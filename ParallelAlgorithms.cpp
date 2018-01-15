@@ -7,8 +7,8 @@
 
 int main()
 {
-	const unsigned long NumElements = 5;
-	unsigned long unsorted_array[NumElements] = { 10, 5, 2, 4, 11 };
+	const unsigned long NumElements = 7;
+	unsigned long unsorted_array[NumElements] = { 10, 5, 2, 4, 11, 0, 3 };
 	unsigned long   sorted_array[NumElements];
 
 	parallel_merge_sort_simplest(unsorted_array, 0, NumElements - 1, sorted_array);
