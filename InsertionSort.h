@@ -3,14 +3,6 @@
 #ifndef _InsertionSort_h
 #define _InsertionSort_h
 
-template < class Item >
-inline void exchange(Item& A, Item& B)
-{
-	Item t = A;
-	A = B;
-	B = t;
-}
-
 template< class _Type >
 inline void insertionSortSimilarToSTLnoSelfAssignment( _Type* a, unsigned long a_size )
 {
