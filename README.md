@@ -1,8 +1,8 @@
 # ParallelAlgorithms
 
-High Performance C++ Algorithms: sequential and parallel
+High Performance C++ Algorithms: parallel and sequential. Working VisualStudio 2015 solution is included with all supporting code and usage examples.
 
-- Parallel Merge for merging two arrays of any data type supporting comparison. Working VisualStudio 2015 solution is included with all supporting code..
+- Parallel Merge for merging two arrays of any data type supporting comparison.
 - Parallel Merge Sort for sorting arrays of any data type supporting comparison. 
   Described in blog https://duvanenko.tech.blog/2018/01/13/parallel-merge-sort/ and in article http://www.drdobbs.com/parallel/parallel-merge-sort/229400239
 
