@@ -25,7 +25,8 @@ int main()
 	unsigned long unsorted_array[NumElements] = { 10, 3, 5, 2, 4, 11, 0, 3 };
 	unsigned long   sorted_array[NumElements];
 
-	parallel_merge_sort_simplest(unsorted_array, 0, NumElements - 1, sorted_array);
+	//parallel_merge_sort_simplest(unsorted_array, 0, NumElements - 1, sorted_array);	// simplest, but slowest
+	parallel_merge_sort_hybrid_rh_1(unsorted_array, 0, NumElements - 1, sorted_array);	// fastest
 
 	std::cout << "sorted array: ";
 	for (unsigned long i = 0; i < NumElements; i++)
