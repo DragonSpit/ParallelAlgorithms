@@ -1,11 +1,15 @@
 // ParallelAlgorithms.cpp : Defines the entry point for the console application.
 //
+
 #include <iostream>
 #include "ParallelMergeSort.h"
+
+extern int ParallelStdCppExample();
 
 int main()
 {
 	// Demonstrate Paralle Merge
+
 	const unsigned long A_NumElements = 8;
 	const unsigned long B_NumElements = 6;
 	unsigned long a_array[A_NumElements + B_NumElements] = { 2, 3, 3, 5, 15, 17, 20, 22, 0, 0, 6, 9, 16, 17 };	// first array has 8 elements, second array has 6
@@ -31,7 +35,10 @@ int main()
 	std::cout << "sorted array: ";
 	for (unsigned long i = 0; i < NumElements; i++)
 		std::cout << sorted_array[i] << " ";
-	std::cout << std::endl;
+	std::cout << std::endl << std::endl;
+
+	// Example of C++17 Standard C++ Parallel Sorting
+	ParallelStdCppExample();
 
     return 0;
 }

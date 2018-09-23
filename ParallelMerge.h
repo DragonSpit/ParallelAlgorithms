@@ -67,8 +67,8 @@ inline void merge_parallel_L3(_Type* t, int p1, int r1, int p2, int r2, _Type* a
 	int q2 = my_binary_search(t[q1], t, p2, r2);
 	int q3 = p3 + (q1 - p1) + (q2 - p2);
 	a[q3] = t[q1];
-	tbb::parallel_invoke(
-		//Concurrency::parallel_invoke(
+	//tbb::parallel_invoke(
+	Concurrency::parallel_invoke(
 		[&] { merge_parallel_L3(t, p1, q1 - 1, p2, q2 - 1, a, p3); },
 		[&] { merge_parallel_L3(t, q1 + 1, r1, q2, r2, a, q3 + 1); }
 	);

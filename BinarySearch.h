@@ -4,6 +4,8 @@
 #ifndef _BinarySearch_h
 #define _BinarySearch_h
 
+#pragma once
+
 // There are several ways to implement a modified binary search for insertion sort.  One way is to compare with the middle array
 // element in the first step.  Another way is to compare with the largest element in the first step and then the smallest element.
 // Or to compare largest and then middle element.  It just depends if we want to optimize for search or for nearly presorted or 
