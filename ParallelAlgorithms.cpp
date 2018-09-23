@@ -5,6 +5,7 @@
 #include "ParallelMergeSort.h"
 
 extern int ParallelStdCppExample();
+extern int ParallelMergeSortBenchmark();
 
 int main()
 {
@@ -39,6 +40,8 @@ int main()
 
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample();
+
+	ParallelMergeSortBenchmark();
 
     return 0;
 }

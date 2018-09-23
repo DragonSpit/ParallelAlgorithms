@@ -155,6 +155,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/std:c++latest %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="ParallelMergeSortBenchmark.cpp" />
     <ClCompile Include="ParallelStdCppExample.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
