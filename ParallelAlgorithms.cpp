@@ -41,6 +41,7 @@ int main()
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample();
 
+	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark();
 
     return 0;
