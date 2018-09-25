@@ -44,9 +44,8 @@ int ParallelMergeSortBenchmark()
 		double * sorted = new double [testSize];
 		const auto startTime = high_resolution_clock::now();
 		parallel_merge_sort_hybrid_rh_1(doubles, 0, (int)(testSize - 1), sorted);
-		//sort(sorted.begin(), sorted.end());
 		const auto endTime = high_resolution_clock::now();
-		print_results("Serial", sorted, testSize, startTime, endTime);
+		print_results("Parallel Merge Sort", sorted, testSize, startTime, endTime);
 		delete[] sorted;
 	}
 
