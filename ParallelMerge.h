@@ -27,6 +27,25 @@ inline void merge_ptr(const _Type* a_start, const _Type* a_end, const _Type* b_s
 	while (a_start < a_end)	*dst++ = *a_start++;
 	while (b_start < b_end)	*dst++ = *b_start++;
 }
+// Faster Merge: see https://duvanenko.tech.blog/2018/07/25/faster-serial-merge-in-c-and-c/
+template< class _Type >
+inline void merge_ptr_1(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst)
+{
+	if (a_start < a_end && b_start < b_end) {
+		while (true) {
+			if (*a_start <= *b_start) {
+				*dst++ = *a_start++;
+				if (a_start >= a_end)	break;
+			}
+			else {
+				*dst++ = *b_start++;
+				if (b_start >= b_end)	break;
+			}
+		}
+	}
+	while (a_start < a_end)	*dst++ = *a_start++;
+	while (b_start < b_end)	*dst++ = *b_start++;
+}
 // Listing 2 
 // Divide-and-Conquer Merge of two ranges of source array T[ p1 .. r1 ] and T[ p2 .. r2 ] into destination array A starting at index p3.
 // From 3rd ed. of "Introduction to Algorithms" p. 798-802
@@ -89,7 +108,7 @@ inline void merge_dac_hybrid(const _Type* t, int p1, int r1, int p2, int r2, _Ty
 	}
 	if (length1 == 0) return;
 	if ((length1 + length2) <= 8192)
-		merge_ptr(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);
+		merge_ptr_1(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);
 	else {
 		int q1 = (p1 + r1) / 2;
 		int q2 = my_binary_search(t[q1], t, p2, r2);
@@ -113,7 +132,7 @@ inline void merge_parallel_L5(_Type* t, int p1, int r1, int p2, int r2, _Type* a
 	}
 	if (length1 == 0)	return;
 	if ((length1 + length2) <= 8192) {	// 8192 threshold is much better than 16
-		merge_ptr(   &t[ p1 ], &t[ p1 + length1 ], &t[ p2 ], &t[ p2 + length2 ], &a[ p3 ] );	// in DDJ paper
+		merge_ptr_1( &t[ p1 ], &t[ p1 + length1 ], &t[ p2 ], &t[ p2 + length2 ], &a[ p3 ] );	// in DDJ paper
 	}
 	else {
 		int q1 = (p1 + r1) / 2;
