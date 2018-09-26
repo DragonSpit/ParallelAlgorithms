@@ -19,7 +19,6 @@ using std::random_device;
 using std::sort;
 using std::vector;
 
-const size_t testSize = 1'000'000;
 const int iterationCount = 5;
 
 void print_results(const char *const tag, const vector<double>& sorted,
@@ -30,17 +29,8 @@ void print_results(const char *const tag, const vector<double>& sorted,
 		duration_cast<duration<double, milli>>(endTime - startTime).count());
 }
 
-int ParallelStdCppExample()
+int ParallelStdCppExample(vector<double>& doubles)
 {
-	random_device rd;
-
-	// generate some random doubles:
-	printf("Testing with %zu doubles...\n", testSize);
-	vector<double> doubles(testSize);
-	for (auto& d : doubles) {
-		d = static_cast<double>(rd());
-	}
-
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{

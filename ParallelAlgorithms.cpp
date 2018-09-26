@@ -2,10 +2,17 @@
 //
 
 #include <iostream>
+#include <random>
+#include <ratio>
+#include <vector>
+#include <execution>
 #include "ParallelMergeSort.h"
 
-extern int ParallelStdCppExample();
-extern int ParallelMergeSortBenchmark();
+using std::random_device;
+using std::vector;
+
+extern int ParallelStdCppExample(vector<double>& doubles);
+extern int ParallelMergeSortBenchmark(vector<double>& doubles);
 
 int main()
 {
@@ -38,11 +45,21 @@ int main()
 		std::cout << sorted_array[i] << " ";
 	std::cout << std::endl << std::endl;
 
+	// Provide the same input random array of doubles to all sorting algorithms
+	const size_t testSize = 1'000'000;
+	random_device rd;
+
+	// generate some random doubles:
+	printf("Testing with %zu doubles...\n", testSize);
+	vector<double> doubles(testSize);
+	for (auto& d : doubles) {
+		d = static_cast<double>(rd());
+	}
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample();
+	ParallelStdCppExample(doubles);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	ParallelMergeSortBenchmark();
+	ParallelMergeSortBenchmark(doubles);
 
     return 0;
 }
