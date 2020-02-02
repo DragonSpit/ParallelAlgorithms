@@ -12,6 +12,8 @@ using std::random_device;
 using std::vector;
 
 extern int ParallelStdCppExample(vector<double>& doubles);
+extern int ParallelStdCppExample(vector<unsigned long>& ulongs);
+extern int 	RadixSortLsdBenchmark(vector<unsigned long>& ulongs);
 extern int ParallelMergeSortBenchmark(vector<double>& doubles);
 
 int main()
@@ -60,6 +62,18 @@ int main()
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark(doubles);
+
+	// generate some random unsigned longs:
+	printf("\nTesting with %zu unsigned longs...\n", testSize);
+	vector<unsigned long> ulongs(testSize);
+	for (auto& d : ulongs) {
+		d = static_cast<unsigned long>(rd());
+	}
+	// Example of C++17 Standard C++ Parallel Sorting
+	ParallelStdCppExample(ulongs);
+
+	// Benchmark the above Parallel Merge Sort algorithm
+	RadixSortLsdBenchmark(ulongs);
 
     return 0;
 }

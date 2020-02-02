@@ -1,0 +1,97 @@
+#pragma once
+
+#ifndef _RadixSortLSD_h
+#define _RadixSortLSD_h
+
+#include "RadixSortCommon.h"
+#include "InsertionSort.h"
+
+template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
+inline unsigned long** HistogramByteComponents(unsigned long inArray[], int l, int r)
+{
+	const unsigned long numberOfDigits = Log2ofPowerOfTwoRadix;
+	const unsigned long numberOfBins = PowerOfTwoRadix;
+
+	unsigned long** count = new unsigned long* [numberOfDigits];
+
+	for (int i = 0; i < numberOfDigits; i++)
+	{
+		count[i] = new unsigned long[numberOfBins];
+		for (int j = 0; j < numberOfBins; j++)
+			count[i][j] = 0;
+	}
+
+	for (int current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+	{
+		unsigned long value = inArray[current];
+		count[0][value & 0xff]++;
+		count[1][(value & 0xff00) >> 8]++;
+		count[2][(value & 0xff0000) >> 16]++;
+		count[3][(value & 0xff000000) >> 24]++;
+	}
+	return count;
+}
+
+// Serial LSD Radix Sort, with Counting separated into its own phase, followed by a permutation phase, as is done in HPCsharp in C#
+template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
+inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned long* input_array, unsigned long* output_array, long last, unsigned long bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
+{
+	const unsigned long numberOfBins = PowerOfTwoRadix;
+	unsigned long* _input_array = input_array;
+	unsigned long* _output_array = output_array;
+	bool _output_array_has_result = false;
+	unsigned long currentDigit = 0;
+
+	unsigned long** count2D = HistogramByteComponents <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
+
+	while (bitMask != 0)						// end processing digits when all the mask bits have been processes and shift out, leaving none
+	{
+		unsigned long* count = count2D[currentDigit];
+
+		long startOfBin[numberOfBins], endOfBin[numberOfBins];
+		startOfBin[0] = endOfBin[0] = 0;
+		for (unsigned long i = 1; i < numberOfBins; i++)
+			startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
+
+		for (long _current = 0; _current <= last; _current++)	// permutation phase
+			_output_array[endOfBin[extractDigit(_input_array[_current], bitMask, shiftRightAmount)]++] = _input_array[_current];
+
+		bitMask <<= Log2ofPowerOfTwoRadix;
+		shiftRightAmount += Log2ofPowerOfTwoRadix;
+		_output_array_has_result = !_output_array_has_result;
+		std::swap(_input_array, _output_array);
+		currentDigit++;
+	}
+	// Done with processing, copy all of the bins
+	if (_output_array_has_result && inputArrayIsDestination)
+		for (long _current = 0; _current <= last; _current++)	// copy from output array into the input array
+			_input_array[_current] = _output_array[_current];
+	if (!_output_array_has_result && !inputArrayIsDestination)
+		for (long _current = 0; _current <= last; _current++)	// copy from input array back into the output array
+			_output_array[_current] = _input_array[_current];
+}
+
+// LSD Radix Sort - stable (LSD has to be, and this may preclude LSD Radix from being able to be in-place)
+inline void RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(unsigned long* a, unsigned long* b, unsigned long a_size)
+{
+	const unsigned long Threshold = 100;	// Threshold of when to switch to using Insertion Sort
+	const unsigned long PowerOfTwoRadix = 256;
+	const unsigned long Log2ofPowerOfTwoRadix = 8;
+	// Create bit-mask and shift right amount
+	unsigned long shiftRightAmount = 0;
+	unsigned long bitMask = (unsigned long)(((unsigned long)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
+
+	// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
+	// they are not pushed on the stack and are treated as constants, but local.
+	if (a_size >= Threshold) {
+		_RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, b, a_size - 1, bitMask, shiftRightAmount, false);
+	}
+	else {
+		// TODO: Substitute Merge Sort, as it will get rid off the for loop, since it's internal to MergeSort
+		insertionSortSimilarToSTLnoSelfAssignment(a, a_size);
+		for (unsigned long j = 0; j < a_size; j++)	// copy from input array to the destination array
+			b[j] = a[j];
+	}
+}
+
+#endif
