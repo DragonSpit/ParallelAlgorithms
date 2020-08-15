@@ -69,6 +69,11 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned l
 	if (!_output_array_has_result && !inputArrayIsDestination)
 		for (long _current = 0; _current <= last; _current++)	// copy from input array back into the output array
 			_output_array[_current] = _input_array[_current];
+
+	const unsigned long numberOfDigits = Log2ofPowerOfTwoRadix;	// deallocate 2D count array, which was allocated in Histogram
+	for (int i = 0; i < numberOfDigits; i++)
+		delete[] count2D[i];
+	delete[] count2D;
 }
 
 // LSD Radix Sort - stable (LSD has to be, and this may preclude LSD Radix from being able to be in-place)
