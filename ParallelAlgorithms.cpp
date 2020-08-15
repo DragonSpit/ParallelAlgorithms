@@ -11,14 +11,18 @@
 using std::random_device;
 using std::vector;
 
-extern int ParallelStdCppExample(vector<double>& doubles);
+extern int ParallelStdCppExample(vector<double>&        doubles);
 extern int ParallelStdCppExample(vector<unsigned long>& ulongs);
-extern int 	RadixSortLsdBenchmark(vector<unsigned long>& ulongs);
-extern int ParallelMergeSortBenchmark(vector<double>& doubles);
+extern int ParallelStdCppExample(vector<unsigned>&      uints);
+extern int RadixSortLsdBenchmark(vector<unsigned long>& ulongs);
+extern int ParallelMergeSortBenchmark(vector<double>&   doubles);
+extern int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs);
+extern int ParallelMergeSortBenchmark(vector<unsigned>&      uints);
+
 
 int main()
 {
-	// Demonstrate Paralle Merge
+	// Demonstrate Parallel Merge
 
 	const unsigned long A_NumElements = 8;
 	const unsigned long B_NumElements = 6;
@@ -73,7 +77,22 @@ int main()
 	ParallelStdCppExample(ulongs);
 
 	// Benchmark the above Parallel Merge Sort algorithm
+	ParallelMergeSortBenchmark(ulongs);
+
+	// Benchmark the above Parallel Merge Sort algorithm
 	RadixSortLsdBenchmark(ulongs);
 
-    return 0;
+	// generate some random unsigned integers:
+	printf("\nTesting with %zu unsigned integers...\n", testSize);
+	vector<unsigned> uints(testSize);
+	for (auto& d : uints) {
+		d = static_cast<unsigned>(rd());
+	}
+	// Example of C++17 Standard C++ Parallel Sorting
+	ParallelStdCppExample(uints);
+
+	// Benchmark the above Parallel Merge Sort algorithm
+	ParallelMergeSortBenchmark(uints);
+
+	return 0;
 }

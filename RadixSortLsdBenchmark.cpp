@@ -19,13 +19,8 @@ using std::vector;
 const size_t testSize = 1'000'000;
 const int iterationCount = 5; 
 
-void print_results(const char *const tag, const unsigned long * sorted, size_t sortedLength,
-	high_resolution_clock::time_point startTime,
-	high_resolution_clock::time_point endTime) {
-	printf("%s: Lowest: %u Highest: %u Time: %fms\n", tag,
-		sorted[0], sorted[sortedLength - 1],
-		duration_cast<duration<double, milli>>(endTime - startTime).count());
-}
+extern void print_results(const char* const tag, const unsigned long* sorted, size_t sortedLength,
+	                      high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime);
 
 int RadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 {
