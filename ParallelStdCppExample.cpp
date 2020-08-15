@@ -33,6 +33,14 @@ void print_results(const char* const tag, const vector<unsigned long>& sorted,
 	high_resolution_clock::time_point startTime,
 	high_resolution_clock::time_point endTime)
 {
+	printf("%s: Lowest: %lu Highest: %lu Time: %fms\n", tag, sorted.front(), sorted.back(),
+		duration_cast<duration<double, milli>>(endTime - startTime).count());
+}
+
+void print_results(const char* const tag, const vector<unsigned>& sorted,
+	high_resolution_clock::time_point startTime,
+	high_resolution_clock::time_point endTime)
+{
 	printf("%s: Lowest: %u Highest: %u Time: %fms\n", tag, sorted.front(), sorted.back(),
 		duration_cast<duration<double, milli>>(endTime - startTime).count());
 }
@@ -117,6 +125,45 @@ int ParallelStdCppExample(vector<unsigned long>& ulongs)
 		sort(std::execution::par_unseq, s, s + ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Array", s[0], s[ulongs.size() - 1], startTime, endTime);
+		delete[] s;
+	}
+
+	return 0;
+}
+
+int ParallelStdCppExample(vector<unsigned>& uints)
+{
+	// time how long it takes to sort them:
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		vector<unsigned> sorted(uints);
+		const auto startTime = high_resolution_clock::now();
+		sort(sorted.begin(), sorted.end());
+		const auto endTime = high_resolution_clock::now();
+		print_results("Serial", sorted, startTime, endTime);
+	}
+
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		vector<unsigned> sorted(uints);
+		const auto startTime = high_resolution_clock::now();
+		// same sort call as above, but with par_unseq:
+		sort(std::execution::par_unseq, sorted.begin(), sorted.end());
+		const auto endTime = high_resolution_clock::now();
+		// in our output, note that these are the parallel results:
+		print_results("Parallel", sorted, startTime, endTime);
+	}
+
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		unsigned *s = new unsigned[uints.size()];
+		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+			s[j] = uints[j];
+		}
+		const auto startTime = high_resolution_clock::now();
+		sort(std::execution::par_unseq, s, s + uints.size());
+		const auto endTime = high_resolution_clock::now();
+		print_results("Parallel Array", s[0], s[uints.size() - 1], startTime, endTime);
 		delete[] s;
 	}
 
