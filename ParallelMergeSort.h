@@ -3,6 +3,8 @@
 #ifndef _ParallelMergeSort_h
 #define _ParallelMergeSort_h
 
+#include <thread>
+
 #include "InsertionSort.h"
 #include "BinarySearch.h"
 #include "ParallelMerge.h"
@@ -106,4 +108,39 @@ inline void parallel_merge_sort_hybrid_rh_1( _Type* src, int l, int r, _Type* ds
     else            merge_parallel_L5( dst, l, m, m + 1, r, src, l );
 }
 
+template< class _Type >
+inline void parallel_merge_sort_hybrid_rh_2(_Type* src, int l, int r, _Type* dst, bool srcToDst = true, int parallelThreshold = 24 * 1024)
+{
+    if (r == l) {    // termination/base case of sorting a single element
+        if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
+        return;
+    }
+    if ((r - l) <= parallelThreshold && !srcToDst) {
+        sort( src + l, src + r + 1 );
+        //if (srcToDst)
+        //    for (int i = l; i <= r; i++)    dst[i] = src[i];
+        return;
+    }
+    int m = ((r + l) / 2);
+    //tbb::parallel_invoke(             // Intel's     Threading Building Blocks (TBB)
+    Concurrency::parallel_invoke(       // Microsoft's Parallel Pattern Library  (PPL)
+        [&] { parallel_merge_sort_hybrid_rh_2(src, l, m, dst, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
+        [&] { parallel_merge_sort_hybrid_rh_2(src, m + 1, r, dst, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
+    );
+    if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
+    else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
+}
+
+template< class _Type >
+inline void parallel_merge_sort_hybrid(_Type* src, int l, int r, _Type* dst, bool srcToDst = true, int parallelThreshold = 24 * 1024)
+{
+    // may return 0 when not able to detect
+    const auto processor_count = std::thread::hardware_concurrency();
+    //printf("Number of cores = %u \n", processor_count);
+
+    if ((int)(parallelThreshold * processor_count) < (r - l + 1))
+        parallelThreshold = (r - l + 1) / processor_count;
+
+    parallel_merge_sort_hybrid_rh_2(src, l, r, dst, srcToDst, parallelThreshold);
+}
 #endif
