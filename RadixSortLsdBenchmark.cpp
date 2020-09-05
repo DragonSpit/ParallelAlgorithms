@@ -16,7 +16,6 @@ using std::random_device;
 using std::sort;
 using std::vector;
 
-const size_t testSize = 1'000'000;
 const int iterationCount = 5; 
 
 extern void print_results(const char* const tag, const unsigned long* sorted, size_t sortedLength,
@@ -27,7 +26,7 @@ int RadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 	random_device rd;
 
 	// generate some random ulongs:
-	printf("\nBenchmarking Radix Sort LSD with %zu unsigned longs...\n", testSize);
+	printf("\nBenchmarking Radix Sort LSD with %zu unsigned longs...\n", ulongs.size());
 	unsigned long * ulongsCopy  = new unsigned long [ulongs.size()];
 
 	// time how long it takes to sort them:
