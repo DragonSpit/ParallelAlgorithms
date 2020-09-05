@@ -16,7 +16,6 @@ using std::random_device;
 using std::sort;
 using std::vector;
 
-const size_t testSize = 1'000'000;
 const int iterationCount = 5; 
 
 void print_results(const char *const tag, const double * sorted, size_t sortedLength,
@@ -48,7 +47,7 @@ int ParallelMergeSortBenchmark(vector<double>& doubles)
 	random_device rd;
 
 	// generate some random uints:
-	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu doubles...\n", testSize);
+	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu doubles...\n", doubles.size());
 	double * doublesCopy  = new double [doubles.size()];
 
 	// time how long it takes to sort them:
@@ -75,7 +74,7 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 	random_device rd;
 
 	// generate some random uints:
-	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned longs...\n", testSize);
+	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned longs...\n", ulongs.size());
 	unsigned long* ulongsCopy = new unsigned long[ulongs.size()];
 
 	// time how long it takes to sort them:
@@ -102,7 +101,7 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 	random_device rd;
 
 	// generate some random uints:
-	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned integers...\n", testSize);
+	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned integers...\n", uints.size());
 	unsigned* uintsCopy = new unsigned[uints.size()];
 
 	// time how long it takes to sort them:
@@ -113,7 +112,8 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 		}
 		unsigned* sorted = new unsigned[uints.size()];
 		const auto startTime = high_resolution_clock::now();
-		parallel_merge_sort_hybrid_rh_1(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
+		//parallel_merge_sort_hybrid_rh_1(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
+		parallel_merge_sort_hybrid(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Merge Sort", sorted, uints.size(), startTime, endTime);
 		delete[] sorted;
