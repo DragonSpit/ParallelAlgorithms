@@ -46,6 +46,27 @@ inline void merge_ptr_1(const _Type* a_start, const _Type* a_end, const _Type* b
 	while (a_start < a_end)	*dst++ = *a_start++;
 	while (b_start < b_end)	*dst++ = *b_start++;
 }
+template< class _Type >
+inline void merge_ptr_2(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst)
+{
+	long aLength = (long)(a_end - a_start);
+	long bLength = (long)(b_end - b_start);
+	while (aLength > 0 && bLength > 0)
+	{
+		long numElements = __min(aLength, bLength);
+		for (long i = 0; i < numElements; i++)
+		{
+			if (*a_start <= *b_start)   			// if elements are equal, then a[] element is output
+				*dst++ = *a_start++;
+			else
+				*dst++ = *b_start++;
+		}
+		aLength = (long)(a_end - a_start);
+		bLength = (long)(b_end - b_start);
+	}
+	while (a_start < a_end)	*dst++ = *a_start++;
+	while (b_start < b_end)	*dst++ = *b_start++;
+}
 // Listing 2 
 // Divide-and-Conquer Merge of two ranges of source array T[ p1 .. r1 ] and T[ p2 .. r2 ] into destination array A starting at index p3.
 // From 3rd ed. of "Introduction to Algorithms" p. 798-802
@@ -132,7 +153,7 @@ inline void merge_parallel_L5(_Type* t, int p1, int r1, int p2, int r2, _Type* a
 	}
 	if (length1 == 0)	return;
 	if ((length1 + length2) <= 8192) {	// 8192 threshold is much better than 16
-		merge_ptr_1( &t[ p1 ], &t[ p1 + length1 ], &t[ p2 ], &t[ p2 + length2 ], &a[ p3 ] );	// in DDJ paper
+		merge_ptr( &t[ p1 ], &t[ p1 + length1 ], &t[ p2 ], &t[ p2 + length2 ], &a[ p3 ] );	// in DDJ paper
 	}
 	else {
 		int q1 = (p1 + r1) / 2;
