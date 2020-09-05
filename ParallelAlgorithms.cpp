@@ -52,7 +52,7 @@ int main()
 	std::cout << std::endl << std::endl;
 
 	// Provide the same input random array of doubles to all sorting algorithms
-	const size_t testSize = 1'000'000;
+	const size_t testSize = 10'000'000;
 	random_device rd;
 
 	// generate some random doubles:
