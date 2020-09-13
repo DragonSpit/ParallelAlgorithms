@@ -16,4 +16,6 @@ Benchmark Results of the following C++17 algorithms on Ubuntu 20.04 using g++, s
 sort single core |14|72|| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 sort multi-core |625|1,333|| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
+the units in the table above are Millions of unsigned integers per second.
+
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=LDD8L7UPAC7QL)
