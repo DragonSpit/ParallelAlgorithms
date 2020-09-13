@@ -11,11 +11,20 @@ Benchmark Results of the following C++17 algorithms on Ubuntu 20.04 using g++, s
 - single core: sort(sorted.begin(), sorted.end())
 - multi-core: sort(std::execution::par_unseq, sorted.begin(), sorted.end())
 
-*Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
+*Algorithm*|*Random*|*Presorted*|*Description*
 --- | --- | --- | --- | ---
-sort single core |14|72|| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-sort multi-core |625|1,333|| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+sort single core |14|72| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+sort multi-core |625|1,333| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
 the units in the table above are Millions of unsigned integers per second.
+
+Sorting an array of unsigned long integers:
+
+*Algorithm*|*Random*|*Presorted*|*Description*
+--- | --- | --- | --- | ---
+sort single core |14|| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+sort multi-core |401|| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+
+
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=LDD8L7UPAC7QL)
