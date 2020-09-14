@@ -22,8 +22,8 @@ Sorting an array of unsigned long integers:
 
 *Algorithm*|*Random*|*Presorted*|*Description*
 --- | --- | --- | ---
-sort single core |14|| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-sort multi-core |401|| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+sort single core |14|16| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+sort multi-core |401|513| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
 
 
