@@ -25,6 +25,22 @@ Sorting an array of unsigned long integers:
 sort single core |14|16| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 sort multi-core |401|513| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
+## Building on Linux
+To install g++:
+```
+sudo apt install build-essential
+```
+
+To update gcc to support c++17 standard:
+```
+sudo apt update
+sudo apt install libtbb-dev
+```
+
+To build, use g++ command and not gcc. The order of the following arguments matters!
+```
+g++ ParallelAlgorithms.cpp -ltbb -std=c++17 -O3 -o ParallelAlgorithms
+```
 
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=LDD8L7UPAC7QL)
