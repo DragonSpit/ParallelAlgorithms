@@ -8,8 +8,8 @@ High Performance C++ Algorithms: parallel and sequential. Working VisualStudio 2
 - LSD Radix Sort for arrays of unsigned long's. Described in blog https://blogs.msdn.microsoft.com/vcblog/2018/09/11/using-c17-parallel-algorithms-for-better-performance/
 
 Benchmark Results of the following C++17 algorithms on Ubuntu 20.04 using g++, sorting an array of 10 Million unsigned integers:
-- single core: sort(sorted.begin(), sorted.end())
-- multi-core: sort(std::execution::par_unseq, sorted.begin(), sorted.end())
+- single core: ```sort(sorted.begin(), sorted.end())```
+- multi-core: ```sort(std::execution::par_unseq, sorted.begin(), sorted.end())```
 
 *Algorithm*|*Random*|*Presorted*|*Description*
 --- | --- | --- | ---
