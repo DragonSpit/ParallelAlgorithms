@@ -55,8 +55,11 @@ int main()
 	const size_t testSize = 10'000'000;
 	random_device rd;
 
+	const auto processor_count = std::thread::hardware_concurrency();
+	printf("Number of cores = %u \n", processor_count);
+
 	// generate some random doubles:
-	printf("Testing with %zu doubles...\n", testSize);
+	printf("Testing with %zu rendom doubles...\n", testSize);
 	vector<double> doubles(testSize);
 	for (auto& d : doubles) {
 		d = static_cast<double>(rd());
@@ -68,7 +71,7 @@ int main()
 	ParallelMergeSortBenchmark(doubles);
 
 	// generate some random unsigned longs:
-	printf("\nTesting with %zu unsigned longs...\n", testSize);
+	printf("\nTesting with %zu random unsigned longs...\n", testSize);
 	vector<unsigned long> ulongs(testSize);
 	for (auto& d : ulongs) {
 		d = static_cast<unsigned long>(rd());
@@ -83,10 +86,25 @@ int main()
 	RadixSortLsdBenchmark(ulongs);
 
 	// generate some random unsigned integers:
-	printf("\nTesting with %zu unsigned integers...\n", testSize);
+	printf("\nTesting with %zu random unsigned integers...\n", testSize);
 	vector<unsigned> uints(testSize);
 	for (auto& d : uints) {
 		d = static_cast<unsigned>(rd());
+	}
+	// Example of C++17 Standard C++ Parallel Sorting
+	ParallelStdCppExample(uints);
+
+	// Benchmark the above Parallel Merge Sort algorithm
+	ParallelMergeSortBenchmark(uints);
+
+	// generate some random unsigned integers:
+	printf("\nTesting with %zu nearly presorted unsigned integers...\n", testSize);
+	//vector<unsigned> uints(testSize);
+	for (size_t i = 0; i < uints.size(); i++) {
+		if ((i % 100) == 0)
+			uints[i] = static_cast<unsigned>(rd());
+		else
+			uints[i] = static_cast<unsigned>(i);
 	}
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample(uints);
