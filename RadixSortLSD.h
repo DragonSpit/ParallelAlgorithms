@@ -1,3 +1,5 @@
+// TODO: Switch histogram calculation from a 2-D array in the inner loop to a four 1-D arrays. It may not be as general, but may be faster.
+// TODO: Switch histogram calculation from mask/shift to union
 #pragma once
 
 #ifndef _RadixSortLSD_h
@@ -48,7 +50,10 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned l
 	{
 		unsigned long* count = count2D[currentDigit];
 
-		long startOfBin[numberOfBins], endOfBin[numberOfBins];
+		long startOfBin[numberOfBins];
+		//long endOfBin[numberOfBins];
+		alignas(64) long endOfBin[numberOfBins];
+		//printf("endOfBin address = %p\n", endOfBin);
 		startOfBin[0] = endOfBin[0] = 0;
 		for (unsigned long i = 1; i < numberOfBins; i++)
 			startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
