@@ -5,10 +5,24 @@
 
 #include <thread>
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <ppl.h>
+#else
+#include <stddef.h>
+#include <stdio.h>
+#include <algorithm>
+#include <chrono>
+#include <iostream>
+#include <random>
+#include <ratio>
+#include <vector>
+#include <execution>
+#include <thread>
+#endif
+
 #include "InsertionSort.h"
 #include "BinarySearch.h"
 #include "ParallelMerge.h"
-#include <ppl.h>
 
 // The simplest version of parallel merge sort that reverses direction of source and destination arrays on each level of recursion
 // to eliminate the use of an additional array.  The top-level of recursion starts in the source to destination direction, which is
@@ -32,9 +46,12 @@ inline void parallel_merge_sort_simplest_r( _Type* src, int l, int r, _Type* dst
 		return;
 	}
 	int m = ( r + l ) / 2;
-	//tbb::parallel_invoke(				// Intel's     Threading Building Blocks (TBB)
-	Concurrency::parallel_invoke(		// Microsoft's Parallel Pattern Library  (PPL)
-		[&] { parallel_merge_sort_simplest_r( src, l,     m, dst, !srcToDst ); },		// reverse direction of srcToDst for the next level of recursion
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    Concurrency::parallel_invoke(
+#else
+    tbb::parallel_invoke(
+#endif
+        [&] { parallel_merge_sort_simplest_r( src, l,     m, dst, !srcToDst ); },		// reverse direction of srcToDst for the next level of recursion
 		[&] { parallel_merge_sort_simplest_r( src, m + 1, r, dst, !srcToDst ); }		// reverse direction of srcToDst for the next level of recursion
 	);
 	if ( srcToDst ) merge_parallel_L5( src, l, m, m + 1, r, dst, l );
@@ -76,8 +93,11 @@ inline void parallel_merge_sort_hybrid_rh( _Type* src, int l, int r, _Type* dst,
         return; 
     }
     int m = ( r + l ) / 2;
-    //tbb::parallel_invoke(             // Intel's     Threading Building Blocks (TBB)
-    Concurrency::parallel_invoke(       // Microsoft's Parallel Pattern Library  (PPL)
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    Concurrency::parallel_invoke(
+#else
+    tbb::parallel_invoke(
+#endif
         [&] { parallel_merge_sort_hybrid_rh( src, l,     m, dst, !srcToDst ); },        // reverse direction of srcToDst for the next level of recursion
         [&] { parallel_merge_sort_hybrid_rh( src, m + 1, r, dst, !srcToDst ); }     // reverse direction of srcToDst for the next level of recursion
     );
@@ -99,8 +119,11 @@ inline void parallel_merge_sort_hybrid_rh_1( _Type* src, int l, int r, _Type* ds
         return; 
     }
     int m = (( r + l ) / 2 );
-    //tbb::parallel_invoke(             // Intel's     Threading Building Blocks (TBB)
-    Concurrency::parallel_invoke(       // Microsoft's Parallel Pattern Library  (PPL)
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    Concurrency::parallel_invoke(
+#else
+    tbb::parallel_invoke(
+#endif
         [&] { parallel_merge_sort_hybrid_rh_1( src, l,     m, dst, !srcToDst ); },      // reverse direction of srcToDst for the next level of recursion
         [&] { parallel_merge_sort_hybrid_rh_1( src, m + 1, r, dst, !srcToDst ); }       // reverse direction of srcToDst for the next level of recursion
     );
@@ -116,14 +139,17 @@ inline void parallel_merge_sort_hybrid_rh_2(_Type* src, int l, int r, _Type* dst
         return;
     }
     if ((r - l) <= parallelThreshold && !srcToDst) {
-        sort( src + l, src + r + 1 );
+        std::sort( src + l, src + r + 1 );
         //if (srcToDst)
         //    for (int i = l; i <= r; i++)    dst[i] = src[i];
         return;
     }
     int m = ((r + l) / 2);
-    //tbb::parallel_invoke(             // Intel's     Threading Building Blocks (TBB)
-    Concurrency::parallel_invoke(       // Microsoft's Parallel Pattern Library  (PPL)
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    Concurrency::parallel_invoke(
+#else
+    tbb::parallel_invoke(
+#endif
         [&] { parallel_merge_sort_hybrid_rh_2(src, l, m, dst, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
         [&] { parallel_merge_sort_hybrid_rh_2(src, m + 1, r, dst, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
     );

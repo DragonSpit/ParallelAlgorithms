@@ -302,19 +302,25 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned l
 	bool _output_array_has_result = false;
 	unsigned long currentDigit = 0;
 
+	//const auto startTime = high_resolution_clock::now();
 	unsigned long** count2D = HistogramByteComponents <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
+	//const auto endTime = high_resolution_clock::now();
+	//printf("Time for Histogram: %fms\n", duration_cast<duration<double, milli>>(endTime - startTime).count());
+
+	alignas(64) long startOfBin[numberOfBins];
+	alignas(64) long endOfBin[numberOfBins];
+	//printf("endOfBin address = %p\n", endOfBin);
 
 	while (bitMask != 0)						// end processing digits when all the mask bits have been processes and shift out, leaving none
 	{
 		unsigned long* count = count2D[currentDigit];
 
-		long startOfBin[numberOfBins], endOfBin[numberOfBins];
 		startOfBin[0] = endOfBin[0] = 0;
 		for (unsigned long i = 1; i < numberOfBins; i++)
 			startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
 		for (long _current = 0; _current <= last; _current++)	// permutation phase
-			_output_array[endOfBin[(unsigned long)((_input_array[_current] & bitMask) >> shiftRightAmount)]++] = _input_array[_current];
+			_output_array[endOfBin[(_input_array[_current] & bitMask) >> shiftRightAmount]++] = _input_array[_current];
 
 		bitMask <<= Log2ofPowerOfTwoRadix;
 		shiftRightAmount += Log2ofPowerOfTwoRadix;
@@ -365,22 +371,28 @@ int RadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 
 	// generate some random ulongs:
 	unsigned long * ulongsCopy  = new unsigned long [ulongs.size()];
+	//unsigned long* ulongsCopy = (unsigned long*) operator new[](sizeof(unsigned long) * ulongs.size(), (std::align_val_t)(128));
+	unsigned long * sorted = new unsigned long [ulongs.size()];
+	//unsigned long* sorted     = (unsigned long*) operator new[](sizeof(unsigned long) * ulongs.size(), (std::align_val_t)(128));
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		for (unsigned int j = 0; j < ulongs.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			ulongsCopy[j] = ulongs[j];
+			sorted[j] = j;									// page in the destination array into system memory
 		}
-		unsigned long * sorted = new unsigned long [ulongs.size()];
+		printf("ulongsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", ulongsCopy, sorted, sorted[static_cast<unsigned>(rd()) % ulongs.size()], ulongsCopy[static_cast<unsigned>(rd()) % ulongs.size()]);
 		const auto startTime = high_resolution_clock::now();
 		RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Radix Sort LSD", sorted, ulongs.size(), startTime, endTime);
-		delete[] sorted;
 	}
 
-	delete [] ulongsCopy;
+	//delete[] sorted;
+	//delete[](operator new[](sizeof(intptr_t) * ulongs.size(), (std::align_val_t)(64)));
+	//delete [] ulongsCopy;
+	//delete[](operator new[](sizeof(intptr_t) * ulongs.size(), (std::align_val_t)(64)));
 
 	return 0;
 }
@@ -442,6 +454,94 @@ inline void merge_ptr_1(const _Type* a_start, const _Type* a_end, const _Type* b
 	while (b_start < b_end)	*dst++ = *b_start++;
 }
 
+template< class _Type >
+inline void merge_ptr_1_unrolled(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst)
+{
+	if (a_start < a_end && b_start < b_end) {
+		while (true) {
+			if (*a_start <= *b_start) {
+				*dst++ = *a_start++;
+				if (a_start >= a_end)	break;
+			}
+			else {
+				*dst++ = *b_start++;
+				if (b_start >= b_end)	break;
+			}
+			if (*a_start <= *b_start) {
+				*dst++ = *a_start++;
+				if (a_start >= a_end)	break;
+			}
+			else {
+				*dst++ = *b_start++;
+				if (b_start >= b_end)	break;
+			}
+			if (*a_start <= *b_start) {
+				*dst++ = *a_start++;
+				if (a_start >= a_end)	break;
+			}
+			else {
+				*dst++ = *b_start++;
+				if (b_start >= b_end)	break;
+			}
+			if (*a_start <= *b_start) {
+				*dst++ = *a_start++;
+				if (a_start >= a_end)	break;
+			}
+			else {
+				*dst++ = *b_start++;
+				if (b_start >= b_end)	break;
+			}
+		}
+	}
+	while (a_start < a_end)	*dst++ = *a_start++;
+	while (b_start < b_end)	*dst++ = *b_start++;
+}
+
+template< class _Type >
+inline void merge_ptr_2(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst)
+{
+	long aLength = (long)(a_end - a_start);
+	long bLength = (long)(b_end - b_start);
+	while (aLength > 0 && bLength > 0)
+	{
+		long numElements = std::min(aLength, bLength);
+		for (long i = 0; i < numElements; i++)
+		{
+			if (*a_start <= *b_start)   			// if elements are equal, then a[] element is output
+				*dst++ = *a_start++;
+			else
+				*dst++ = *b_start++;
+		}
+		aLength = (long)(a_end - a_start);
+		bLength = (long)(b_end - b_start);
+	}
+	while (a_start < a_end)	*dst++ = *a_start++;
+	while (b_start < b_end)	*dst++ = *b_start++;
+}
+template< class _Type >
+inline void merge_ptr_adaptive_2(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst)
+{
+	long aLength = (long)(a_end - a_start);
+	long bLength = (long)(b_end - b_start);
+	while (aLength > 0 && bLength > 0)
+	{
+		long numElements = std::min(aLength, bLength);
+		if (numElements < 128)
+			merge_ptr_1(a_start, a_end, b_start, b_end, dst);
+		for (long i = 0; i < numElements; i++)
+		{
+			if (*a_start <= *b_start)   			// if elements are equal, then a[] element is output
+				*dst++ = *a_start++;
+			else
+				*dst++ = *b_start++;
+		}
+		aLength = (long)(a_end - a_start);
+		bLength = (long)(b_end - b_start);
+	}
+	while (a_start < a_end)	*dst++ = *a_start++;
+	while (b_start < b_end)	*dst++ = *b_start++;
+}
+
 // Listing 5
 template< class _Type >
 inline void merge_parallel_L5(_Type* t, int p1, int r1, int p2, int r2, _Type* a, int p3)
@@ -497,6 +597,7 @@ template< class _Type >
 inline void parallel_merge_sort_hybrid(_Type* src, int l, int r, _Type* dst, bool srcToDst = true, int parallelThreshold = 24 * 1024)
 {
     // may return 0 when not able to detect
+	
     const auto processor_count = std::thread::hardware_concurrency();
     //printf("Number of cores = %u \n", processor_count);
 
@@ -525,10 +626,11 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
+		unsigned* sorted = new unsigned[uints.size()];
 		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			uintsCopy[j] = uints[j];
+			sorted[j] = 0;									// page the destination array into system memory
 		}
-		unsigned* sorted = new unsigned[uints.size()];
 		const auto startTime = high_resolution_clock::now();
 		//parallel_merge_sort_hybrid_rh_1(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
 		parallel_merge_sort_hybrid(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
@@ -545,23 +647,23 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 int main()
 {
 	// Provide the same input random array of doubles to all sorting algorithms
-	const size_t testSize = 100'000'000;
+	const size_t testSize = 10'000'000;
 	random_device rd;
 	const auto processor_count = std::thread::hardware_concurrency();
 	printf("Number of cores = %u \n", processor_count);
 
-#if 0
+
 	// generate some random doubles:
-	printf("Testing with %zu doubles...\n", testSize);
+	printf("Testing with %zu random doubles...\n", testSize);
 	vector<double> doubles(testSize);
 	for (auto& d : doubles) {
 		d = static_cast<double>(rd());
 	}
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample(doubles);
-#endif
+
 	// generate some random unsigned longs:
-	printf("\nTesting with %zu unsigned longs...\n", testSize);
+	printf("\nTesting with %zu unsigned random longs...\n", testSize);
 	vector<unsigned long> ulongs(testSize);
 	for (auto& d : ulongs) {
 		d = static_cast<unsigned long>(rd());
@@ -572,11 +674,41 @@ int main()
 	// Benchmark the above Parallel Merge Sort algorithm
 	RadixSortLsdBenchmark(ulongs);
 
+	// generate mosly presorted unsigned long integers with a low percentage of randoms:
+	printf("\nTesting with %zu nearly presorted unsigned long integers...\n", testSize);
+	//vector<unsigned> uints(testSize);
+	for (size_t i = 0; i < ulongs.size(); i++) {
+		if ((i % 100) == 0)
+			ulongs[i] = static_cast<unsigned long>(rd());
+		else
+			ulongs[i] = static_cast<unsigned long>(i);
+	}
+	// Example of C++17 Standard C++ Parallel Sorting
+	ParallelStdCppExample(ulongs);
+
+	// Benchmark the above Parallel Merge Sort algorithm
+	//ParallelMergeSortBenchmark(ulongs);
+
 	// generate some random unsigned integers:
-	printf("\nTesting with %zu unsigned integers...\n", testSize);
+	printf("\nTesting with %zu random unsigned integers...\n", testSize);
 	vector<unsigned> uints(testSize);
 	for (auto& d : uints) {
 		d = static_cast<unsigned>(rd());
+	}
+	// Example of C++17 Standard C++ Parallel Sorting
+	ParallelStdCppExample(uints);
+
+	// Benchmark the above Parallel Merge Sort algorithm
+	ParallelMergeSortBenchmark(uints);
+
+	// generate mosly presorted unsigned integers with a low percentage of randoms:
+	printf("\nTesting with %zu nearly presorted unsigned integers...\n", testSize);
+	//vector<unsigned> uints(testSize);
+	for (size_t i = 0; i < uints.size(); i++) {
+		if ((i % 100000) == 0)
+			uints[i] = static_cast<unsigned>(rd());
+		else
+			uints[i] = static_cast<unsigned>(i);
 	}
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample(uints);

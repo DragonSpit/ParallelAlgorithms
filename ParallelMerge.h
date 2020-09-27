@@ -5,7 +5,20 @@
 
 #include "InsertionSort.h"
 #include "BinarySearch.h"
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #include <ppl.h>
+#else
+#include <stddef.h>
+#include <stdio.h>
+#include <algorithm>
+#include <chrono>
+#include <iostream>
+#include <random>
+#include <ratio>
+#include <vector>
+#include <execution>
+#include <thread>
+#endif
 
 template < class Item >
 inline void exchange(Item& A, Item& B)
@@ -47,13 +60,55 @@ inline void merge_ptr_1(const _Type* a_start, const _Type* a_end, const _Type* b
 	while (b_start < b_end)	*dst++ = *b_start++;
 }
 template< class _Type >
+inline void merge_ptr_1_unrolled(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst)
+{
+	if (a_start < a_end && b_start < b_end) {
+		while (true) {
+			if (*a_start <= *b_start) {
+				*dst++ = *a_start++;
+				if (a_start >= a_end)	break;
+			}
+			else {
+				*dst++ = *b_start++;
+				if (b_start >= b_end)	break;
+			}
+			if (*a_start <= *b_start) {
+				*dst++ = *a_start++;
+				if (a_start >= a_end)	break;
+			}
+			else {
+				*dst++ = *b_start++;
+				if (b_start >= b_end)	break;
+			}
+			if (*a_start <= *b_start) {
+				*dst++ = *a_start++;
+				if (a_start >= a_end)	break;
+			}
+			else {
+				*dst++ = *b_start++;
+				if (b_start >= b_end)	break;
+			}
+			if (*a_start <= *b_start) {
+				*dst++ = *a_start++;
+				if (a_start >= a_end)	break;
+			}
+			else {
+				*dst++ = *b_start++;
+				if (b_start >= b_end)	break;
+			}
+		}
+	}
+	while (a_start < a_end)	*dst++ = *a_start++;
+	while (b_start < b_end)	*dst++ = *b_start++;
+}
+template< class _Type >
 inline void merge_ptr_2(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst)
 {
 	long aLength = (long)(a_end - a_start);
 	long bLength = (long)(b_end - b_start);
 	while (aLength > 0 && bLength > 0)
 	{
-		long numElements = __min(aLength, bLength);
+		long numElements = std::min(aLength, bLength);
 		for (long i = 0; i < numElements; i++)
 		{
 			if (*a_start <= *b_start)   			// if elements are equal, then a[] element is output
@@ -67,6 +122,30 @@ inline void merge_ptr_2(const _Type* a_start, const _Type* a_end, const _Type* b
 	while (a_start < a_end)	*dst++ = *a_start++;
 	while (b_start < b_end)	*dst++ = *b_start++;
 }
+template< class _Type >
+inline void merge_ptr_adaptive_2(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst)
+{
+	long aLength = (long)(a_end - a_start);
+	long bLength = (long)(b_end - b_start);
+	while (aLength > 0 && bLength > 0)
+	{
+		long numElements = std::min(aLength, bLength);
+		if (numElements < 128)
+			merge_ptr_1(a_start, a_end, b_start, b_end, dst);
+		for (long i = 0; i < numElements; i++)
+		{
+			if (*a_start <= *b_start)   			// if elements are equal, then a[] element is output
+				*dst++ = *a_start++;
+			else
+				*dst++ = *b_start++;
+		}
+		aLength = (long)(a_end - a_start);
+		bLength = (long)(b_end - b_start);
+	}
+	while (a_start < a_end)	*dst++ = *a_start++;
+	while (b_start < b_end)	*dst++ = *b_start++;
+}
+
 // Listing 2 
 // Divide-and-Conquer Merge of two ranges of source array T[ p1 .. r1 ] and T[ p2 .. r2 ] into destination array A starting at index p3.
 // From 3rd ed. of "Introduction to Algorithms" p. 798-802
@@ -107,8 +186,11 @@ inline void merge_parallel_L3(_Type* t, int p1, int r1, int p2, int r2, _Type* a
 	int q2 = my_binary_search(t[q1], t, p2, r2);
 	int q3 = p3 + (q1 - p1) + (q2 - p2);
 	a[q3] = t[q1];
-	//tbb::parallel_invoke(
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 	Concurrency::parallel_invoke(
+#else
+	tbb::parallel_invoke(
+#endif
 		[&] { merge_parallel_L3(t, p1, q1 - 1, p2, q2 - 1, a, p3); },
 		[&] { merge_parallel_L3(t, q1 + 1, r1, q2, r2, a, q3 + 1); }
 	);
@@ -160,8 +242,11 @@ inline void merge_parallel_L5(_Type* t, int p1, int r1, int p2, int r2, _Type* a
 		int q2 = my_binary_search(t[q1], t, p2, r2);
 		int q3 = p3 + (q1 - p1) + (q2 - p2);
 		a[q3] = t[q1];
-		//tbb::parallel_invoke(
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 		Concurrency::parallel_invoke(
+#else
+		tbb::parallel_invoke(
+#endif
 			[&] { merge_parallel_L5(t, p1, q1 - 1, p2, q2 - 1, a, p3); },
 			[&] { merge_parallel_L5(t, q1 + 1, r1, q2, r2, a, q3 + 1); }
 		);

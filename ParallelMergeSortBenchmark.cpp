@@ -6,6 +6,7 @@
 #include <ratio>
 #include <vector>
 #include <execution>
+
 #include "ParallelMergeSort.h"
 
 using std::chrono::duration;

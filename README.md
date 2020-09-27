@@ -25,8 +25,8 @@ Sorting an array of unsigned long integers:
 sort single core |14|16| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 sort multi-core |401|513| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
-## Building on Linux
-To install g++:
+## Building on Ubuntu 20.04 Linux
+To install g++ which supports C++17:
 ```
 sudo apt install build-essential
 ```
@@ -39,7 +39,7 @@ sudo apt install libtbb-dev
 
 To build, use g++ command and not gcc. The order of the following arguments matters!
 ```
-g++ ParallelAlgorithms.cpp -ltbb -std=c++17 -O3 -o ParallelAlgorithms
+g++ ParallelAlgorithms.cpp ParallelMergeSortBenchmark.cpp RadixSortLsdBenchmark.cpp ParallelStdCppExample.cpp -ltbb -std=c++17 -O3 -o ParallelAlgorithms
 ```
 
 

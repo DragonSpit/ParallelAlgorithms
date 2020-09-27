@@ -38,6 +38,7 @@ inline unsigned long logicalRightShift_ru( int a, unsigned long shiftAmount )
 {
 	return (((unsigned long)a ) >> shiftAmount );
 }
+#if 0
 inline __int64 logicalRightShift( __int64 a, unsigned long shiftAmount )
 {
 	return (__int64)(((unsigned __int64)a ) >> shiftAmount );
@@ -46,7 +47,7 @@ inline unsigned __int64 logicalRightShift_ru( __int64 a, unsigned long shiftAmou
 {
 	return (((unsigned __int64)a ) >> shiftAmount );
 }
-
+#endif
 template< class _Type >
 inline unsigned long extractDigit( _Type a, _Type bitMask, unsigned long shiftRightAmount )
 {

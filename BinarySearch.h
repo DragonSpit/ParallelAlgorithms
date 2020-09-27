@@ -32,7 +32,7 @@ template< class _Type >
 inline int my_binary_search( _Type value, const _Type* a, int left, int right )
 {
 	long low  = left;
-	long high = __max( left, right + 1 );
+	long high = std::max( left, right + 1 );
 	while( low < high )
 	{
 		long mid = ( low + high ) / 2;

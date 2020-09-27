@@ -11,11 +11,11 @@
 using std::random_device;
 using std::vector;
 
-extern int ParallelStdCppExample(vector<double>&        doubles);
-extern int ParallelStdCppExample(vector<unsigned long>& ulongs);
-extern int ParallelStdCppExample(vector<unsigned>&      uints);
-extern int RadixSortLsdBenchmark(vector<unsigned long>& ulongs);
-extern int ParallelMergeSortBenchmark(vector<double>&   doubles);
+extern int ParallelStdCppExample(vector<double>&             doubles);
+extern int ParallelStdCppExample(vector<unsigned long>&      ulongs);
+extern int ParallelStdCppExample(vector<unsigned>&           uints);
+extern int RadixSortLsdBenchmark(vector<unsigned long>&      ulongs);
+extern int ParallelMergeSortBenchmark(vector<double>&        doubles);
 extern int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs);
 extern int ParallelMergeSortBenchmark(vector<unsigned>&      uints);
 
