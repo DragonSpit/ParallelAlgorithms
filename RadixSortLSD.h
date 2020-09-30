@@ -1,4 +1,4 @@
-// TODO: Switch histogram calculation from a 2-D array in the inner loop to a four 1-D arrays. It may not be as general, but may be faster.
+// TODO: Allocate a single array (cache-line aligned) for all the count arrays and index into it for each of the counts
 // TODO: Switch histogram calculation from mask/shift to union
 #pragma once
 
@@ -11,18 +11,19 @@
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline unsigned long** HistogramByteComponents(unsigned long inArray[], int l, int r)
 {
-	const unsigned long numberOfDigits = Log2ofPowerOfTwoRadix;
-	const unsigned long numberOfBins = PowerOfTwoRadix;
+	const unsigned numberOfDigits = Log2ofPowerOfTwoRadix;
+	const unsigned numberOfBins = PowerOfTwoRadix;
 
 	unsigned long** count = new unsigned long* [numberOfDigits];
 
-	for (int i = 0; i < numberOfDigits; i++)
+	for (unsigned i = 0; i < numberOfDigits; i++)
 	{
 		count[i] = new unsigned long[numberOfBins];
-		for (int j = 0; j < numberOfBins; j++)
+		for (unsigned j = 0; j < numberOfBins; j++)
 			count[i][j] = 0;
 	}
 
+#if 0
 	for (int current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 	{
 		unsigned long value = inArray[current];
@@ -31,6 +32,22 @@ inline unsigned long** HistogramByteComponents(unsigned long inArray[], int l, i
 		count[2][(value & 0xff0000) >> 16]++;
 		count[3][(value & 0xff000000) >> 24]++;
 	}
+#else
+	// Faster version, since it doesn't use a 2-D array, reducing one level of indirection
+	unsigned long* count0 = count[0];
+	unsigned long* count1 = count[1];
+	unsigned long* count2 = count[2];
+	unsigned long* count3 = count[3];
+
+	for (int current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+	{
+		unsigned long value = inArray[current];
+		count0[ value & 0xff]++;
+		count1[(value & 0xff00) >> 8]++;
+		count2[(value & 0xff0000) >> 16]++;
+		count3[(value & 0xff000000) >> 24]++;
+	}
+#endif
 	return count;
 }
 
@@ -76,7 +93,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned l
 			_output_array[_current] = _input_array[_current];
 
 	const unsigned long numberOfDigits = Log2ofPowerOfTwoRadix;	// deallocate 2D count array, which was allocated in Histogram
-	for (int i = 0; i < numberOfDigits; i++)
+	for (unsigned i = 0; i < numberOfDigits; i++)
 		delete[] count2D[i];
 	delete[] count2D;
 }
