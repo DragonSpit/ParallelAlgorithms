@@ -98,7 +98,7 @@ int main()
 	ParallelMergeSortBenchmark(uints);
 
 	// generate some random unsigned integers:
-	printf("\nTesting with %zu nearly presorted unsigned integers...\n", testSize);
+	printf("\nTesting with %zu nearly pre-sorted unsigned integers...\n", testSize);
 	//vector<unsigned> uints(testSize);
 	for (size_t i = 0; i < uints.size(); i++) {
 		if ((i % 100) == 0)

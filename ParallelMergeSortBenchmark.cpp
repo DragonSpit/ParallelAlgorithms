@@ -50,22 +50,23 @@ int ParallelMergeSortBenchmark(vector<double>& doubles)
 	// generate some random uints:
 	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu doubles...\n", doubles.size());
 	double * doublesCopy  = new double [doubles.size()];
+	double* sorted = new double[doubles.size()];
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		for (unsigned int j = 0; j < doubles.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			doublesCopy[j] = doubles[j];
+			sorted[j] = j;									// page in the destination array into system memory
 		}
-		double * sorted = new double [doubles.size()];
 		const auto startTime = high_resolution_clock::now();
 		parallel_merge_sort_hybrid_rh_1(doublesCopy, 0, (int)(doubles.size() - 1), sorted);	// ParallelMergeSort modifies the source array
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Merge Sort", sorted, doubles.size(), startTime, endTime);
-		delete[] sorted;
 	}
 
-	delete [] doublesCopy;
+	delete[] sorted;
+	delete[] doublesCopy;
 
 	return 0;
 }
@@ -77,21 +78,22 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 	// generate some random uints:
 	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned longs...\n", ulongs.size());
 	unsigned long* ulongsCopy = new unsigned long[ulongs.size()];
+	unsigned long* sorted = new unsigned long[ulongs.size()];
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		for (unsigned int j = 0; j < ulongs.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			ulongsCopy[j] = ulongs[j];
+			sorted[j] = j;									// page in the destination array into system memory
 		}
-		unsigned long* sorted = new unsigned long[ulongs.size()];
 		const auto startTime = high_resolution_clock::now();
 		parallel_merge_sort_hybrid_rh_1(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted);	// ParallelMergeSort modifies the source array
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Merge Sort", sorted, ulongs.size(), startTime, endTime);
-		delete[] sorted;
 	}
 
+	delete[] sorted;
 	delete[] ulongsCopy;
 
 	return 0;
@@ -104,22 +106,23 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 	// generate some random uints:
 	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned integers...\n", uints.size());
 	unsigned* uintsCopy = new unsigned[uints.size()];
+	unsigned* sorted = new unsigned[uints.size()];
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			uintsCopy[j] = uints[j];
+			sorted[j] = j;									// page in the destination array into system memory
 		}
-		unsigned* sorted = new unsigned[uints.size()];
 		const auto startTime = high_resolution_clock::now();
 		//parallel_merge_sort_hybrid_rh_1(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
 		parallel_merge_sort_hybrid(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Merge Sort", sorted, uints.size(), startTime, endTime);
-		delete[] sorted;
 	}
 
+	delete[] sorted;
 	delete[] uintsCopy;
 
 	return 0;
