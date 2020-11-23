@@ -1,4 +1,5 @@
 // Parallel Merge implementations
+// TODO: Need to expose parallel threshold to the user
 
 #ifndef _ParallelMerge_h
 #define _ParallelMerge_h
@@ -28,8 +29,8 @@ inline void exchange(Item& A, Item& B)
 	B = t;
 }
 
-// Listing 1
-// _end pointer point not to the last element, but one past and never access it.
+// Listing 1 from Dr. Dobb's Journal paper
+// _end pointer point not to the last element, but one past and never access it - i.e. _end is not included
 template< class _Type >
 inline void merge_ptr(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst)
 {
@@ -41,6 +42,7 @@ inline void merge_ptr(const _Type* a_start, const _Type* a_end, const _Type* b_s
 	while (b_start < b_end)	*dst++ = *b_start++;
 }
 // Faster Merge: see https://duvanenko.tech.blog/2018/07/25/faster-serial-merge-in-c-and-c/
+// _end pointer point not to the last element, but one past and never access it - i.e. _end is not included
 template< class _Type >
 inline void merge_ptr_1(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst)
 {
@@ -122,6 +124,50 @@ inline void merge_ptr_2(const _Type* a_start, const _Type* a_end, const _Type* b
 	while (a_start < a_end)	*dst++ = *a_start++;
 	while (b_start < b_end)	*dst++ = *b_start++;
 }
+
+// _end pointer point not to the last element, but one past and never access it - i.e. _end is not included
+template< class _Type >
+inline void merge_ptr_3(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst, long threshold = 10 * 1024)
+{
+	while (true)
+	{
+		long aLength = (long)(a_end - a_start);
+		long bLength = (long)(b_end - b_start);
+		long numElements;
+
+		if (aLength <= bLength)
+		{
+			if (aLength < threshold)
+			{
+				merge_ptr_2(a_start, a_end, b_start, b_end, dst);
+				return;
+			}
+			else
+				numElements = aLength;
+		}
+		else
+		{
+			if (bLength < threshold)
+			{
+				merge_ptr_2(a_start, a_end, b_start, b_end, dst);
+				return;
+			}
+			else
+				numElements = bLength;
+		}
+
+		_Type* dst_end = dst + numElements - 1;
+
+		while (dst <= dst_end)                // single comparison, which should be simpler for branch prediction to predict
+		{
+			if (*a_start <= *b_start)         // if elements are equal, then a[] element is output
+				*dst++ = *a_start++;
+			else
+				*dst++ = *b_start++;
+		}
+	}
+}
+
 template< class _Type >
 inline void merge_ptr_adaptive_2(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst)
 {
@@ -234,8 +280,10 @@ inline void merge_parallel_L5(_Type* t, int p1, int r1, int p2, int r2, _Type* a
 		exchange(length1, length2);
 	}
 	if (length1 == 0)	return;
-	if ((length1 + length2) <= 8192) {	// 8192 threshold is much better than 16
-		merge_ptr( &t[ p1 ], &t[ p1 + length1 ], &t[ p2 ], &t[ p2 + length2 ], &a[ p3 ] );	// in DDJ paper
+	if ((length1 + length2) <= 32768) {	// 8192 threshold is much better than 16. 32K seems to be an even better threshold
+		//merge_ptr( &t[ p1 ], &t[ p1 + length1 ], &t[ p2 ], &t[ p2 + length2 ], &a[ p3 ] );	// in DDJ paper
+		merge_ptr_1(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);				// slightly faster than merge_ptr version due to fewer loop comparisons
+		//merge_ptr_3(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);				// slightly faster than merge_ptr version due to fewer loop comparisons
 	}
 	else {
 		int q1 = (p1 + r1) / 2;
