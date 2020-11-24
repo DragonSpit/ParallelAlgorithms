@@ -125,6 +125,7 @@ inline void merge_ptr_2(const _Type* a_start, const _Type* a_end, const _Type* b
 	while (b_start < b_end)	*dst++ = *b_start++;
 }
 
+// New merge concept, which uses a single comparison that should be easier for branch prediction
 // _end pointer point not to the last element, but one past and never access it - i.e. _end is not included
 template< class _Type >
 inline void merge_ptr_3(const _Type* a_start, const _Type* a_end, const _Type* b_start, const _Type* b_end, _Type* dst, long threshold = 10 * 1024)
@@ -283,7 +284,7 @@ inline void merge_parallel_L5(_Type* t, int p1, int r1, int p2, int r2, _Type* a
 	if ((length1 + length2) <= 32768) {	// 8192 threshold is much better than 16. 32K seems to be an even better threshold
 		//merge_ptr( &t[ p1 ], &t[ p1 + length1 ], &t[ p2 ], &t[ p2 + length2 ], &a[ p3 ] );	// in DDJ paper
 		merge_ptr_1(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);				// slightly faster than merge_ptr version due to fewer loop comparisons
-		//merge_ptr_3(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);				// slightly faster than merge_ptr version due to fewer loop comparisons
+		//merge_ptr_3(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);				// new merge concept, which turned out slower
 	}
 	else {
 		int q1 = (p1 + r1) / 2;
