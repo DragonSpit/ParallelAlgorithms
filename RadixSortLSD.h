@@ -25,16 +25,6 @@ inline unsigned long** HistogramByteComponents(unsigned long inArray[], int l, i
 			count[i][j] = 0;
 	}
 
-#if 0
-	for (int current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
-	{
-		unsigned long value = inArray[current];
-		count[0][value & 0xff]++;
-		count[1][(value & 0xff00) >> 8]++;
-		count[2][(value & 0xff0000) >> 16]++;
-		count[3][(value & 0xff000000) >> 24]++;
-	}
-#else
 	// Faster version, since it doesn't use a 2-D array, reducing one level of indirection
 	unsigned long* count0 = count[0];
 	unsigned long* count1 = count[1];
@@ -44,12 +34,11 @@ inline unsigned long** HistogramByteComponents(unsigned long inArray[], int l, i
 	for (int current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 	{
 		unsigned long value = inArray[current];
-		count0[ value & 0xff]++;
-		count1[(value & 0xff00) >> 8]++;
-		count2[(value & 0xff0000) >> 16]++;
-		count3[(value & 0xff000000) >> 24]++;
+		count0[ value        & 0xff]++;
+		count1[(value >>  8) & 0xff]++;
+		count2[(value >> 16) & 0xff]++;
+		count3[(value >> 24) & 0xff]++;
 	}
-#endif
 	return count;
 }
 
@@ -72,10 +61,10 @@ inline unsigned long* HistogramByteComponents_1(unsigned long inArray[], int l, 
 	for (int current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 	{
 		unsigned long value = inArray[current];
-		count0[value & 0xff]++;
-		count1[(value & 0xff00) >> 8]++;
-		count2[(value & 0xff0000) >> 16]++;
-		count3[(value & 0xff000000) >> 24]++;
+		count0[ value        & 0xff]++;
+		count1[(value >>  8) & 0xff]++;
+		count2[(value >> 16) & 0xff]++;
+		count3[(value >> 24) & 0xff]++;
 	}
 	return count;
 }
