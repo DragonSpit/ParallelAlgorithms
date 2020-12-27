@@ -21,21 +21,33 @@ template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], int l, int r, int parallelThreshold = 16 * 1024)
 {
 	const unsigned long numberOfDigits = Log2ofPowerOfTwoRadix;
-	const unsigned long numberOfBins = PowerOfTwoRadix;
+	const unsigned long numberOfBins   = PowerOfTwoRadix;
 
-	unsigned long** countLeft = new unsigned long* [numberOfDigits];
-
-	for (int i = 0; i < numberOfDigits; i++)
-	{
-		countLeft[i] = new unsigned long[numberOfBins];
-		for (int j = 0; j < numberOfBins; j++)
-			countLeft[i][j] = 0;
-	}
+	unsigned long** countLeft;
+	unsigned long** countRight;
 
 	if (l > r)      // zero elements to compare
+	{
+		countLeft = new unsigned long* [numberOfDigits];
+
+		for (int i = 0; i < numberOfDigits; i++)
+		{
+			countLeft[i] = new unsigned long[numberOfBins];
+			for (int j = 0; j < numberOfBins; j++)
+				countLeft[i][j] = 0;
+		}
 		return countLeft;
+	}
 	if ((r - l + 1) <= parallelThreshold)
 	{
+		countLeft = new unsigned long* [numberOfDigits];
+
+		for (int i = 0; i < numberOfDigits; i++)
+		{
+			countLeft[i] = new unsigned long[numberOfBins];
+			for (int j = 0; j < numberOfBins; j++)
+				countLeft[i][j] = 0;
+		}
 		// Faster version, since it doesn't use a 2-D array, reducing one level of indirection
 		unsigned long* count0 = countLeft[0];
 		unsigned long* count1 = countLeft[1];
@@ -45,8 +57,8 @@ inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], 
 		for (int current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 		{
 			unsigned long value = inArray[current];
-			count0[value & 0xff]++;
-			count1[(value >> 8) & 0xff]++;
+			count0[value         & 0xff]++;
+			count1[(value >>  8) & 0xff]++;
 			count2[(value >> 16) & 0xff]++;
 			count3[(value >> 24) & 0xff]++;
 		}
@@ -67,15 +79,6 @@ inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], 
 
 	int m = ((r + l) / 2);
 
-	unsigned long** countRight = new unsigned long* [numberOfDigits];
-
-	for (int i = 0; i < numberOfDigits; i++)
-	{
-		countRight[i] = new unsigned long[numberOfBins];
-		for (int j = 0; j < numberOfBins; j++)
-			countRight[i][j] = 0;
-	}
-
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 	Concurrency::parallel_invoke(
 #else
@@ -89,6 +92,10 @@ inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], 
 		for (int j = 0; j < numberOfBins; j++)
 			countLeft[i][j] += countRight[i][j];
 
+	for (int i = 0; i < numberOfDigits; i++)
+		delete[] countRight[i];
+	delete[] countRight;
+
 	return countLeft;
 }
 
@@ -96,7 +103,8 @@ inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], 
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
 inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase(unsigned long* input_array, unsigned long* output_array, long last, unsigned long bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
 {
-	const unsigned long numberOfBins = PowerOfTwoRadix;
+	const unsigned long numberOfBins   = PowerOfTwoRadix;
+	const unsigned long numberOfDigits = Log2ofPowerOfTwoRadix;
 	unsigned long* _input_array = input_array;
 	unsigned long* _output_array = output_array;
 	bool _output_array_has_result = false;
@@ -122,6 +130,9 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase(unsigned
 		std::swap(_input_array, _output_array);
 		currentDigit++;
 	}
+	for (int i = 0; i < numberOfDigits; i++)
+		delete[] count2D[i];
+	delete[] count2D;
 	// Done with processing, copy all of the bins
 	if (_output_array_has_result && inputArrayIsDestination)
 		for (long _current = 0; _current <= last; _current++)	// copy from output array into the input array
