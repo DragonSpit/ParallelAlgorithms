@@ -1,3 +1,6 @@
+// TODO: Place all of these algorithms in a parallel_algorithms namespace
+// TODO: Provide the same interface to serial and parallel algorithms as standard C++ does, using the first argument as the execution policy
+
 // Parallel Merge Sort implementations
 
 #ifndef _ParallelMergeSort_h

@@ -14,6 +14,7 @@ Benchmark Results of the following C++17 algorithms on Ubuntu 20.04 using g++, s
 *Algorithm*|*Random*|*Presorted*|*Description*
 --- | --- | --- | ---
 sort single core |14|72| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+sort multi-core |73|175| 6-core Intel i7-9750H, with hyperthreading
 sort multi-core |625|1,333| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
 the units in the table above are Millions of unsigned integers per second.
@@ -23,6 +24,7 @@ Sorting an array of unsigned long integers:
 *Algorithm*|*Random*|*Presorted*|*Description*
 --- | --- | --- | ---
 sort single core |14|16| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+sort multi-core |71|| 6-core Intel i7-9750H, with hyperthreading
 sort multi-core |401|513| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
 ## Building on Ubuntu 20.04 Linux

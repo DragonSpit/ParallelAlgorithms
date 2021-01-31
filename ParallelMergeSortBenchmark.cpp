@@ -76,7 +76,7 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 	random_device rd;
 
 	// generate some random uints:
-	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned longs...\n", ulongs.size());
+	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned longs (each of %llu bytes)...\n", ulongs.size(), sizeof(unsigned long));
 	unsigned long* ulongsCopy = new unsigned long[ulongs.size()];
 	unsigned long* sorted = new unsigned long[ulongs.size()];
 
@@ -104,7 +104,7 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 	random_device rd;
 
 	// generate some random uints:
-	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned integers...\n", uints.size());
+	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned integers (each of %llu bytes)...\n", uints.size(), sizeof(unsigned));
 	unsigned* uintsCopy = new unsigned[uints.size()];
 	unsigned* sorted = new unsigned[uints.size()];
 

@@ -167,5 +167,32 @@ int ParallelStdCppExample(vector<unsigned>& uints)
 		delete[] s;
 	}
 
+	printf("\nAccumulate/Sum Benchmark:\n");
+
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		unsigned* s = new unsigned[uints.size()];
+		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+			s[j] = uints[j];
+		}
+		const auto startTime = high_resolution_clock::now();
+		unsigned result_serial = std::accumulate(s, s + uints.size(), 0);
+		const auto endTime = high_resolution_clock::now();
+		print_results("Serial Array Sum", result_serial, result_serial, startTime, endTime);
+		delete[] s;
+	}
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		unsigned* s = new unsigned[uints.size()];
+		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+			s[j] = uints[j];
+		}
+		const auto startTime = high_resolution_clock::now();
+		unsigned result_parallel = std::reduce(std::execution::par, s, s + uints.size(), 0);		//Faster
+		const auto endTime = high_resolution_clock::now();
+		print_results("Parallel Array Sum", result_parallel, result_parallel, startTime, endTime);
+		delete[] s;
+	}
+
 	return 0;
 }
