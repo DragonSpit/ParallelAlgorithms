@@ -49,5 +49,13 @@ To build, use g++ command and not gcc. The order of the following arguments matt
 g++ ParallelAlgorithms.cpp ParallelMergeSortBenchmark.cpp RadixSortLsdBenchmark.cpp ParallelStdCppExample.cpp -ltbb -std=c++17 -O3 -o ParallelAlgorithms
 ```
 
+## Building on Windows Using Intel's OneAPI Compiler
+In IntelOneAPI directory, open ParallelAlgorithms.sln VisualStudio 2019 Solution, and build it. This solution is setup to use the Intel Compiler.
+Intel Compiler produces higher performance Parallel Merge Sort and LSD Radix Sort, as shown in the following table:
+
+*Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
+--- | --- | --- | --- | ---
+LSD Radix Sort multi-core |175||| 6-core Intel i7-9750H, with hyperthreading
+
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=LDD8L7UPAC7QL)
