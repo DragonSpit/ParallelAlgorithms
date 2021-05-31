@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31229.75
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ParallelAlgorithms", "ParallelAlgorithms.vcxproj", "{38797712-F993-4B9F-9651-2F89C3260F7D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{38797712-F993-4B9F-9651-2F89C3260F7D}.Debug|x64.ActiveCfg = Debug|x64
+		{38797712-F993-4B9F-9651-2F89C3260F7D}.Debug|x64.Build.0 = Debug|x64
+		{38797712-F993-4B9F-9651-2F89C3260F7D}.Release|x64.ActiveCfg = Release|x64
+		{38797712-F993-4B9F-9651-2F89C3260F7D}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C8C74E65-8056-4329-B1CD-00224394099C}
+	EndGlobalSection
+EndGlobal
