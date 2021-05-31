@@ -2,14 +2,17 @@
 // compile with:
 //  debug: cl /EHsc /W4 /WX /std:c++latest /Fedebug /MDd .\program.cpp
 //  release: cl /EHsc /W4 /WX /std:c++latest /Ferelease /MD /O2 .\program.cpp
-#include <stddef.h>
-#include <stdio.h>
+//#include <oneapi/dpl/execution>
+//#include <oneapi/dpl/algorithm>
+#include <iostream>
 #include <algorithm>
 #include <chrono>
 #include <random>
 #include <ratio>
 #include <vector>
 #include <execution>
+//#include <pstl/execution>		// TBB
+//#include <pstl/algorithm>		// TBB
 
 using std::chrono::duration;
 using std::chrono::duration_cast;
@@ -130,6 +133,47 @@ int ParallelStdCppExample(vector<unsigned long>& ulongs)
 
 	return 0;
 }
+
+#if 0
+int ParallelTbbCppExample(vector<unsigned long>& ulongs)
+{
+	// time how long it takes to sort them:
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		vector<unsigned long> sorted(ulongs);
+		const auto startTime = high_resolution_clock::now();
+		sort(sorted.begin(), sorted.end());
+		const auto endTime = high_resolution_clock::now();
+		print_results("Serial", sorted, startTime, endTime);
+	}
+
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		vector<unsigned long> sorted(ulongs);
+		const auto startTime = high_resolution_clock::now();
+		// same sort call as above, but with par_unseq:
+		sort(pstl::execution::par_unseq, sorted.begin(), sorted.end());
+		const auto endTime = high_resolution_clock::now();
+		// in our output, note that these are the parallel results:
+		print_results("Parallel", sorted, startTime, endTime);
+	}
+
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		unsigned long* s = new unsigned long[ulongs.size()];
+		for (unsigned int j = 0; j < ulongs.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+			s[j] = ulongs[j];
+		}
+		const auto startTime = high_resolution_clock::now();
+		sort(pstl::execution::par_unseq, s, s + ulongs.size());
+		const auto endTime = high_resolution_clock::now();
+		print_results("Parallel Array", s[0], s[ulongs.size() - 1], startTime, endTime);
+		delete[] s;
+	}
+
+	return 0;
+}
+#endif
 
 int ParallelStdCppExample(vector<unsigned>& uints)
 {

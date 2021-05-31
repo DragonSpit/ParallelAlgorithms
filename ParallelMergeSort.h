@@ -6,21 +6,19 @@
 #ifndef _ParallelMergeSort_h
 #define _ParallelMergeSort_h
 
-#include <thread>
-
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <thread>
+#include <execution>
 #include <ppl.h>
 #else
-#include <stddef.h>
-#include <stdio.h>
+#include <iostream>
 #include <algorithm>
 #include <chrono>
-#include <iostream>
 #include <random>
 #include <ratio>
 #include <vector>
-#include <execution>
 #include <thread>
+#include <execution>
 #endif
 
 #include "InsertionSort.h"
@@ -172,4 +170,45 @@ inline void parallel_merge_sort_hybrid(_Type* src, int l, int r, _Type* dst, boo
 
     parallel_merge_sort_hybrid_rh_2(src, l, r, dst, srcToDst, parallelThreshold);
 }
+
+template< class _Type >
+inline void inplace_merge_sort_hybrid(_Type* src, int l, int r, int threshold = 1024)
+{
+    if (r == l) {
+        return;
+    }
+    if ((r - l) <= threshold) {
+        std::sort(src + l, src + r + 1);    // could be insertion sort, with a smaller threshold
+        return;
+    }
+    int m = ((r + l) / 2);
+
+    inplace_merge_sort_hybrid(src, l,     m, threshold);
+    inplace_merge_sort_hybrid(src, m + 1, r, threshold);
+
+    std::inplace_merge(src + l, src + m + 1, src + r + 1);
+}
+
+template< class _Type >
+inline void parallel_inplace_merge_sort_hybrid(_Type* src, int l, int r, int parallelThreshold = 1024)
+{
+    if (r == l) {
+        return;
+    }
+    if ((r - l) <= parallelThreshold) {
+        std::sort(src + l, src + r + 1);
+        return;
+    }
+    int m = ((r + l) / 2);
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    Concurrency::parallel_invoke(
+#else
+    tbb::parallel_invoke(
+#endif
+        [&] { parallel_inplace_merge_sort_hybrid(src, l,     m, parallelThreshold); },
+        [&] { parallel_inplace_merge_sort_hybrid(src, m + 1, r, parallelThreshold); }
+    );
+    std::inplace_merge(std::execution::par_unseq, src + l, src + m + 1, src + r + 1);
+}
+
 #endif

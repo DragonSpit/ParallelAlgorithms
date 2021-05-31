@@ -1,11 +1,11 @@
 // ParallelAlgorithms.cpp : Defines the entry point for the console application.
-//
+// TODO: TBB includes Parallel STL algorithm implementations, including sort. To use them pstl::execution execution policy needs to be use instead of std::execution, to
+//       select TBB PSTL algorithm. It would be interesting to compare performance of standard and TBB parallel sort implementations, and update my blog to include these results.
 
 #include <iostream>
 #include <random>
 #include <ratio>
 #include <vector>
-#include <execution>
 #include "ParallelMergeSort.h"
 
 using std::random_device;
@@ -13,15 +13,22 @@ using std::vector;
 
 extern int ParallelStdCppExample(vector<double>&             doubles);
 extern int ParallelStdCppExample(vector<unsigned long>&      ulongs);
+extern int ParallelTbbCppExample(vector<unsigned long>& ulongs);
 extern int ParallelStdCppExample(vector<unsigned>&           uints);
 extern int RadixSortLsdBenchmark(vector<unsigned long>&      ulongs);
 extern int ParallelMergeSortBenchmark(vector<double>&        doubles);
 extern int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs);
+extern int ParallelInPlaceMergeSortBenchmark(vector<unsigned long>& ulongs);
 extern int ParallelMergeSortBenchmark(vector<unsigned>&      uints);
+extern int main_quicksort();
+extern int ParallelMergeBenchmark();
 
 
 int main()
 {
+	// Benchmark QuickSort
+	main_quicksort();
+
 	// Demonstrate Parallel Merge
 
 	const unsigned long A_NumElements = 8;
@@ -32,7 +39,7 @@ int main()
 
 	merge_parallel_L5(a_array, 0, A_NumElements - 1, A_NumElements, C_NumElements - 1, c_array, 0);
 
-	std::cout << "merged array: ";
+	std::cout << std::endl << "merged array: ";
 	for (unsigned long i = 0; i < C_NumElements; i++)
 		std::cout << c_array[i] << " ";
 	std::cout << std::endl;
@@ -48,7 +55,10 @@ int main()
 
 	std::cout << "sorted array: ";
 	for (unsigned long i = 0; i < NumElements; i++)
+	{
 		std::cout << sorted_array[i] << " ";
+		//std::cout << unsorted_array[i] << " ";
+	}
 	std::cout << std::endl << std::endl;
 
 	// Provide the same input random array of doubles to all sorting algorithms
@@ -79,9 +89,25 @@ int main()
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample(ulongs);
 
+	// Example of C++17 Standard C++ Parallel Sorting
+	//ParallelTbbCppExample(ulongs);
+
 	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark(ulongs);
 
+	// Benchmark Parallel InPlace Merge Sort algorithm
+	ParallelInPlaceMergeSortBenchmark(ulongs);
+
+	// Benchmark the above Parallel Merge Sort algorithm
+	RadixSortLsdBenchmark(ulongs);
+
+	printf("\nTesting with %zu nearly pre-sorted unsigned longs...\n", testSize);
+	for (size_t i = 0; i < ulongs.size(); i++) {
+		if ((i % 100) == 0)
+			ulongs[i] = static_cast<unsigned long>(rd());
+		else
+			ulongs[i] = static_cast<unsigned long>(i);
+	}
 	// Benchmark the above Parallel Merge Sort algorithm
 	RadixSortLsdBenchmark(ulongs);
 
@@ -111,6 +137,8 @@ int main()
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark(uints);
+
+	ParallelMergeBenchmark();
 
 	return 0;
 }

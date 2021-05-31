@@ -1,5 +1,7 @@
-#include <stddef.h>
-#include <stdio.h>
+//#include <oneapi/dpl/execution>
+//#include <oneapi/dpl/algorithm>
+
+#include <iostream>
 #include <algorithm>
 #include <chrono>
 #include <random>
@@ -76,24 +78,71 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 	random_device rd;
 
 	// generate some random uints:
-	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned longs (each of %llu bytes)...\n", ulongs.size(), sizeof(unsigned long));
-	unsigned long* ulongsCopy = new unsigned long[ulongs.size()];
-	unsigned long* sorted = new unsigned long[ulongs.size()];
+	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned longs (each of %lu bytes)...\n", ulongs.size(), (unsigned long)sizeof(unsigned long));
+	unsigned long* ulongsCopy  = new unsigned long[ulongs.size()];
+	unsigned long* ulongsCopy2 = new unsigned long[ulongs.size()];
+	unsigned long* sorted      = new unsigned long[ulongs.size()];
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		for (unsigned int j = 0; j < ulongs.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
-			ulongsCopy[j] = ulongs[j];
+			ulongsCopy[ j] = ulongs[j];
+			ulongsCopy2[j] = ulongs[j];
 			sorted[j] = j;									// page in the destination array into system memory
 		}
 		const auto startTime = high_resolution_clock::now();
-		parallel_merge_sort_hybrid_rh_1(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted);	// ParallelMergeSort modifies the source array
+		parallel_merge_sort_hybrid_rh_1(   ulongsCopy,  0, (int)(ulongs.size() - 1), sorted);	// ParallelMergeSort modifies the source array
+		//inplace_merge_sort_hybrid(ulongsCopy2, 0, (int)(ulongs.size() - 1));
 		const auto endTime = high_resolution_clock::now();
+		parallel_inplace_merge_sort_hybrid(ulongsCopy2, 0, (int)(ulongs.size() - 1));
 		print_results("Parallel Merge Sort", sorted, ulongs.size(), startTime, endTime);
+		//print_results("Parallel Merge Sort", ulongsCopy, ulongs.size(), startTime, endTime);
+		if (std::equal(sorted, sorted + ulongs.size(), ulongsCopy2))
+			std::cout << "Arrays are equal ";
+		else
+			std::cout << "Arrays are not equal ";
 	}
 
 	delete[] sorted;
+	delete[] ulongsCopy;
+
+	return 0;
+}
+
+int ParallelInPlaceMergeSortBenchmark(vector<unsigned long>& ulongs)
+{
+	random_device rd;
+
+	// generate some random uints:
+	printf("\nBenchmarking InPlace Parallel Merge Sort Hybrid with %zu unsigned longs (each of %lu bytes)...\n", ulongs.size(), (unsigned long)sizeof(unsigned long));
+	unsigned long* ulongsCopy  = new unsigned long[ulongs.size()];
+	unsigned long* ulongsCopy2 = new unsigned long[ulongs.size()];
+	unsigned long* sorted      = new unsigned long[ulongs.size()];
+
+	// time how long it takes to sort them:
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		for (unsigned int j = 0; j < ulongs.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+			ulongsCopy[j]  = ulongs[j];
+			ulongsCopy2[j] = ulongs[j];
+			sorted[j] = j;									// page in the destination array into system memory
+		}
+		parallel_merge_sort_hybrid_rh_1(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted);	// ParallelMergeSort modifies the source array
+		//std::cout << "Before parallel inplace merge sort" << std::endl;
+		const auto startTime = high_resolution_clock::now();
+		parallel_inplace_merge_sort_hybrid(ulongsCopy2, 0, (int)(ulongs.size() - 1));
+		//inplace_merge_sort_hybrid(ulongsCopy2, 0, (int)(ulongs.size() - 1));
+		const auto endTime = high_resolution_clock::now();
+		print_results("Parallel InPlace Merge Sort", ulongsCopy, ulongs.size(), startTime, endTime);
+		if (std::equal(sorted, sorted + ulongs.size(), ulongsCopy2))
+			std::cout << "Arrays are equal ";
+		else
+			std::cout << "Arrays are not equal ";
+	}
+
+	delete[] sorted;
+	delete[] ulongsCopy2;
 	delete[] ulongsCopy;
 
 	return 0;
@@ -104,9 +153,9 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 	random_device rd;
 
 	// generate some random uints:
-	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned integers (each of %llu bytes)...\n", uints.size(), sizeof(unsigned));
+	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned integers (each of %lu bytes)...\n", uints.size(), (unsigned long)sizeof(unsigned));
 	unsigned* uintsCopy = new unsigned[uints.size()];
-	unsigned* sorted = new unsigned[uints.size()];
+	unsigned* sorted    = new unsigned[uints.size()];
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
@@ -124,6 +173,48 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 
 	delete[] sorted;
 	delete[] uintsCopy;
+
+	return 0;
+}
+
+int ParallelMergeBenchmark()
+{
+	const size_t testSize = 10'000'000;
+	random_device rd;
+
+	// generate some random uints:
+	vector<unsigned> uints_0(testSize);
+	for (auto& d : uints_0)
+		d = static_cast<unsigned>(rd());
+
+	printf("\nBenchmarking Parallel Merge with %zu unsigned integers (each of %lu bytes)...\n", uints_0.size(), (unsigned long)sizeof(unsigned));
+
+#if 1
+	sort(std::execution::par_unseq, uints_0.begin(), uints_0.begin() + testSize/2);
+	sort(std::execution::par_unseq, uints_0.begin() + testSize/2, uints_0.end());
+#else
+	sort(oneapi::dpl::execution::par_unseq, uints_0.begin(), uints_0.begin() + testSize / 2);
+	sort(oneapi::dpl::execution::par_unseq, uints_0.begin() + testSize / 2, uints_0.end());
+#endif
+
+	// time how long it takes to merge them them:
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		vector<unsigned> uints_work(uints_0);		// copy the original into a working vector, since it's an in-place merge
+		const auto startTime = high_resolution_clock::now();
+		std::inplace_merge(std::execution::par_unseq, uints_work.begin(), uints_work.begin() + testSize / 2, uints_work.end());
+		const auto endTime = high_resolution_clock::now();
+		print_results("Parallel Merge", uints_work.data(), uints_work.size(), startTime, endTime);
+	}
+	// time how long it takes to merge them them:
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		vector<unsigned> uints_work(uints_0);		// copy the original into a working vector, since it's an in-place merge
+		const auto startTime = high_resolution_clock::now();
+		std::inplace_merge(uints_work.begin(), uints_work.begin() + testSize / 2, uints_work.end());
+		const auto endTime = high_resolution_clock::now();
+		print_results("Parallel Merge", uints_work.data(), uints_work.size(), startTime, endTime);
+	}
 
 	return 0;
 }

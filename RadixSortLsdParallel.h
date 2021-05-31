@@ -5,8 +5,7 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #include <ppl.h>
 #else
-#include <stddef.h>
-#include <stdio.h>
+#include <iostream>
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -30,10 +29,10 @@ inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], 
 	{
 		countLeft = new unsigned long* [numberOfDigits];
 
-		for (int i = 0; i < numberOfDigits; i++)
+		for (unsigned long i = 0; i < numberOfDigits; i++)
 		{
 			countLeft[i] = new unsigned long[numberOfBins];
-			for (int j = 0; j < numberOfBins; j++)
+			for (unsigned long j = 0; j < numberOfBins; j++)
 				countLeft[i][j] = 0;
 		}
 		return countLeft;
@@ -42,10 +41,10 @@ inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], 
 	{
 		countLeft = new unsigned long* [numberOfDigits];
 
-		for (int i = 0; i < numberOfDigits; i++)
+		for (unsigned long i = 0; i < numberOfDigits; i++)
 		{
 			countLeft[i] = new unsigned long[numberOfBins];
-			for (int j = 0; j < numberOfBins; j++)
+			for (unsigned long j = 0; j < numberOfBins; j++)
 				countLeft[i][j] = 0;
 		}
 		// Faster version, since it doesn't use a 2-D array, reducing one level of indirection
@@ -88,11 +87,11 @@ inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], 
 		[&] { countRight = HistogramByteComponentsParallel <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, parallelThreshold); }
 	);
 	// Combine left and right results
-	for (int i = 0; i < numberOfDigits; i++)
-		for (int j = 0; j < numberOfBins; j++)
+	for (unsigned long i = 0; i < numberOfDigits; i++)
+		for (unsigned long j = 0; j < numberOfBins; j++)
 			countLeft[i][j] += countRight[i][j];
 
-	for (int i = 0; i < numberOfDigits; i++)
+	for (unsigned long i = 0; i < numberOfDigits; i++)
 		delete[] countRight[i];
 	delete[] countRight;
 
@@ -130,7 +129,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase(unsigned
 		std::swap(_input_array, _output_array);
 		currentDigit++;
 	}
-	for (int i = 0; i < numberOfDigits; i++)
+	for (unsigned long i = 0; i < numberOfDigits; i++)
 		delete[] count2D[i];
 	delete[] count2D;
 	// Done with processing, copy all of the bins

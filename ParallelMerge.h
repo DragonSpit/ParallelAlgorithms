@@ -9,8 +9,7 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #include <ppl.h>
 #else
-#include <stddef.h>
-#include <stdio.h>
+#include <iostream>
 #include <algorithm>
 #include <chrono>
 #include <iostream>
