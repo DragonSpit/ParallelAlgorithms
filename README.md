@@ -55,7 +55,7 @@ Intel Compiler produces higher performance Parallel Merge Sort and LSD Radix Sor
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
-LSD Radix Sort multi-core |175||| 6-core Intel i7-9750H, with hyperthreading
+LSD Radix Sort multi-core |175|145|125| 6-core Intel i7-9750H, with hyperthreading
 
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=LDD8L7UPAC7QL)

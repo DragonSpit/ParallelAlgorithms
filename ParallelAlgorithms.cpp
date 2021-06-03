@@ -111,6 +111,13 @@ int main()
 	// Benchmark the above Parallel Merge Sort algorithm
 	RadixSortLsdBenchmark(ulongs);
 
+	printf("\nTesting with %zu constant unsigned longs...\n", testSize);
+	for (size_t i = 0; i < ulongs.size(); i++) {
+		ulongs[i] = 10;
+	}
+	// Benchmark the above Parallel Merge Sort algorithm
+	RadixSortLsdBenchmark(ulongs);
+
 	// generate some random unsigned integers:
 	printf("\nTesting with %zu random unsigned integers...\n", testSize);
 	vector<unsigned> uints(testSize);
@@ -123,7 +130,7 @@ int main()
 	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark(uints);
 
-	// generate some random unsigned integers:
+	// generate some nearly pre-sorted unsigned integers:
 	printf("\nTesting with %zu nearly pre-sorted unsigned integers...\n", testSize);
 	//vector<unsigned> uints(testSize);
 	for (size_t i = 0; i < uints.size(); i++) {
