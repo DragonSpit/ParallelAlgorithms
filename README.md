@@ -24,12 +24,14 @@ Sorting an array of unsigned long integers:
 *Algorithm*|*Random*|*Presorted*|*Description*
 --- | --- | --- | ---
 sort single core |14|16| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-sort multi-core |71|| 6-core Intel i7-9750H, with hyperthreading
+sort multi-core |71|150| 6-core Intel i7-9750H, with hyperthreading
 sort multi-core |401|513| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
 LSD Radix Sort multi-core |153|140|121| 6-core Intel i7-9750H, with hyperthreading
+Merge Sort multi-core |106|208|| 6-core Intel i7-9750H, with hyperthreading
+In-Place Merge Sort multi-core |58||| 6-core Intel i7-9750H, with hyperthreading
 
 
 ## Building on Ubuntu 20.04 Linux
