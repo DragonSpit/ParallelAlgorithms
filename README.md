@@ -48,7 +48,7 @@ sudo apt install libtbb-dev
 
 To build, use g++ command and not gcc. The order of the following arguments matters!
 ```
-g++ ParallelAlgorithms.cpp ParallelMergeSortBenchmark.cpp RadixSortLsdBenchmark.cpp ParallelStdCppExample.cpp -ltbb -std=c++17 -O3 -o ParallelAlgorithms
+g++ ParallelAlgorithms.cpp ParallelMergeSortBenchmark.cpp RadixSortLsdBenchmark.cpp ParallelStdCppExample.cpp ParallelQuickSort.cpp -ltbb -std=c++17 -O3 -o ParallelAlgorithms
 ```
 
 ## Building on Windows Using Intel's OneAPI Compiler
