@@ -29,7 +29,7 @@ sort multi-core |401|513| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
-LSD Radix Sort multi-core |153|140|121| 6-core Intel i7-9750H, with hyperthreading
+LSD Radix Sort multi-core |244|238|285| 6-core Intel i7-9750H, with hyperthreading
 Merge Sort multi-core |106|208|| 6-core Intel i7-9750H, with hyperthreading
 In-Place Merge Sort multi-core |58||| 6-core Intel i7-9750H, with hyperthreading
 
