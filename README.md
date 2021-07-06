@@ -11,12 +11,12 @@ Benchmark Results of the following C++17 algorithms on Ubuntu 20.04 using g++, s
 - single core: ```sort(sorted.begin(), sorted.end())```
 - multi-core: ```sort(std::execution::par_unseq, sorted.begin(), sorted.end())```
 
-*Algorithm*|*Random*|*Presorted*|*Description*
---- | --- | --- | ---
-sort single core |11|35| 6-core Intel i7-9750H, with hyperthreading
-sort multi-core |62|152| 6-core Intel i7-9750H, with hyperthreading
-sort single core |11|32| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-sort multi-core |93|250| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+*Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
+--- | --- | --- | --- | ---
+sort single core |11|35|1667| 6-core Intel i7-9750H, with hyperthreading
+sort multi-core |62|152|1639| 6-core Intel i7-9750H, with hyperthreading
+sort single core |11|32|1492| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+sort multi-core |93|250|1492| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
 the units in the table above are Millions of unsigned longs per second.
 
@@ -26,9 +26,10 @@ Additional sorting algorithms provided:
 --- | --- | --- | --- | ---
 LSD Radix Sort single core |145|141|119| 6-core Intel i7-9750H, with hyperthreading
 LSD Radix Sort multi-core |244|238|285| 6-core Intel i7-9750H, with hyperthreading
-Merge Sort multi-core |98|161|| 6-core Intel i7-9750H, with hyperthreading
-Merge Sort multi-core |500|1000|| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-In-Place Merge Sort multi-core |58||| 6-core Intel i7-9750H, with hyperthreading
+Merge Sort multi-core |105|222|243| 6-core Intel i7-9750H, with hyperthreading
+Merge Sort multi-core |546|910|952| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+In-Place Merge Sort multi-core |58|164|1163| 6-core Intel i7-9750H, with hyperthreading
+In-Place Merge Sort multi-core |61|145|1230| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
 
 ## Building on Ubuntu 20.04 Linux
