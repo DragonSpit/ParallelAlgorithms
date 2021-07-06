@@ -112,6 +112,12 @@ int main()
 		else
 			ulongs[i] = static_cast<unsigned long>(i);
 	}
+	// Example of C++17 Standard C++ Parallel Sorting
+	ParallelStdCppExample(ulongs);
+
+	// Benchmark Parallel InPlace Merge Sort algorithm
+	ParallelInPlaceMergeSortBenchmark(ulongs);
+
 	// Benchmark the above Parallel Merge Sort algorithm
 	RadixSortLsdBenchmark(ulongs);
 
@@ -122,6 +128,12 @@ int main()
 	for (size_t i = 0; i < ulongs.size(); i++) {
 		ulongs[i] = 10;
 	}
+	// Example of C++17 Standard C++ Parallel Sorting
+	ParallelStdCppExample(ulongs);
+
+	// Benchmark Parallel InPlace Merge Sort algorithm
+	ParallelInPlaceMergeSortBenchmark(ulongs);
+
 	// Benchmark the above Parallel Merge Sort algorithm
 	RadixSortLsdBenchmark(ulongs);
 
