@@ -7,30 +7,27 @@ High Performance C++ Algorithms: parallel and sequential. Working VisualStudio 2
 - Parallel Sort from Standard C++17. Described in blog https://blogs.msdn.microsoft.com/vcblog/2018/09/11/using-c17-parallel-algorithms-for-better-performance/
 - LSD Radix Sort for arrays of unsigned long's. Described in blog https://blogs.msdn.microsoft.com/vcblog/2018/09/11/using-c17-parallel-algorithms-for-better-performance/
 
-Benchmark Results of the following C++17 algorithms on Ubuntu 20.04 using g++, sorting an array of 10 Million unsigned integers:
+Benchmark Results of the following C++17 algorithms on Ubuntu 20.04 using g++, sorting an array of 10 Million unsigned 32-bit integers:
 - single core: ```sort(sorted.begin(), sorted.end())```
 - multi-core: ```sort(std::execution::par_unseq, sorted.begin(), sorted.end())```
 
 *Algorithm*|*Random*|*Presorted*|*Description*
 --- | --- | --- | ---
-sort single core |14|72| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-sort multi-core |73|175| 6-core Intel i7-9750H, with hyperthreading
-sort multi-core |625|1,333| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+sort single core |11|35| 6-core Intel i7-9750H, with hyperthreading
+sort multi-core |62|152| 6-core Intel i7-9750H, with hyperthreading
+sort single core |11|32| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+sort multi-core |93|250| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
-the units in the table above are Millions of unsigned integers per second.
+the units in the table above are Millions of unsigned longs per second.
 
-Sorting an array of unsigned long integers:
-
-*Algorithm*|*Random*|*Presorted*|*Description*
---- | --- | --- | ---
-sort single core |14|16| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-sort multi-core |71|150| 6-core Intel i7-9750H, with hyperthreading
-sort multi-core |401|513| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+Additional sorting algorithms provided:
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
+LSD Radix Sort single core |145|141|119| 6-core Intel i7-9750H, with hyperthreading
 LSD Radix Sort multi-core |244|238|285| 6-core Intel i7-9750H, with hyperthreading
-Merge Sort multi-core |106|208|| 6-core Intel i7-9750H, with hyperthreading
+Merge Sort multi-core |98|161|| 6-core Intel i7-9750H, with hyperthreading
+Merge Sort multi-core |500|1000|| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 In-Place Merge Sort multi-core |58||| 6-core Intel i7-9750H, with hyperthreading
 
 
