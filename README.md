@@ -18,7 +18,7 @@ sort multi-core |62|152|1639| 6-core Intel i7-9750H, with hyperthreading
 sort single core |11|32|1492| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 sort multi-core |93|250|1492| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
-the units in the table above are Millions of unsigned longs per second.
+the units in the table above are Millions of unsigned longs per second. Pre-sorted array is actually nearly pre-sorted, with every 100-th element being a random value.
 
 Additional sorting algorithms provided:
 
