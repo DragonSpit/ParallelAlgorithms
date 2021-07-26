@@ -23,8 +23,10 @@ Additional sorting algorithms provided:
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
-LSD Radix Sort single core |145|141|119| 6-core Intel i7-9750H, with hyperthreading
-LSD Radix Sort multi-core |244|238|285| 6-core Intel i7-9750H, with hyperthreading
+LSD Radix Sort single core |175|147|123| 6-core Intel i7-9750H, with hyperthreading
+LSD Radix Sort multi-core |263|250|263| 6-core Intel i7-9750H, with hyperthreading
+LSD Radix Sort single core |59|65|114| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+LSD Radix Sort multi-core |417|476|714| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 Merge Sort multi-core |105|222|243| 6-core Intel i7-9750H, with hyperthreading
 Merge Sort multi-core |546|910|952| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 In-Place Merge Sort multi-core |58|164|1163| 6-core Intel i7-9750H, with hyperthreading
