@@ -363,10 +363,10 @@ inline unsigned long** ComputeStartOfBinsPar(unsigned long* inArray, unsigned lo
 
 // Permute phase of LSD Radix Sort with de-randomized write memory accesses
 // Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
-template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, unsigned long BufferDepth>
+template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix>
 inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 	unsigned long* inputArray, unsigned long* outputArray, unsigned long q, unsigned long** startOfBin, unsigned long startIndex, unsigned long endIndex,
-	unsigned long bitMask, unsigned long shiftRightAmount, unsigned long** bufferIndex, unsigned long** bufferDerandomize, unsigned long* bufferIndexEnd)
+	unsigned long bitMask, unsigned long shiftRightAmount, unsigned long** bufferIndex, unsigned long** bufferDerandomize, unsigned long* bufferIndexEnd, unsigned long BufferDepth)
 {
 	const unsigned long numberOfBins = PowerOfTwoRadix;
 
@@ -394,10 +394,11 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 	// Flush all the derandomization buffers
 	for (unsigned long whichBuff = 0; whichBuff < numberOfBins; whichBuff++)
 	{
+		unsigned long outIndex       = startOfBinLoc[whichBuff];
 		unsigned long buffStartIndex = whichBuff * BufferDepth;
-		unsigned long buffEndIndex = bufferIndexLoc[whichBuff];
-		while (buffStartIndex < buffEndIndex)
-			outputArray[startOfBinLoc[whichBuff]++] = bufferDerandomizeLoc[buffStartIndex++];
+		unsigned long buffEndIndex   = bufferIndexLoc[whichBuff];
+		size_t numItems = (size_t)buffEndIndex - buffStartIndex;
+		memcpy(&(outputArray[outIndex]), &(bufferDerandomizeLoc[buffStartIndex]), numItems * sizeof(unsigned long));
 		bufferIndexLoc[whichBuff] = whichBuff * BufferDepth;
 	}
 }
@@ -477,8 +478,8 @@ inline void SortRadixInnerPar(unsigned long* inputArray, unsigned long* outputAr
 			unsigned long startIndex = q * SortRadixParallelWorkQuanta;
 			unsigned long   endIndex = startIndex + SortRadixParallelWorkQuanta;	// non-inclusive
 			g.run([=] {																// important to not pass by reference, as all tasks will then get the same/last value
-				_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<256, 8, 64>(
-					inputArray, outputArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd);
+				_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<256, 8>(
+					inputArray, outputArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd, BufferDepth);
 				});
 		}
 		if (numberOfQuantas > numberOfFullQuantas)      // last partially filled workQuanta
@@ -486,8 +487,8 @@ inline void SortRadixInnerPar(unsigned long* inputArray, unsigned long* outputAr
 			unsigned long startIndex = q * SortRadixParallelWorkQuanta;
 			unsigned long   endIndex = inputSize;									// non-inclusive
 			g.run([=] {
-				_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<256, 8, 64>(
-					inputArray, outputArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd);
+				_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<256, 8>(
+					inputArray, outputArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd, BufferDepth);
 				});
 		}
 		g.wait();
@@ -522,7 +523,7 @@ inline void SortRadixInnerPar(unsigned long* inputArray, unsigned long* outputAr
 
 // LSD Radix Sort - stable (LSD has to be, and this may preclude LSD Radix from being able to be in-place)
 // Result is returned in "a", whereas "b" is used a temporary working buffer.
-inline void SortRadixPar(unsigned long* a, unsigned long a_size)
+inline void SortRadixPar(unsigned long* a, unsigned long a_size, unsigned parallelThreshold = 64 * 1024)
 {
 	const unsigned long Threshold = 100;	// Threshold of when to switch to using Insertion Sort
 	const unsigned long PowerOfTwoRadix = 256;
@@ -530,10 +531,18 @@ inline void SortRadixPar(unsigned long* a, unsigned long a_size)
 
 	unsigned long* b = new unsigned long[a_size];		// this allocation does slow things down a bit. If we want even faster, then pass "b" in as an argument
 
+	// may return 0 when not able to detect
+	auto processor_count = std::thread::hardware_concurrency();
+	//printf("Number of cores = %u \n", processor_count);
+	processor_count *= 4;									// Increase the number of cores to split array into more pieces than cores, which increases performance
+
+	if ((processor_count > 0) && (parallelThreshold * processor_count) < a_size)
+		parallelThreshold = a_size / processor_count;
+
 	// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
 	// they are not pushed on the stack and are treated as constants, but local.
 	if (a_size >= Threshold)
-		SortRadixInnerPar< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(a, b, a_size);
+		SortRadixInnerPar< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(a, b, a_size, parallelThreshold);
 	else
 		insertionSortSimilarToSTLnoSelfAssignment(a, a_size);
 
@@ -541,16 +550,24 @@ inline void SortRadixPar(unsigned long* a, unsigned long a_size)
 }
 
 // Faster implementation, when the user is willing to provide a pre-alocated temporary/working buffer, which makes it a bit more cumbersome to use
-inline void SortRadixPar(unsigned long* a, unsigned long* tmp_work_buff, unsigned long a_size)
+inline void SortRadixPar(unsigned long* a, unsigned long* tmp_work_buff, unsigned long a_size, unsigned parallelThreshold = 64 * 1024)
 {
 	const unsigned long Threshold = 100;	// Threshold of when to switch to using Insertion Sort
 	const unsigned long PowerOfTwoRadix = 256;
 	const unsigned long Log2ofPowerOfTwoRadix = 8;
 
+	// may return 0 when not able to detect
+	auto processor_count = std::thread::hardware_concurrency();
+	//printf("Number of cores = %u \n", processor_count);
+	//processor_count = 8;									// Fastest on 48-core AWS Intel machine
+
+	if ((processor_count > 0) && (parallelThreshold * processor_count) < a_size)
+		parallelThreshold = a_size / processor_count;
+
 	// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
 	// they are not pushed on the stack and are treated as constants, but local.
 	if (a_size >= Threshold)
-		SortRadixInnerPar< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(a, tmp_work_buff, a_size);
+		SortRadixInnerPar< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(a, tmp_work_buff, a_size, parallelThreshold);
 	else
 		insertionSortSimilarToSTLnoSelfAssignment(a, a_size);
 }
