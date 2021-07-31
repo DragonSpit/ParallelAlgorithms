@@ -52,7 +52,7 @@ int main()
 	unsigned long   sorted_array[NumElements];
 
 	//parallel_merge_sort_simplest(unsorted_array, 0, NumElements - 1, sorted_array);	// simplest, but slowest
-	parallel_merge_sort_hybrid_rh_1(unsorted_array, 0, NumElements - 1, sorted_array);	// fastest
+	ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(unsorted_array, 0, NumElements - 1, sorted_array);	// fastest
 
 	std::cout << "sorted array: ";
 	for (unsigned long i = 0; i < NumElements; i++)
@@ -115,6 +115,9 @@ int main()
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample(ulongs);
 
+	// Benchmark the above Parallel Merge Sort algorithm
+	ParallelMergeSortBenchmark(ulongs);
+
 	// Benchmark Parallel InPlace Merge Sort algorithm
 	ParallelInPlaceMergeSortBenchmark(ulongs);
 
@@ -130,6 +133,9 @@ int main()
 	}
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample(ulongs);
+
+	// Benchmark the above Parallel Merge Sort algorithm
+	ParallelMergeSortBenchmark(ulongs);
 
 	// Benchmark Parallel InPlace Merge Sort algorithm
 	ParallelInPlaceMergeSortBenchmark(ulongs);
