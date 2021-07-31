@@ -1,5 +1,6 @@
 // Parallel Merge implementations
 // TODO: Need to expose parallel threshold to the user
+// TODO: Merge and Parallel Merge need indexes to be size_t instead of int
 
 #ifndef _ParallelMerge_h
 #define _ParallelMerge_h
@@ -18,6 +19,7 @@
 #include <vector>
 #include <execution>
 #include <thread>
+#include <tbb/parallel_invoke.h>
 #endif
 
 template < class Item >
@@ -270,10 +272,10 @@ inline void merge_dac_hybrid(const _Type* t, int p1, int r1, int p2, int r2, _Ty
 
 // Listing 5
 template< class _Type >
-inline void merge_parallel_L5(_Type* t, int p1, int r1, int p2, int r2, _Type* a, int p3)
+inline void merge_parallel_L5(_Type* t, size_t p1, size_t r1, size_t p2, size_t r2, _Type* a, size_t p3)
 {
-	int length1 = r1 - p1 + 1;
-	int length2 = r2 - p2 + 1;
+	size_t length1 = r1 - p1 + 1;
+	size_t length2 = r2 - p2 + 1;
 	if (length1 < length2) {
 		exchange(p1, p2);
 		exchange(r1, r2);
@@ -286,17 +288,17 @@ inline void merge_parallel_L5(_Type* t, int p1, int r1, int p2, int r2, _Type* a
 		//merge_ptr_3(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);				// new merge concept, which turned out slower
 	}
 	else {
-		int q1 = (p1 + r1) / 2;
-		int q2 = my_binary_search(t[q1], t, p2, r2);
-		int q3 = p3 + (q1 - p1) + (q2 - p2);
+		size_t q1 = (p1 + r1) / 2;
+		size_t q2 = my_binary_search(t[q1], t, p2, r2);
+		size_t q3 = p3 + (q1 - p1) + (q2 - p2);
 		a[q3] = t[q1];
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(
 #endif
-			[&] { merge_parallel_L5(t, p1, q1 - 1, p2, q2 - 1, a, p3); },
-			[&] { merge_parallel_L5(t, q1 + 1, r1, q2, r2, a, q3 + 1); }
+			[&] { merge_parallel_L5(t, p1,     q1 - 1, p2, q2 - 1, a, p3    ); },
+			[&] { merge_parallel_L5(t, q1 + 1, r1,     q2, r2,     a, q3 + 1); }
 		);
 	}
 }

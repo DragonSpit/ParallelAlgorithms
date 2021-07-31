@@ -31,13 +31,13 @@
 // It would be cool if the routine worked automagically for the condition of left == right (i.e. one element )
 // This version is borrowed from "Introduction to Algorithms" 3rd edition, p. 799.
 template< class _Type >
-inline int my_binary_search( _Type value, const _Type* a, int left, int right )
+inline size_t my_binary_search( _Type value, const _Type* a, size_t left, size_t right )
 {
-	long low  = left;
-	long high = std::max( left, right + 1 );
+	size_t low  = left;
+	size_t high = std::max( left, right + 1 );
 	while( low < high )
 	{
-		long mid = ( low + high ) / 2;
+		size_t mid = ( low + high ) / 2;
 		if ( value <= a[ mid ] )	high = mid;
 		else						low  = mid + 1;	// because we compared to a[mid] and the value was larger than a[mid].
 													// Thus, the next array element to the right from mid is the next possible
