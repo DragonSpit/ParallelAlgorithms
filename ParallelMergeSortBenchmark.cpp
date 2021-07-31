@@ -10,6 +10,7 @@
 #include <execution>
 
 #include "ParallelMergeSort.h"
+#include "SortParallel.h"
 
 using std::chrono::duration;
 using std::chrono::duration_cast;
@@ -62,7 +63,7 @@ int ParallelMergeSortBenchmark(vector<double>& doubles)
 			sorted[j] = j;									// page in the destination array into system memory
 		}
 		const auto startTime = high_resolution_clock::now();
-		parallel_merge_sort_hybrid_rh_1(doublesCopy, 0, (int)(doubles.size() - 1), sorted);	// ParallelMergeSort modifies the source array
+		ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(doublesCopy, 0, doubles.size() - 1, sorted);	// ParallelMergeSort modifies the source array
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Merge Sort", sorted, doubles.size(), startTime, endTime);
 	}
@@ -92,13 +93,14 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 			sorted[j] = j;									// page in the destination array into system memory
 		}
 		const auto startTime = high_resolution_clock::now();
-		parallel_merge_sort_hybrid_rh_1(   ulongsCopy,  0, (int)(ulongs.size() - 1), sorted);	// ParallelMergeSort modifies the source array
-		//inplace_merge_sort_hybrid(ulongsCopy2, 0, (int)(ulongs.size() - 1));
+		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1( ulongsCopy,  0, ulongs.size() - 1, sorted, false);	// ParallelMergeSort modifies the source array
+		ParallelAlgorithms::parallel_merge_sort_hybrid_rh_2(ulongsCopy, 0, ulongs.size() - 1, sorted, false, ulongs.size() / 48);	// ParallelMergeSort modifies the source array
+		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), 24 * 1024);
 		const auto endTime = high_resolution_clock::now();
-		parallel_inplace_merge_sort_hybrid(ulongsCopy2, 0, (int)(ulongs.size() - 1));
+		sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
 		print_results("Parallel Merge Sort", sorted, ulongs.size(), startTime, endTime);
-		//print_results("Parallel Merge Sort", ulongsCopy, ulongs.size(), startTime, endTime);
-		if (std::equal(sorted, sorted + ulongs.size(), ulongsCopy2))
+		//if (std::equal(sorted, sorted + ulongs.size(), ulongsCopy2))
+		if (std::equal(ulongsCopy, ulongsCopy + ulongs.size(), ulongsCopy2))
 			std::cout << "Arrays are equal ";
 		else
 			std::cout << "Arrays are not equal ";
@@ -128,10 +130,12 @@ int ParallelInPlaceMergeSortBenchmark(vector<unsigned long>& ulongs)
 			ulongsCopy2[j] = ulongs[j];
 			sorted[j] = j;									// page in the destination array into system memory
 		}
-		parallel_merge_sort_hybrid_rh_1(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted);	// ParallelMergeSort modifies the source array
+		ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted);	// ParallelMergeSort modifies the source array
 		//std::cout << "Before parallel inplace merge sort" << std::endl;
 		const auto startTime = high_resolution_clock::now();
-		parallel_inplace_merge_sort_hybrid(ulongsCopy2, 0, (int)(ulongs.size() - 1));
+		//parallel_inplace_merge_sort_hybrid_inner(ulongsCopy2, 0, (int)(ulongs.size() - 1));
+		//ParallelAlgorithms::parallel_inplace_merge_sort_hybrid(ulongsCopy2, 0, (int)(ulongs.size() - 1));
+		ParallelAlgorithms::parallel_inplace_merge_sort_hybrid(ulongsCopy2, 0, ulongs.size() - 1, ulongs.size() / 48);
 		//inplace_merge_sort_hybrid(ulongsCopy2, 0, (int)(ulongs.size() - 1));
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel InPlace Merge Sort", ulongsCopy, ulongs.size(), startTime, endTime);
@@ -166,7 +170,7 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 		}
 		const auto startTime = high_resolution_clock::now();
 		//parallel_merge_sort_hybrid_rh_1(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
-		parallel_merge_sort_hybrid(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
+		ParallelAlgorithms::parallel_merge_sort_hybrid(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Merge Sort", sorted, uints.size(), startTime, endTime);
 	}
