@@ -45,7 +45,7 @@ int RadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 		// Paging-in source and destination arrays leads to a 50% speed-up on Linux, and 15% on Windows
 		printf("ulongsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", ulongsCopy, sorted, sorted[static_cast<unsigned>(rd()) % ulongs.size()], ulongsCopy[static_cast<unsigned>(rd()) % ulongs.size()]);
 		const auto startTime = high_resolution_clock::now();
-		//RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(ulongsCopy, tmp_working, (unsigned long)ulongs.size());
+		//RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
 		RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Radix Sort LSD", sorted, ulongs.size(), startTime, endTime);
