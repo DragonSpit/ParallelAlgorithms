@@ -1,3 +1,5 @@
+// TODO: Benchmark how long memory allocation takes
+// TODO: Benchmark how much better algorithm does where dst/working buffer is provided, versus one that is provided and paged in
 #pragma once
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
