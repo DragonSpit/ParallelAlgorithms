@@ -58,21 +58,11 @@ namespace ParallelAlgorithms
     // dst buffer must be large enough to provide elements dst[l to r-1]
     // Two use cases: in-place interface, where the dst buffer is a temporary work buffer, or the dst buffer is the destination memory buffer
     template< class _Type >
-    inline void sort_par(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
+    inline void sort_par(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
     {
-        const auto processor_count = std::thread::hardware_concurrency();        // may return 0 when not able to detect
-        //printf("Number of cores = %u \n", processor_count);
-
-        size_t a_size = r - l;
-        if (processor_count > 0 && (parallelThreshold * processor_count) < a_size)
-            parallelThreshold = a_size / processor_count;
-
         if (!dst)
             sort(std::execution::par_unseq, src + l, src + r);
         else
-        {
-            //ParallelAlgorithms::parallel_merge_sort_hybrid_rh_2(src, l, r - 1, dst, true, parallelThreshold);    // r - 1 because this algorithm wants inclusive bounds
-            ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(src, l, r - 1, dst, true);    // r - 1 because this algorithm wants inclusive bounds
-        }
+            ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(src, l, r - 1, dst, srcToDst);    // r - 1 because this algorithm wants inclusive bounds
     }
 }
