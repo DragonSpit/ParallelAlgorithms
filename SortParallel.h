@@ -22,25 +22,16 @@
 namespace ParallelAlgorithms
 {
     // Sort the entire array of any data type with comparable elements
-    // 32 * 1024 is a good value for parallelThreshold
     template< class _Type >
-    inline void sort_par(_Type* src, size_t a_size, size_t parallelThreshold)
+    inline void sort_par(_Type* src, size_t src_size)
     {
-        ParallelAlgorithms::sort_par(src, 0, a_size, parallelThreshold);
+        ParallelAlgorithms::sort_par(src, 0, src_size);
     }
 
     // Array bounds includes l/left, but does not include r/right
-    // 32 * 1024 is a good value for parallelThreshold
     template< class _Type >
-    inline void sort_par(_Type* src, size_t l, size_t r, size_t parallelThreshold)
+    inline void sort_par(_Type* src, size_t l, size_t r)
     {
-        const auto processor_count = std::thread::hardware_concurrency();        // may return 0 when not able to detect
-        //printf("Number of cores = %u \n", processor_count);
-
-        size_t a_size = r - l;
-        if (processor_count > 0 && (parallelThreshold * processor_count) < a_size)
-            parallelThreshold = a_size / processor_count;
-
         _Type* sorted = new(std::nothrow) _Type[a_size];
 
         if (!sorted)
@@ -48,7 +39,6 @@ namespace ParallelAlgorithms
         else
         {
             ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(src, l, r - 1, sorted, false);    // r - 1 because this algorithm wants inclusive bounds
-            //ParallelAlgorithms::parallel_merge_sort_hybrid_rh_2(src, l, r - 1, sorted, false, parallelThreshold);    // r - 1 because this algorithm wants inclusive bounds
 
             delete[] sorted;
         }
@@ -56,7 +46,23 @@ namespace ParallelAlgorithms
 
     // Array bounds includes l/left, but does not include r/right
     // dst buffer must be large enough to provide elements dst[l to r-1]
-    // Two use cases: in-place interface, where the dst buffer is a temporary work buffer, or the dst buffer is the destination memory buffer
+    // Two use cases:
+    //   -     in-place interface, where the dst buffer is a temporary work buffer
+    //   - not-in-place interface, where the dst buffer is the destination memory buffer
+    template< class _Type >
+    inline void sort_par(_Type* src, size_t src_size, _Type* dst, bool srcToDst = true)
+    {
+        if (!dst)
+            sort(std::execution::par_unseq, src + 0, src + src_size);
+        else
+            ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(src, 0, src_size - 1, dst, srcToDst);    // size - 1 because this algorithm wants inclusive bounds
+    }
+
+    // Array bounds includes l/left, but does not include r/right
+    // dst buffer must be large enough to provide elements dst[l to r-1]
+    // Two use cases:
+    //   -     in-place interface, where the dst buffer is a temporary work buffer
+    //   - not-in-place interface, where the dst buffer is the destination memory buffer
     template< class _Type >
     inline void sort_par(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
     {
