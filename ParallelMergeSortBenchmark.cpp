@@ -93,10 +93,12 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 			sorted[j] = j;									// page in the destination array into system memory
 		}
 		const auto startTime = high_resolution_clock::now();
-		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(ulongsCopy,  0, ulongs.size() - 1, sorted, false);	// ParallelMergeSort modifies the source array
-		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_2(ulongsCopy, 0, ulongs.size() - 1, sorted, false, ulongs.size() / 48);	// ParallelMergeSort modifies the source array
-		ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size(), sorted, false);
-		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), 24 * 1024);
+		// Example of usages, which trade off ease of use and performance
+		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size());
+		//ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size());
+		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), sorted, false);		//     in-place
+		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), sorted, true);		// not in-place
+		ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size(), sorted, false);		//     in-place
 		const auto endTime = high_resolution_clock::now();
 		sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
 		print_results("Parallel Merge Sort", sorted, ulongs.size(), startTime, endTime);
