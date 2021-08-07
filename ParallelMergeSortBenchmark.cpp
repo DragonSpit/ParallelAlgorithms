@@ -94,11 +94,11 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 		}
 		const auto startTime = high_resolution_clock::now();
 		// Example of usages, which trade off ease of use and performance
-		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size());
-		//ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size());
-		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), sorted, false);		//     in-place
-		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), sorted, true);		// not in-place
-		ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size(), sorted, false);		//     in-place
+		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size());										//     in-place adaptive interface
+		//ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size());									//     in-place adaptive interface
+		ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), sorted, ulongs.size(), false);		//     in-place interface
+		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), sorted, ulongs.size(), true);			// not in-place interface
+		//ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size(), sorted, ulongs.size(), false);		//     in-place interface
 		const auto endTime = high_resolution_clock::now();
 		sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
 		print_results("Parallel Merge Sort", sorted, ulongs.size(), startTime, endTime);
