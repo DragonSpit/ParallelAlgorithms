@@ -32,7 +32,8 @@ namespace ParallelAlgorithms
     template< class _Type >
     inline void sort_par(_Type* src, size_t l, size_t r)
     {
-        _Type* sorted = new(std::nothrow) _Type[a_size];
+        size_t src_size = r;
+        _Type* sorted = new(std::nothrow) _Type[src_size];
 
         if (!sorted)
             sort(std::execution::par_unseq, src + l, src + r);
@@ -51,12 +52,7 @@ namespace ParallelAlgorithms
     template< class _Type >
     inline void sort_par(_Type* src, size_t src_size, _Type* dst, size_t dst_size, bool srcToDst = false)
     {
-        if (!dst)
-            throw std::invalid_argument("dst is null, which is not supported");
-        if (dst_size < src_size)
-            throw std::invalid_argument("dst_size must be larger or equal to src_size");
-
-        ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(src, 0, src_size - 1, dst, srcToDst);    // size - 1 because this algorithm wants inclusive bounds
+        ParallelAlgorithms::sort_par(src, 0, src_size, dst, dst_size, srcToDst);
     }
 
     // Array bounds includes l/left, but does not include r/right
