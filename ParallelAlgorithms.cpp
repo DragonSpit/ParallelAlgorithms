@@ -87,6 +87,9 @@ int main()
 	for (auto& d : ulongs) {
 		d = static_cast<unsigned long>(rd());
 	}
+	printf("Finished initializing unsigned long array\n");
+
+
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample(ulongs);
 
@@ -98,7 +101,6 @@ int main()
 
 	// Benchmark Parallel InPlace Merge Sort algorithm
 	ParallelInPlaceMergeSortBenchmark(ulongs);
-
 	// Benchmark Radix Sort LSD algorithm
 	RadixSortLsdBenchmark(ulongs);
 
