@@ -22,10 +22,18 @@
 namespace ParallelAlgorithms
 {
     // Sort the entire array of any data type with comparable elements
+    // Adaptive algorithm: if enough memory to allocate a temporary working buffer, then faster not-in-place parallel merge sort is used.
+    //                     if not enough memory, then the standard C++ in-place parallel sort is used, which is slower.
     template< class _Type >
     inline void sort_par(_Type* src, size_t src_size)
     {
         ParallelAlgorithms::sort_par(src, 0, src_size);
+    }
+
+    template< class _Type >
+    inline void sort_par(std::vector<_Type>& src)
+    {
+        ParallelAlgorithms::sort_par(src, 0, src.size());
     }
 
     // Array bounds includes l/left, but does not include r/right
@@ -42,6 +50,22 @@ namespace ParallelAlgorithms
             ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(src, l, r - 1, sorted, false);    // r - 1 because this algorithm wants inclusive bounds
 
             delete[] sorted;
+        }
+    }
+
+    // Array bounds includes l/left, but does not include r/right
+    template< class _Type >
+    inline void sort_par(std::vector<_Type>& src, size_t l, size_t r)
+    {
+        try
+        {
+            size_t src_size = r;
+            std::vector<_Type> sorted(src_size);
+            ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(src.data(), l, r - 1, sorted.data(), false);    // r - 1 because this algorithm wants inclusive bounds
+        }
+        catch (std::bad_alloc& ba)
+        {
+            sort(std::execution::par_unseq, src.begin() + l, src.begin() + r);
         }
     }
 
