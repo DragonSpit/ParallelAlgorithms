@@ -54,16 +54,21 @@ int ParallelMergeSortBenchmark(vector<double>& doubles)
 	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu doubles...\n", doubles.size());
 	double * doublesCopy  = new double [doubles.size()];
 	double* sorted = new double[doubles.size()];
+	vector<double> doublesCopyVec(doubles);
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		for (unsigned int j = 0; j < doubles.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
-			doublesCopy[j] = doubles[j];
+			doublesCopy[   j] = doubles[j];
+			doublesCopyVec[j] = doubles[j];
 			sorted[j] = j;									// page in the destination array into system memory
 		}
 		const auto startTime = high_resolution_clock::now();
-		ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(doublesCopy, 0, doubles.size() - 1, sorted);	// ParallelMergeSort modifies the source array
+		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(doublesCopy, 0, doubles.size() - 1, sorted);	// ParallelMergeSort modifies the source array
+		ParallelAlgorithms::sort_par(doublesCopy, doubles.size(), sorted, doubles.size(), false);			//     in-place interface
+		//ParallelAlgorithms::sort_par(doublesCopy, doubles.size());										//     in-place adaptive interface
+		//ParallelAlgorithms::sort_par(doublesCopyVec);														//     in-place adaptive interface (vector)
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Merge Sort", sorted, doubles.size(), startTime, endTime);
 	}
@@ -93,24 +98,26 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 			ulongsCopy[ j] = ulongs[j];
 			ulongsCopy2[j] = ulongs[j];
 			sorted[j] = j;									// page in the destination array into system memory
+			ulongsCopyVec[ j] = ulongs[j];
+			ulongsCopyVec2[j] = ulongs[j];
 		}
 		const auto startTime = high_resolution_clock::now();
 		// Example of usages, which trade off ease of use and performance
-		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size());										//     in-place adaptive interface
+		ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size());										//     in-place adaptive interface
 		//ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size());									//     in-place adaptive interface
 		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), sorted, ulongs.size(), false);		//     in-place interface
 		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), sorted, ulongs.size(), true);			// not in-place interface
-		ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size(), sorted, ulongs.size(), false);		//     in-place interface
+		//ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size(), sorted, ulongs.size(), false);		//     in-place interface
 		//ParallelAlgorithms::sort_par(ulongsCopyVec);													//     in-place adaptive interface (vector)
 		//sort(ulongsCopyVec.begin(), ulongsCopyVec.end());											//     in-place adaptive interface (vector)
 
 		const auto endTime = high_resolution_clock::now();
-		//sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
-		sort(std::execution::par_unseq, ulongsCopyVec2.begin(), ulongsCopyVec2.end());
+		sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
+		//sort(std::execution::par_unseq, ulongsCopyVec2.begin(), ulongsCopyVec2.end());
 		print_results("Parallel Merge Sort", sorted, ulongs.size(), startTime, endTime);
 		//if (std::equal(sorted, sorted + ulongs.size(), ulongsCopy2))
-		//if (std::equal(ulongsCopy, ulongsCopy + ulongs.size(), ulongsCopy2))
-		if (std::equal(ulongsCopyVec.begin(), ulongsCopyVec.end(), ulongsCopyVec2.begin()))
+		if (std::equal(ulongsCopy, ulongsCopy + ulongs.size(), ulongsCopy2))
+		//if (std::equal(ulongsCopyVec.begin(), ulongsCopyVec.end(), ulongsCopyVec2.begin()))
 			std::cout << "Arrays are equal ";
 		else
 			std::cout << "Arrays are not equal ";
