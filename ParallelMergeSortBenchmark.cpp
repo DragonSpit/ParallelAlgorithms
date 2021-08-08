@@ -83,6 +83,8 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 	unsigned long* ulongsCopy  = new unsigned long[ulongs.size()];
 	unsigned long* ulongsCopy2 = new unsigned long[ulongs.size()];
 	unsigned long* sorted      = new unsigned long[ulongs.size()];
+	vector<unsigned long> ulongsCopyVec(ulongs);
+	vector<unsigned long> ulongsCopyVec2(ulongs);
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
@@ -96,20 +98,26 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 		// Example of usages, which trade off ease of use and performance
 		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size());										//     in-place adaptive interface
 		//ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size());									//     in-place adaptive interface
-		ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), sorted, ulongs.size(), false);		//     in-place interface
+		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), sorted, ulongs.size(), false);		//     in-place interface
 		//ParallelAlgorithms::sort_par(ulongsCopy, ulongs.size(), sorted, ulongs.size(), true);			// not in-place interface
-		//ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size(), sorted, ulongs.size(), false);		//     in-place interface
+		ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size(), sorted, ulongs.size(), false);		//     in-place interface
+		//ParallelAlgorithms::sort_par(ulongsCopyVec);													//     in-place adaptive interface (vector)
+		//sort(ulongsCopyVec.begin(), ulongsCopyVec.end());											//     in-place adaptive interface (vector)
+
 		const auto endTime = high_resolution_clock::now();
-		sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
+		//sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
+		sort(std::execution::par_unseq, ulongsCopyVec2.begin(), ulongsCopyVec2.end());
 		print_results("Parallel Merge Sort", sorted, ulongs.size(), startTime, endTime);
 		//if (std::equal(sorted, sorted + ulongs.size(), ulongsCopy2))
-		if (std::equal(ulongsCopy, ulongsCopy + ulongs.size(), ulongsCopy2))
+		//if (std::equal(ulongsCopy, ulongsCopy + ulongs.size(), ulongsCopy2))
+		if (std::equal(ulongsCopyVec.begin(), ulongsCopyVec.end(), ulongsCopyVec2.begin()))
 			std::cout << "Arrays are equal ";
 		else
 			std::cout << "Arrays are not equal ";
 	}
 
 	delete[] sorted;
+	delete[] ulongsCopy2;
 	delete[] ulongsCopy;
 
 	return 0;
