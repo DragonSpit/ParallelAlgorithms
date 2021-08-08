@@ -65,7 +65,6 @@ int ParallelMergeSortBenchmark(vector<double>& doubles)
 			sorted[j] = j;									// page in the destination array into system memory
 		}
 		const auto startTime = high_resolution_clock::now();
-		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(doublesCopy, 0, doubles.size() - 1, sorted);	// ParallelMergeSort modifies the source array
 		ParallelAlgorithms::sort_par(doublesCopy, doubles.size(), sorted, doubles.size(), false);			//     in-place interface
 		//ParallelAlgorithms::sort_par(doublesCopy, doubles.size());										//     in-place adaptive interface
 		//ParallelAlgorithms::sort_par(doublesCopyVec);														//     in-place adaptive interface (vector)
