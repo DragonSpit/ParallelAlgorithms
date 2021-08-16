@@ -32,8 +32,8 @@ LSD Radix Sort single core (two phase) |145|125|104| 6-core Intel i7-9750H, with
 LSD Radix Sort multi-core |285|294|322| 6-core Intel i7-9750H, with hyperthreading
 LSD Radix Sort single core |60|64|112| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 LSD Radix Sort multi-core |434|476|714| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-Merge Sort multi-core |105|222|243| 6-core Intel i7-9750H, with hyperthreading
 Merge Sort single-core |19|93|114| 6-core Intel i7-9750H, with hyperthreading
+Merge Sort multi-core |105|222|243| 6-core Intel i7-9750H, with hyperthreading
 Merge Sort multi-core |626|1010|1136| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 In-Place Merge Sort multi-core |58|164|1163| 6-core Intel i7-9750H, with hyperthreading
 In-Place Merge Sort multi-core |61|145|1230| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
