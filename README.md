@@ -22,7 +22,7 @@ the units in the table above are Millions of unsigned longs per second. Pre-sort
 Additional sorting algorithms provided are:
 - Single-core LSD Radix Sort (Two Phase)
 - Multi-core Parallel LSD Radix Sort
-- Multi-core Parallel Merge Sort, with simple interfaces (see ParallelAlgorithm namespace)
+- Multi-core Parallel Merge Sort, with simple interfaces (see ParallelAlgorithms namespace)
 - Single-core In-Place Merge Sort
 - Multi-core Parallel In-Place Merge Sort
 
@@ -33,6 +33,7 @@ LSD Radix Sort multi-core |285|294|322| 6-core Intel i7-9750H, with hyperthreadi
 LSD Radix Sort single core |60|64|112| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 LSD Radix Sort multi-core |434|476|714| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 Merge Sort multi-core |105|222|243| 6-core Intel i7-9750H, with hyperthreading
+Merge Sort single-core |19|93|114| 6-core Intel i7-9750H, with hyperthreading
 Merge Sort multi-core |626|1010|1136| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 In-Place Merge Sort multi-core |58|164|1163| 6-core Intel i7-9750H, with hyperthreading
 In-Place Merge Sort multi-core |61|145|1230| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
