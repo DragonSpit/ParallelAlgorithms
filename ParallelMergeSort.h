@@ -59,8 +59,8 @@ namespace ParallelAlgorithms
             [&] { parallel_merge_sort_simplest_r(src, l, m, dst, !srcToDst); },		// reverse direction of srcToDst for the next level of recursion
             [&] { parallel_merge_sort_simplest_r(src, m + 1, r, dst, !srcToDst); }		// reverse direction of srcToDst for the next level of recursion
         );
-        if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
-        else			merge_parallel_L5(dst, l, m, m + 1, r, src, l);
+        if (srcToDst)   merge_parallel_L5(src, l, m, m + 1, r, dst, l);
+        else	        merge_parallel_L5(dst, l, m, m + 1, r, src, l);
     }
 
     template< class _Type >
@@ -173,6 +173,28 @@ namespace ParallelAlgorithms
             parallelThreshold = (r - l + 1) / processor_count;
 
         parallel_merge_sort_hybrid_rh_2(src, l, r, dst, srcToDst, parallelThreshold);
+    }
+
+    // Serial Merge Sort, using divide-and-conquer algorthm
+    template< class _Type >
+    inline void merge_sort_hybrid(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
+    {
+        if (r == l) {    // termination/base case of sorting a single element
+            if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
+            return;
+        }
+        if ((r - l) <= 48 && !srcToDst) {     // 32 or 64 or larger seem to perform well
+            insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);    // want to do dstToSrc, can just do it in-place, just sort the src, no need to copy
+            //stable_sort( src + l, src + r + 1 );  // STL stable_sort can be used instead, but is slightly slower than Insertion Sort
+            return;
+        }
+        size_t m = ((r + l) / 2);
+
+        merge_sort_hybrid(src, l,     m, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
+        merge_sort_hybrid(src, m + 1, r, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
+
+        if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
+        else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
     }
 
     template< class _Type >
