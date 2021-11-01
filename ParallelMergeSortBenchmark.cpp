@@ -109,7 +109,8 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 		//ParallelAlgorithms::sort_par(ulongsCopy, 0, ulongs.size(), sorted, ulongs.size(), false);		//     in-place interface
 		//ParallelAlgorithms::sort_par(ulongsCopyVec);													//     in-place adaptive interface (vector)
 		//sort(ulongsCopyVec.begin(), ulongsCopyVec.end());												//     in-place adaptive interface (vector)
-		ParallelAlgorithms::merge_sort_hybrid(ulongsCopy, 0, ulongs.size(), sorted, false);
+		//ParallelAlgorithms::merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
+		ParallelAlgorithms::parallel_merge_sort_hybrid_radix(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted, false, ulongs.size() / 48 );	// ParallelMergeSort modifies the source array
 
 		const auto endTime = high_resolution_clock::now();
 		sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
@@ -149,7 +150,8 @@ int ParallelInPlaceMergeSortBenchmark(vector<unsigned long>& ulongs)
 			sorted[j] = j;									// page in the destination array into system memory
 		}
 		ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted);	// ParallelMergeSort modifies the source array
-		//std::cout << "Before parallel inplace merge sort" << std::endl;
+		//ParallelAlgorithms::merge_sort_bottom_up(ulongsCopy, 0, (int)(ulongs.size() - 1));
+																												//std::cout << "Before parallel inplace merge sort" << std::endl;
 		const auto startTime = high_resolution_clock::now();
 		//parallel_inplace_merge_sort_hybrid_inner(ulongsCopy2, 0, (int)(ulongs.size() - 1));
 		//ParallelAlgorithms::parallel_inplace_merge_sort_hybrid(ulongsCopy2, 0, (int)(ulongs.size() - 1));
@@ -157,6 +159,7 @@ int ParallelInPlaceMergeSortBenchmark(vector<unsigned long>& ulongs)
 		//inplace_merge_sort_hybrid(ulongsCopy2, 0, (int)(ulongs.size() - 1));
 		const auto endTime = high_resolution_clock::now();
 		if (std::equal(sorted, sorted + ulongs.size(), ulongsCopy2))
+		//if (std::equal(ulongsCopy, ulongsCopy + ulongs.size(), ulongsCopy2))
 			std::cout << "Arrays are equal ";
 		else
 			std::cout << "Arrays are not equal ";
