@@ -26,6 +26,8 @@
 #include "InsertionSort.h"
 #include "BinarySearch.h"
 #include "ParallelMerge.h"
+#include "RadixSortLSD.h"
+#include "RadixSortLsdParallel.h"
 
 namespace ParallelAlgorithms
 {
@@ -175,6 +177,45 @@ namespace ParallelAlgorithms
         parallel_merge_sort_hybrid_rh_2(src, l, r, dst, srcToDst, parallelThreshold);
     }
 
+    inline void parallel_merge_sort_hybrid_radix_inner(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
+    {
+        if (r == l) {   // termination/base case of sorting a single element
+            if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
+            return;
+        }
+        if ((r - l) <= parallelThreshold && !srcToDst) {
+            RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
+            //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
+            //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
+            //if (srcToDst)
+            //    for (int i = l; i <= r; i++)    dst[i] = src[i];
+            return;
+        }
+        size_t m = (r + l) / 2;
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+        Concurrency::parallel_invoke(
+#else
+        tbb::parallel_invoke(
+#endif
+            [&] { parallel_merge_sort_hybrid_radix_inner(src, l,     m, dst, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
+            [&] { parallel_merge_sort_hybrid_radix_inner(src, m + 1, r, dst, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
+        );
+        if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
+        else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
+    }
+
+    inline void parallel_merge_sort_hybrid_radix(unsigned long* src, int l, int r, unsigned long* dst, bool srcToDst = true, int parallelThreshold = 24 * 1024)
+    {
+        // may return 0 when not able to detect
+        const auto processor_count = std::thread::hardware_concurrency();
+        //printf("Number of cores = %u \n", processor_count);
+
+        if ((int)(parallelThreshold * processor_count) < (r - l + 1))
+            parallelThreshold = (r - l + 1) / processor_count;
+
+        parallel_merge_sort_hybrid_radix_inner(src, l, r, dst, srcToDst, parallelThreshold);
+    }
+
     // Serial Merge Sort, using divide-and-conquer algorthm
     template< class _Type >
     inline void merge_sort_hybrid(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
@@ -209,7 +250,7 @@ namespace ParallelAlgorithms
         }
         int m = ((r + l) / 2);
 
-        inplace_merge_sort_hybrid(src, l, m, threshold);
+        inplace_merge_sort_hybrid(src, l,     m, threshold);
         inplace_merge_sort_hybrid(src, m + 1, r, threshold);
 
         std::inplace_merge(src + l, src + m + 1, src + r + 1);
@@ -249,5 +290,14 @@ namespace ParallelAlgorithms
 
         parallel_inplace_merge_sort_hybrid_inner(src, l, r, parallelThreshold);
     }
+
+    template< class _Type >
+    inline void merge_sort_bottom_up(_Type* src, int l, int r)
+    {
+        for (int m = 1; m <= r - l; m = m + m)
+            for (int i = l; i <= r - m; i += m + m)
+                std::inplace_merge(&src[i], &src[i + m - 1], &src[__min(i + m + m - 1, r) - 1]);
+    }
+
 }
 #endif
