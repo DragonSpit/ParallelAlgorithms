@@ -82,7 +82,7 @@ int main()
 	ParallelMergeSortBenchmark(doubles);
 
 	// generate some random unsigned longs:
-	printf("\nTesting with %zu random unsigned longs...\n", testSize);
+	printf("\nTesting with %zu random unsigned longs...\n\n", testSize);
 	vector<unsigned long> ulongs(testSize);
 	for (auto& d : ulongs) {
 		d = static_cast<unsigned long>(rd());
@@ -107,7 +107,7 @@ int main()
 	// Benchmark Radix Sort LSD algorithm
 	ParallelRadixSortLsdBenchmark(ulongs);
 
-	printf("\nTesting with %zu nearly pre-sorted unsigned longs...\n", testSize);
+	printf("\nTesting with %zu nearly pre-sorted unsigned longs...\n\n", testSize);
 	for (size_t i = 0; i < ulongs.size(); i++) {
 		if ((i % 100) == 0)
 			ulongs[i] = static_cast<unsigned long>(rd());
@@ -129,7 +129,7 @@ int main()
 	// Benchmark Radix Sort LSD algorithm
 	ParallelRadixSortLsdBenchmark(ulongs);
 
-	printf("\nTesting with %zu constant unsigned longs...\n", testSize);
+	printf("\nTesting with %zu constant unsigned longs...\n\n", testSize);
 	for (size_t i = 0; i < ulongs.size(); i++) {
 		ulongs[i] = 10;
 	}
@@ -149,7 +149,7 @@ int main()
 	ParallelRadixSortLsdBenchmark(ulongs);
 
 	// generate some random unsigned integers:
-	printf("\nTesting with %zu random unsigned integers...\n", testSize);
+	printf("\nTesting with %zu random unsigned integers...\n\n", testSize);
 	vector<unsigned> uints(testSize);
 	for (auto& d : uints) {
 		d = static_cast<unsigned>(rd());
@@ -161,7 +161,7 @@ int main()
 	ParallelMergeSortBenchmark(uints);
 
 	// generate some nearly pre-sorted unsigned integers:
-	printf("\nTesting with %zu nearly pre-sorted unsigned integers...\n", testSize);
+	printf("\nTesting with %zu nearly pre-sorted unsigned integers...\n\n", testSize);
 	//vector<unsigned> uints(testSize);
 	for (size_t i = 0; i < uints.size(); i++) {
 		if ((i % 100) == 0)
