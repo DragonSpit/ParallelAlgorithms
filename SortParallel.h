@@ -93,6 +93,6 @@ namespace ParallelAlgorithms
         if (dst_size < src_size)
             throw std::invalid_argument("dst_size must be larger or equal to r, to be able to return dst[l to r-1]");
 
-        ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(src, l, r - 1, dst, srcToDst);    // r - 1 because this algorithm wants inclusive bounds
+        ParallelAlgorithms::parallel_merge_sort_hybrid_rh_2(src, l, r - 1, dst, srcToDst);    // r - 1 because this algorithm wants inclusive bounds
     }
 }
