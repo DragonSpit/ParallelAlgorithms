@@ -1,8 +1,11 @@
+// TODO: Try DeRandomized version, but without using Parallel Histogram
 #pragma once
 
 #include "InsertionSort.h"
 #include "BinarySearch.h"
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include "tbb/tbb.h"
+#include <thread>
 #include <ppl.h>
 #else
 #include <iostream>
@@ -18,6 +21,8 @@
 #include <tbb/parallel_invoke.h>
 #include <string.h>
 #endif
+
+using namespace tbb;
 
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], int l, int r, int parallelThreshold = 16 * 1024)
@@ -572,3 +577,186 @@ inline void SortRadixPar(unsigned long* a, unsigned long* tmp_work_buff, size_t 
 		insertionSortSimilarToSTLnoSelfAssignment(a, a_size);
 }
 
+template< class _CountType >
+class HistogramByteComponentsParallelType
+{
+	unsigned long* my_input_array;			// a local copy to the array being counted to provide a pointer to each parallel task
+public:
+	static const unsigned long numberOfDigits = 4;
+	static const unsigned long numberOfBins = 256;
+	__declspec(align(64)) _CountType my_count[numberOfDigits][numberOfBins];		// the count for this task
+
+	HistogramByteComponentsParallelType(unsigned long* a) : my_input_array(a)	// constructor, which copies the pointer to the array being counted
+	{
+		for (unsigned long i = 0; i < numberOfDigits; i++)	// initialized all counts to zero, since the array may not contain all values
+			for (unsigned long j = 0; j < numberOfBins; j++)
+				my_count[i][j] = 0;
+	}
+	// Method that performs the core work of counting
+	void operator()(const blocked_range< unsigned long >& r)
+	{
+		unsigned long* a = my_input_array;		// these local variables are used to help the compiler optimize the code better
+		size_t         end = r.end();
+		_CountType(*count)[numberOfBins] = my_count;
+		_CountType* count0 = count[0];
+		_CountType* count1 = count[1];
+		_CountType* count2 = count[2];
+		_CountType* count3 = count[3];
+		for (size_t i = r.begin(); i != end; ++i)
+		{
+			unsigned long value = a[i];
+			count0[value & 0xff]++;
+			count1[(value >> 8) & 0xff]++;
+			count2[(value >> 16) & 0xff]++;
+			count3[(value >> 24) & 0xff]++;
+		}
+	}
+	// Splitter (splitting constructor) required by the parallel_reduce
+	// Takes a reference to the original object, and a dummy argument to distinguish this method from a copy constructor
+	HistogramByteComponentsParallelType(HistogramByteComponentsParallelType& x, split) : my_input_array(x.my_input_array)
+	{
+		for (unsigned long i = 0; i < numberOfDigits; i++)	// initialized all counts to zero, since the array may not contain all values
+			for (unsigned long j = 0; j < numberOfBins; j++)
+				my_count[i][j] = 0;
+	}
+	// Join method required by parallel_reduce
+	// Combines a result from another task into this result
+	void join(const HistogramByteComponentsParallelType& y)
+	{
+		for (unsigned long i = 0; i < numberOfDigits; i++)
+			for (unsigned long j = 0; j < numberOfBins; j++)
+				my_count[i][j] += y.my_count[i][j];
+	}
+};
+
+// Permute phase of LSD Radix Sort with de-randomized write memory accesses
+// Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
+template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold, unsigned long BufferDepth>
+inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsigned long* input_array, unsigned long* output_array, long startIndex, long endIndex, unsigned long bitMask, unsigned long shiftRightAmount,
+	long* endOfBin, unsigned long bufferIndex[], unsigned long bufferDerandomize[][BufferDepth])
+{
+	const unsigned long numberOfBins = PowerOfTwoRadix;
+
+	for (long _current = startIndex; _current <= endIndex; _current++)
+	{
+		unsigned long digit = extractDigit(input_array[_current], bitMask, shiftRightAmount);
+		if (bufferIndex[digit] < BufferDepth)
+		{
+			bufferDerandomize[digit][bufferIndex[digit]++] = input_array[_current];
+		}
+		else
+		{
+			unsigned long outIndex = endOfBin[digit];
+			unsigned long* buff = &(bufferDerandomize[digit][0]);
+			memcpy(&(output_array[outIndex]), buff, BufferDepth * sizeof(unsigned long));	// significantly faster than a for loop
+			endOfBin[digit] += BufferDepth;
+			bufferDerandomize[digit][0] = input_array[_current];
+			bufferIndex[digit] = 1;
+		}
+	}
+	// Flush all the derandomization buffers
+	for (unsigned long whichBuff = 0; whichBuff < numberOfBins; whichBuff++)
+	{
+		unsigned long numOfElementsInBuff = bufferIndex[whichBuff];
+		for (unsigned long i = 0; i < numOfElementsInBuff; i++)
+			output_array[endOfBin[whichBuff]++] = bufferDerandomize[whichBuff][i];
+		bufferIndex[whichBuff] = 0;
+	}
+}
+
+// Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
+// Parallel LSD Radix Sort, with Counting separated into its own parallel phase, followed by a serial permutation phase, as is done in HPCsharp in C#
+template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
+void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase_DeRandomize(unsigned long* input_array, unsigned long* output_array, long last, unsigned long bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
+{
+	const unsigned long numberOfBins = PowerOfTwoRadix;
+	unsigned long* _input_array = input_array;
+	unsigned long* _output_array = output_array;
+	bool _output_array_has_result = false;
+	unsigned long currentDigit = 0;
+	static const unsigned long bufferDepth = 64;
+	__declspec(align(64)) unsigned long bufferDerandomize[numberOfBins][bufferDepth];
+	__declspec(align(64)) unsigned long bufferIndex[numberOfBins] = { 0 };
+
+	//unsigned long** count2D = HistogramByteComponents <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inputArray, 0, endIndex);
+
+	HistogramByteComponentsParallelType<unsigned long> histogramParallel(input_array);	// contains the count array, which is initialized to all zeros
+
+	parallel_reduce(blocked_range< unsigned long >(0, last + 1), histogramParallel);
+
+	while (bitMask != 0)						// end processing digits when all the mask bits have been processes and shift out, leaving none
+	{
+		unsigned long* count = histogramParallel.my_count[currentDigit];
+
+		long startOfBin[numberOfBins], endOfBin[numberOfBins];
+		startOfBin[0] = endOfBin[0] = 0;
+		for (unsigned long i = 1; i < numberOfBins; i++)
+			startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
+
+#if 1
+		_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold, bufferDepth>(_input_array, _output_array, 0, last,
+			bitMask, shiftRightAmount, endOfBin, bufferIndex, bufferDerandomize);
+#else
+		for (long currIndex = 0; currIndex <= last; currIndex++)	// permutation phase
+		{
+			unsigned long currDigit = extractDigit(_input_array[currIndex], bitMask, shiftRightAmount);
+			if (bufferIndex[currDigit] >= bufferDepth)
+			{
+				unsigned long outIndex = startOfBin[currDigit];
+				unsigned long* buff = &(bufferDerandomize[currDigit][0]);
+				memcpy(&(_output_array[outIndex]), buff, bufferDepth * sizeof(unsigned long));	// significantly faster than a for loop
+				startOfBin[currDigit] += bufferDepth;
+				bufferDerandomize[currDigit][0] = _input_array[currIndex];
+				bufferIndex[currDigit] = 1;
+			}
+			else
+			{
+				bufferDerandomize[currDigit][bufferIndex[currDigit]++] = _input_array[currIndex];
+			}
+		}
+		// Flush all the derandomization buffers
+		for (unsigned long whichBuff = 0; whichBuff < numberOfBins; whichBuff++)
+		{
+			unsigned long numOfElementsInBuff = bufferIndex[whichBuff];
+			for (unsigned long i = 0; i < numOfElementsInBuff; i++)
+				_output_array[startOfBin[whichBuff]++] = bufferDerandomize[whichBuff][i];
+			bufferIndex[whichBuff] = 0;
+		}
+#endif
+		bitMask <<= Log2ofPowerOfTwoRadix;
+		shiftRightAmount += Log2ofPowerOfTwoRadix;
+		_output_array_has_result = !_output_array_has_result;
+		std::swap(_input_array, _output_array);
+		currentDigit++;
+	}
+	// Done with processing, copy all of the bins
+	if (_output_array_has_result && inputArrayIsDestination)
+		for (long _current = 0; _current <= last; _current++)	// copy from output array into the input array
+			_input_array[_current] = _output_array[_current];
+	if (!_output_array_has_result && !inputArrayIsDestination)
+		for (long _current = 0; _current <= last; _current++)	// copy from input array back into the output array
+			_output_array[_current] = _input_array[_current];
+}
+
+// LSD Radix Sort - stable (LSD has to be, and this may preclude LSD Radix from being able to be in-place)
+inline void RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(unsigned long* a, unsigned long* b, unsigned long a_size)
+{
+	const unsigned long Threshold = 100;	// Threshold of when to switch to using Insertion Sort
+	const unsigned long PowerOfTwoRadix = 256;
+	const unsigned long Log2ofPowerOfTwoRadix = 8;
+	// Create bit-mask and shift right amount
+	unsigned long shiftRightAmount = 0;
+	unsigned long bitMask = (unsigned long)(((unsigned long)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
+
+	// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
+	// they are not pushed on the stack and are treated as constants, but local.
+	if (a_size >= Threshold) {
+		_RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase_DeRandomize< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, b, a_size - 1, bitMask, shiftRightAmount, false);
+	}
+	else {
+		// TODO: Substitute Merge Sort, as it will get rid off the for loop, since it's internal to MergeSort
+		insertionSortSimilarToSTLnoSelfAssignment(a, a_size);
+		for (unsigned long j = 0; j < a_size; j++)	// copy from input array to the destination array
+			b[j] = a[j];
+	}
+}
