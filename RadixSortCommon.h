@@ -54,7 +54,12 @@ inline unsigned long extractDigit( _Type a, _Type bitMask, unsigned long shiftRi
 	unsigned long digit = (unsigned long)(( a & bitMask ) >> shiftRightAmount );	// extract the digit we are sorting based on
 	return digit;
 }
-template< unsigned long PowerOfTwoRadix, class _Type >
+template< class _Type >
+inline unsigned long extractDigit_1(_Type a, _Type bitMask, unsigned long shiftRightAmount)
+{
+	unsigned long digit = (unsigned long)((a >> shiftRightAmount) & bitMask);	// extract the digit we are sorting based on
+	return digit;
+}template< unsigned long PowerOfTwoRadix, class _Type >
 inline unsigned long extractDigitNegate( _Type a, _Type bitMask, unsigned long shiftRightAmount )
 {
 	unsigned long digit = (unsigned long)logicalRightShift_ru((_Type)( a & bitMask ), shiftRightAmount );	// extract the digit we are sorting based on
