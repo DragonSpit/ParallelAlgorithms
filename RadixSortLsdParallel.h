@@ -22,10 +22,12 @@
 #include <string.h>
 #endif
 
+#include "RadixSortLSD.h"
+
 using namespace tbb;
 
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
-inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], int l, int r, int parallelThreshold = 16 * 1024)
+inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], int l, int r, int parallelThreshold = 64 * 1024)
 {
 	const unsigned long numberOfDigits = Log2ofPowerOfTwoRadix;
 	const unsigned long numberOfBins   = PowerOfTwoRadix;
@@ -584,7 +586,7 @@ class HistogramByteComponentsParallelType
 public:
 	static const unsigned long numberOfDigits = 4;
 	static const unsigned long numberOfBins = 256;
-	__declspec(align(64)) _CountType my_count[numberOfDigits][numberOfBins];		// the count for this task
+	alignas(64) _CountType my_count[numberOfDigits][numberOfBins];		// the count for this task
 
 	HistogramByteComponentsParallelType(unsigned long* a) : my_input_array(a)	// constructor, which copies the pointer to the array being counted
 	{
@@ -629,41 +631,6 @@ public:
 	}
 };
 
-// Permute phase of LSD Radix Sort with de-randomized write memory accesses
-// Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
-template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold, unsigned long BufferDepth>
-inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsigned long* input_array, unsigned long* output_array, long startIndex, long endIndex, unsigned long bitMask, unsigned long shiftRightAmount,
-	long* endOfBin, unsigned long bufferIndex[], unsigned long bufferDerandomize[][BufferDepth])
-{
-	const unsigned long numberOfBins = PowerOfTwoRadix;
-
-	for (long _current = startIndex; _current <= endIndex; _current++)
-	{
-		unsigned long digit = extractDigit(input_array[_current], bitMask, shiftRightAmount);
-		if (bufferIndex[digit] < BufferDepth)
-		{
-			bufferDerandomize[digit][bufferIndex[digit]++] = input_array[_current];
-		}
-		else
-		{
-			unsigned long outIndex = endOfBin[digit];
-			unsigned long* buff = &(bufferDerandomize[digit][0]);
-			memcpy(&(output_array[outIndex]), buff, BufferDepth * sizeof(unsigned long));	// significantly faster than a for loop
-			endOfBin[digit] += BufferDepth;
-			bufferDerandomize[digit][0] = input_array[_current];
-			bufferIndex[digit] = 1;
-		}
-	}
-	// Flush all the derandomization buffers
-	for (unsigned long whichBuff = 0; whichBuff < numberOfBins; whichBuff++)
-	{
-		unsigned long numOfElementsInBuff = bufferIndex[whichBuff];
-		for (unsigned long i = 0; i < numOfElementsInBuff; i++)
-			output_array[endOfBin[whichBuff]++] = bufferDerandomize[whichBuff][i];
-		bufferIndex[whichBuff] = 0;
-	}
-}
-
 // Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
 // Parallel LSD Radix Sort, with Counting separated into its own parallel phase, followed by a serial permutation phase, as is done in HPCsharp in C#
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
@@ -675,8 +642,8 @@ void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase_DeRandomize(uns
 	bool _output_array_has_result = false;
 	unsigned long currentDigit = 0;
 	static const unsigned long bufferDepth = 64;
-	__declspec(align(64)) unsigned long bufferDerandomize[numberOfBins][bufferDepth];
-	__declspec(align(64)) unsigned long bufferIndex[numberOfBins] = { 0 };
+	alignas(64) unsigned long bufferDerandomize[numberOfBins][bufferDepth];
+	alignas(64) unsigned long bufferIndex[numberOfBins] = { 0 };
 
 	//unsigned long** count2D = HistogramByteComponents <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inputArray, 0, endIndex);
 
@@ -693,36 +660,9 @@ void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase_DeRandomize(uns
 		for (unsigned long i = 1; i < numberOfBins; i++)
 			startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
-#if 1
-		_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold, bufferDepth>(_input_array, _output_array, 0, last,
-			bitMask, shiftRightAmount, endOfBin, bufferIndex, bufferDerandomize);
-#else
-		for (long currIndex = 0; currIndex <= last; currIndex++)	// permutation phase
-		{
-			unsigned long currDigit = extractDigit(_input_array[currIndex], bitMask, shiftRightAmount);
-			if (bufferIndex[currDigit] >= bufferDepth)
-			{
-				unsigned long outIndex = startOfBin[currDigit];
-				unsigned long* buff = &(bufferDerandomize[currDigit][0]);
-				memcpy(&(_output_array[outIndex]), buff, bufferDepth * sizeof(unsigned long));	// significantly faster than a for loop
-				startOfBin[currDigit] += bufferDepth;
-				bufferDerandomize[currDigit][0] = _input_array[currIndex];
-				bufferIndex[currDigit] = 1;
-			}
-			else
-			{
-				bufferDerandomize[currDigit][bufferIndex[currDigit]++] = _input_array[currIndex];
-			}
-		}
-		// Flush all the derandomization buffers
-		for (unsigned long whichBuff = 0; whichBuff < numberOfBins; whichBuff++)
-		{
-			unsigned long numOfElementsInBuff = bufferIndex[whichBuff];
-			for (unsigned long i = 0; i < numOfElementsInBuff; i++)
-				_output_array[startOfBin[whichBuff]++] = bufferDerandomize[whichBuff][i];
-			bufferIndex[whichBuff] = 0;
-		}
-#endif
+		_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold, bufferDepth>(
+			_input_array, _output_array, 0, last, bitMask, shiftRightAmount, endOfBin, bufferIndex, bufferDerandomize);
+
 		bitMask <<= Log2ofPowerOfTwoRadix;
 		shiftRightAmount += Log2ofPowerOfTwoRadix;
 		_output_array_has_result = !_output_array_has_result;
