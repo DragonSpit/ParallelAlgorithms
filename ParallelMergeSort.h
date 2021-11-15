@@ -179,13 +179,15 @@ namespace ParallelAlgorithms
 
     inline void parallel_merge_sort_hybrid_radix_inner(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
     {
+        //printf("l = %zd   r = %zd   parallelThreshold = %zd\n", l, r, parallelThreshold);
         if (r == l) {   // termination/base case of sorting a single element
             if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
             return;
         }
         if ((r - l) <= parallelThreshold && !srcToDst) {
-            RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
+            RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
             //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
+            //RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
             //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
             //if (srcToDst)
             //    for (int i = l; i <= r; i++)    dst[i] = src[i];
@@ -197,20 +199,20 @@ namespace ParallelAlgorithms
 #else
         tbb::parallel_invoke(
 #endif
-            [&] { parallel_merge_sort_hybrid_radix_inner(src, l,     m, dst, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
-            [&] { parallel_merge_sort_hybrid_radix_inner(src, m + 1, r, dst, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
+            [&] { parallel_merge_sort_hybrid_radix_inner(src, l,     m, dst, !srcToDst, parallelThreshold); },      // reverse direction of srcToDst for the next level of recursion
+            [&] { parallel_merge_sort_hybrid_radix_inner(src, m + 1, r, dst, !srcToDst, parallelThreshold); }       // reverse direction of srcToDst for the next level of recursion
         );
         if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
         else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
     }
 
-    inline void parallel_merge_sort_hybrid_radix(unsigned long* src, int l, int r, unsigned long* dst, bool srcToDst = true, int parallelThreshold = 24 * 1024)
+    inline void parallel_merge_sort_hybrid_radix(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 24 * 1024)
     {
         // may return 0 when not able to detect
         const auto processor_count = std::thread::hardware_concurrency();
-        //printf("Number of cores = %u \n", processor_count);
+        //printf("Number of cores = %u   parallelThreshold = %d\n", processor_count, parallelThreshold);
 
-        if ((int)(parallelThreshold * processor_count) < (r - l + 1))
+        if ((parallelThreshold * processor_count) < (r - l + 1))
             parallelThreshold = (r - l + 1) / processor_count;
 
         parallel_merge_sort_hybrid_radix_inner(src, l, r, dst, srcToDst, parallelThreshold);
