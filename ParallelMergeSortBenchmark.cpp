@@ -111,6 +111,7 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 		//sort(ulongsCopyVec.begin(), ulongsCopyVec.end());												//     in-place adaptive interface (vector)
 		//ParallelAlgorithms::merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
 		ParallelAlgorithms::parallel_merge_sort_hybrid_radix(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted, false, ulongs.size() / 48 );	// ParallelMergeSort modifies the source array
+		//RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(ulongsCopy, sorted, ulongs.size());
 
 		const auto endTime = high_resolution_clock::now();
 		sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
