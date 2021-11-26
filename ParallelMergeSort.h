@@ -58,7 +58,7 @@ namespace ParallelAlgorithms
 #else
         tbb::parallel_invoke(
 #endif
-            [&] { parallel_merge_sort_simplest_r(src, l, m, dst, !srcToDst); },		// reverse direction of srcToDst for the next level of recursion
+            [&] { parallel_merge_sort_simplest_r(src, l,     m, dst, !srcToDst); },		// reverse direction of srcToDst for the next level of recursion
             [&] { parallel_merge_sort_simplest_r(src, m + 1, r, dst, !srcToDst); }		// reverse direction of srcToDst for the next level of recursion
         );
         if (srcToDst)   merge_parallel_L5(src, l, m, m + 1, r, dst, l);
@@ -89,6 +89,7 @@ namespace ParallelAlgorithms
     template< class _Type >
     inline void parallel_merge_sort_hybrid_rh(_Type* src, int l, int r, _Type* dst, bool srcToDst = true)
     {
+        if (r < l)  return;
         if (r == l) {    // termination/base case of sorting a single element
             if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
             return;
@@ -109,13 +110,14 @@ namespace ParallelAlgorithms
             [&] { parallel_merge_sort_hybrid_rh(src, m + 1, r, dst, !srcToDst); }     // reverse direction of srcToDst for the next level of recursion
         );
         if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
-        else            merge_parallel_L5(dst, l, m, m + 1, r, src, l);
+        else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
     }
 
     // Listing 4
     template< class _Type >
     inline void parallel_merge_sort_hybrid_rh_1(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
     {
+        if (r < l)  return;
         if (r == l) {    // termination/base case of sorting a single element
             if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
             return;
@@ -141,6 +143,7 @@ namespace ParallelAlgorithms
     template< class _Type >
     inline void parallel_merge_sort_hybrid_rh_2(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
     {
+        if (r < l)  return;
         if (r == l) {   // termination/base case of sorting a single element
             if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
             return;
@@ -180,6 +183,7 @@ namespace ParallelAlgorithms
     inline void parallel_merge_sort_hybrid_radix_inner(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
     {
         //printf("l = %zd   r = %zd   parallelThreshold = %zd\n", l, r, parallelThreshold);
+        if (r < l)  return;
         if (r == l) {   // termination/base case of sorting a single element
             if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
             return;
@@ -222,6 +226,7 @@ namespace ParallelAlgorithms
     template< class _Type >
     inline void merge_sort_hybrid(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
     {
+        if (r < l)  return;
         if (r == l) {    // termination/base case of sorting a single element
             if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
             return;
@@ -243,7 +248,7 @@ namespace ParallelAlgorithms
     template< class _Type >
     inline void inplace_merge_sort_hybrid(_Type* src, int l, int r, int threshold = 1024)
     {
-        if (r == l) {
+        if (r <= l) {
             return;
         }
         if ((r - l) <= threshold) {
@@ -261,7 +266,7 @@ namespace ParallelAlgorithms
     template< class _Type >
     inline void parallel_inplace_merge_sort_hybrid_inner(_Type* src, size_t l, size_t r, size_t parallelThreshold = 1024)
     {
-        if (r == l) {
+        if (r <= l) {
             return;
         }
         if ((r - l) <= parallelThreshold) {
@@ -294,11 +299,24 @@ namespace ParallelAlgorithms
     }
 
     template< class _Type >
-    inline void merge_sort_bottom_up(_Type* src, int l, int r)
+    inline void merge_sort_inplace(_Type* src, size_t l, size_t r)
     {
-        for (int m = 1; m <= r - l; m = m + m)
-            for (int i = l; i <= r - m; i += m + m)
-                std::inplace_merge(&src[i], &src[i + m - 1], &src[__min(i + m + m - 1, r) - 1]);
+        if (r <= l) return;
+
+        size_t m = l + ( r - l ) / 2;             // computes the average without overflow
+
+        merge_sort_inplace(src, l,     m);
+        merge_sort_inplace(src, m + 1, r);
+
+        std::inplace_merge(src + l, src + m + 1, src + r + 1);
+    }
+
+    template< class _Type >
+    inline void merge_sort_bottom_up_inplace(_Type* src, size_t l, size_t r)
+    {
+        for (size_t m = 1; m <= r - l; m = m + m)
+            for (size_t i = l; i <= r - m; i += m + m)
+                std::inplace_merge(src + i, src + i + m, src + __min(i + m + m, r + 1));
     }
 
 }
