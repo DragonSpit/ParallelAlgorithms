@@ -303,4 +303,79 @@ inline void merge_parallel_L5(_Type* t, size_t p1, size_t r1, size_t p2, size_t 
 	}
 }
 
+template< class _Type >
+inline void mirror_ptr(_Type* a, int l, int r)
+{
+	while (l < r)	exchange(a[l++], a[r--]);
+}
+
+// Swaps two sequential sub-arrays ranges a[ l .. m ] and a[ m + 1 .. r ]
+// Seems to be the fastest version, as if mirror of the two blocks brings into the cache the most of the whole array for the last mirror to do.
+template< class _Type >
+inline void block_exchange_mirror(_Type* a, int l, int m, int r)
+{
+	mirror_ptr(a, l, m);
+	mirror_ptr(a, m + 1, r);
+	mirror_ptr(a, l, r);
+}
+
+template< class _Type >
+inline void p_merge_in_place_2(_Type* t, int l, int m, int r)
+{
+	int length1 = m - l + 1;
+	int length2 = r - m;
+	if (length1 >= length2)
+	{
+		if (length2 <= 0)	return;
+		//		if ( length1 <= 32 && length2 <= 32 )	{ mergeInPlace( t, l, m, r );  return; }
+		//		if (( length1 <= 16*1024 ) && ( length2 <= 16*1024 ))	{ _mergeSedgewick( t, l, m, r );  return; }
+		//		if (( length1 + length2 ) <= 1024 )	{ mergeSedgewick_small_arrays_only< 1024 >( t, l, m, r );  return; }	// 2X speedup
+		if ((length1 + length2) <= 1024) { std::inplace_merge(t + l, t + m + 1, t + r + 1);  return; }
+		//		if ( length1 < 1024 )	{ merge_inplace_forward< 1024 >( t, l, m, r );  return; }	
+		int q1 = (l + m) / 2;								// q1 is mid-point of the larger segment
+		int q2 = my_binary_search(t[q1], t, m + 1, r);	// q2 is q1 partitioning element within the smaller sub-array (and q2 itself is part of the sub-array that does not move)
+		int q3 = q1 + (q2 - m - 1);
+		//		block_exchange_7< 16 >( t, q1, m, q2 - 1 );
+		//		block_exchange_mirror_reverse_order(( t, q1, m, q2 - 1 );
+		//		p_block_exchange( t, q1, m, q2 - 1 );
+		block_exchange_mirror(t, q1, m, q2 - 1);		// 2X speedup
+//		block_exchange_juggling_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
+//		block_swap_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		Concurrency::parallel_invoke(
+#else
+		tbb::parallel_invoke(
+#endif
+			[&] { p_merge_in_place_2(t, l,      q1 - 1, q3 - 1); },	// note that q3 is now in its final place and no longer participates in further processing
+			[&] { p_merge_in_place_2(t, q3 + 1, q2 - 1, r     ); }
+		);
+	}
+	else {
+		if (length1 <= 0)	return;
+		//		if ( length1 <= 32 && length2 <= 32 )	{ mergeInPlace( t, l, m, r );  return; }
+		//		if (( length1 <= 16*1024 ) && ( length2 <= 16*1024 ))	{ _mergeSedgewick( t, l, m, r );  return; }
+		//		if (( length1 + length2 ) <= 1024 )	{ mergeSedgewick_small_arrays_only< 1024 >( t, l, m, r );  return; }	// 2X speedup
+		if ((length1 + length2) <= 1024) { std::inplace_merge(t + l, t + m + 1, t + r + 1);  return; }
+		//		if ( length2 < 1024 )	{ merge_inplace_reverse< 1024 >( t, l, m, r );  return; }	
+		int q1 = (m + 1 + r) / 2;							// q1 is mid-point of the larger segment
+		int q2 = my_binary_search(t[q1], t, l, m);		// q2 is q1 partitioning element within the smaller sub-array (and q2 itself is part of the sub-array that does not move)
+		int q3 = q2 + (q1 - m - 1);
+		//		block_exchange_7< 16 >( t, q2, m, q1 );
+		//		block_exchange_mirror_reverse_order(( t, q2, m, q1 );
+		//		p_block_exchange( t, q2, m, q1 );
+		block_exchange_mirror(t, q2, m, q1);			// 2X speedup
+//		block_exchange_juggling_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
+//		block_swap_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		Concurrency::parallel_invoke(
+#else
+		tbb::parallel_invoke(
+#endif
+			[&] { p_merge_in_place_2(t, l, q2 - 1, q3 - 1); },	// note that q3 is now in its final place and no longer participates in further processing
+			[&] { p_merge_in_place_2(t, q3 + 1, q1, r); }
+		);
+	}
+}
+
+
 #endif
