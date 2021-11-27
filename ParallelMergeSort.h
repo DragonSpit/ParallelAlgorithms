@@ -246,7 +246,7 @@ namespace ParallelAlgorithms
     }
 
     template< class _Type >
-    inline void inplace_merge_sort_hybrid(_Type* src, int l, int r, int threshold = 1024)
+    inline void merge_sort_inplace_hybrid(_Type* src, int l, int r, int threshold = 1024)
     {
         if (r <= l) {
             return;
@@ -257,8 +257,8 @@ namespace ParallelAlgorithms
         }
         int m = ((r + l) / 2);
 
-        inplace_merge_sort_hybrid(src, l,     m, threshold);
-        inplace_merge_sort_hybrid(src, m + 1, r, threshold);
+        merge_sort_inplace_hybrid(src, l,     m, threshold);
+        merge_sort_inplace_hybrid(src, m + 1, r, threshold);
 
         std::inplace_merge(src + l, src + m + 1, src + r + 1);
     }
@@ -279,10 +279,11 @@ namespace ParallelAlgorithms
 #else
         tbb::parallel_invoke(
 #endif
-            [&] { parallel_inplace_merge_sort_hybrid_inner(src, l, m, parallelThreshold); },
+            [&] { parallel_inplace_merge_sort_hybrid_inner(src, l,     m, parallelThreshold); },
             [&] { parallel_inplace_merge_sort_hybrid_inner(src, m + 1, r, parallelThreshold); }
         );
-        std::inplace_merge(std::execution::par_unseq, src + l, src + m + 1, src + r + 1);
+        //std::inplace_merge(std::execution::par_unseq, src + l, src + m + 1, src + r + 1);
+        p_merge_in_place_2(src, l, m, r);
     }
 
     template< class _Type >
@@ -318,6 +319,7 @@ namespace ParallelAlgorithms
             for (size_t i = l; i <= r - m; i += m + m)
                 std::inplace_merge(src + i, src + i + m, src + __min(i + m + m, r + 1));
     }
+
 
 }
 #endif
