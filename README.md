@@ -35,8 +35,8 @@ LSD Radix Sort multi-core |434|476|714| 48-core Intel Xeon, with hyperthreading 
 Merge Sort single-core |19|93|114| 6-core Intel i7-9750H, with hyperthreading
 Merge Sort multi-core |105|222|243| 6-core Intel i7-9750H, with hyperthreading
 Merge Sort multi-core |626|1010|1136| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-In-Place Merge Sort multi-core |58|164|1163| 6-core Intel i7-9750H, with hyperthreading
-In-Place Merge Sort multi-core |61|145|1230| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+In-Place Merge Sort multi-core |58|139|313| 6-core Intel i7-9750H, with hyperthreading
+In-Place Merge Sort multi-core |179|286|333| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
 
 Parallel Merge Sort is over 6X faster than C++ standard sort, on a 48-core machine, showing better scaling
 with more cores. It is also 70% faster on 6-core machine. It is also 4X faster for nearly pre-sorted arrays.
