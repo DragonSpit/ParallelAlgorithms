@@ -2,6 +2,9 @@
 // TODO: Provide the same interface to serial and parallel algorithms as standard C++ does, using the first argument as the execution policy
 // TODO: Improve parallel in-place merge sort by using the same method as the not-in-place merge sort does, where it looks at how many processors are
 //       available and adjusts the parallel threshold accordingly, as the current parallel threshold is set way too small.
+// TODO: Use Selection Sort instead of Insertion Sort for faster bottom of the recursion tree.
+// TODO: Consider bringing in and thoroughly testing (correctness and performance) https://keithschwarz.com/interesting/code/?dir=inplace-merge (Linear in-place merge implementation)
+// TODO: Implement memswap() with the same interface as memcpy() https://stackoverflow.com/questions/109249/why-isnt-there-a-standard-memswap-function
 
 // Parallel Merge Sort implementations
 
@@ -313,13 +316,50 @@ namespace ParallelAlgorithms
     }
 
     template< class _Type >
+    inline void merge_sort_hybrid_inplace(_Type* src, size_t l, size_t r)
+    {
+        if (r <= l) return;
+        if ((r - l) <= 48) {
+            insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);
+            return;
+        }
+
+        size_t m = l + (r - l) / 2;             // computes the average without overflow
+
+        merge_sort_hybrid_inplace(src, l,     m);
+        merge_sort_hybrid_inplace(src, m + 1, r);
+
+        std::inplace_merge(src + l, src + m + 1, src + r + 1);
+    }
+
+    template< class _Type >
     inline void merge_sort_bottom_up_inplace(_Type* src, size_t l, size_t r)
     {
         for (size_t m = 1; m <= r - l; m = m + m)
             for (size_t i = l; i <= r - m; i += m + m)
                 std::inplace_merge(src + i, src + i + m, src + __min(i + m + m, r + 1));
+                //merge_in_place(src, i, i + m - 1, __min(i + m + m - 1, r));     // slower than C++ standard inplace_merge
     }
 
+    template< class _Type >
+    inline void merge_sort_bottom_up_inplace_hybrid(_Type* src, size_t l, size_t r)
+    {
+        // TODO: Use insertion sort for the first 32 element chunks
+        if ((r - l) <= 32) {
+            insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);
+            return;
+        }
+        size_t m = 32;
+        for (size_t i = l; i <= r; i += m)
+            insertionSortSimilarToSTLnoSelfAssignment(src + i, __min(m, r - m + 1));
+        for (; m <= r - l; m = m + m)
+            for (size_t i = l; i <= r - m; i += m + m)
+                std::inplace_merge(src + i, src + i + m, src + __min(i + m + m, r + 1));
+                //merge_in_place(src, i, i + m - 1, __min(i + m + m - 1, r));     // slower than using C++ standard inplace_merge, because standard one is adaptive. I could make mine adaptive too. Performance order is definitely noticable for 100M element array
+                // TODO: Create an adaptive version of my own in-place merge and see if it's faster
+        // TODO: This leads to a terrific idea of implementing an adaptive in-place merge sort, which performs not-in-place parallel merge sort when there is sufficient memory, and falls back to the truly in-place merge sort when it has to,
+        //       and even then the parallel in-place merge sort is faster than C++ parallel sort.
+    }
 
 }
 #endif
