@@ -157,6 +157,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BinarySearch.h" />
+    <ClInclude Include="InplaceMerge.h" />
     <ClInclude Include="InsertionSort.h" />
     <ClInclude Include="ParallelMerge.h" />
     <ClInclude Include="RadixSortCommon.h" />
