@@ -225,6 +225,24 @@ namespace ParallelAlgorithms
         parallel_merge_sort_hybrid_radix_inner(src, l, r, dst, srcToDst, parallelThreshold);
     }
 
+    // Pure Serial Merge Sort, using divide-and-conquer algorthm
+    template< class _Type >
+    inline void merge_sort(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
+    {
+        if (r < l)  return;
+        if (r == l) {    // termination/base case of sorting a single element
+            if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
+            return;
+        }
+        size_t m = ((r + l) / 2);
+
+        merge_sort(src, l, m, dst, !srcToDst);          // reverse direction of srcToDst for the next level of recursion
+        merge_sort(src, m + 1, r, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
+
+        if (srcToDst) merge_dac(src, l, m, m + 1, r, dst, l);
+        else          merge_dac(dst, l, m, m + 1, r, src, l);
+    }
+
     // Serial Merge Sort, using divide-and-conquer algorthm
     template< class _Type >
     inline void merge_sort_hybrid(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
@@ -244,8 +262,8 @@ namespace ParallelAlgorithms
         merge_sort_hybrid(src, l,     m, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
         merge_sort_hybrid(src, m + 1, r, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
 
-        if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
-        else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
+        if (srcToDst) merge_dac_hybrid(src, l, m, m + 1, r, dst, l);
+        else          merge_dac_hybrid(dst, l, m, m + 1, r, src, l);
     }
 
     template< class _Type >
