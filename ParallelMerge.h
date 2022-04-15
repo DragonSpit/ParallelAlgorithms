@@ -1,6 +1,8 @@
 // Parallel Merge implementations
 // TODO: Need to expose parallel threshold to the user
 // TODO: Merge and Parallel Merge need indexes to be size_t instead of int
+// TODO: Convert all Merge function to use [left, right) boundary method where left is included and right is not, to allow specification of zero length array
+//       even at left being at zero index. This will go well with size_t transition.
 
 #ifndef _ParallelMerge_h
 #define _ParallelMerge_h
@@ -304,6 +306,38 @@ inline void merge_parallel_L5(_Type* t, size_t p1, size_t r1, size_t p2, size_t 
 }
 
 template< class _Type >
+inline void merge_parallel_quad(_Type* t, size_t p1, size_t r1, size_t p2, size_t r2, _Type* a, size_t p3)
+{
+	size_t length1 = r1 - p1 + 1;
+	size_t length2 = r2 - p2 + 1;
+	if (length1 < length2) {
+		exchange(p1, p2);
+		exchange(r1, r2);
+		exchange(length1, length2);
+	}
+	if (length1 == 0)	return;
+	if ((length1 + length2) <= 32768) {	// 8192 threshold is much better than 16. 32K seems to be an even better threshold
+		//merge_ptr( &t[ p1 ], &t[ p1 + length1 ], &t[ p2 ], &t[ p2 + length2 ], &a[ p3 ] );	// in DDJ paper
+		merge_ptr_1(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);				// slightly faster than merge_ptr version due to fewer loop comparisons
+		//merge_ptr_3(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);				// new merge concept, which turned out slower
+	}
+	else {
+		size_t q1 = (p1 + r1) / 2;
+		size_t q2 = my_binary_search(t[q1], t, p2, r2);
+		size_t q3 = p3 + (q1 - p1) + (q2 - p2);
+		a[q3] = t[q1];
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		Concurrency::parallel_invoke(
+#else
+		tbb::parallel_invoke(
+#endif
+			[&] { merge_parallel_quad(t, p1,     q1 - 1, p2, q2 - 1, a, p3    ); },
+			[&] { merge_parallel_quad(t, q1 + 1, r1,     q2, r2,     a, q3 + 1); }
+		);
+	}
+}
+
+template< class _Type >
 inline void mirror_ptr(_Type* a, int l, int r)
 {
 	while (l < r)	exchange(a[l++], a[r--]);
@@ -314,9 +348,31 @@ inline void mirror_ptr(_Type* a, int l, int r)
 template< class _Type >
 inline void block_exchange_mirror(_Type* a, int l, int m, int r)
 {
-	mirror_ptr(a, l, m);
+	mirror_ptr(a, l,     m);
 	mirror_ptr(a, m + 1, r);
-	mirror_ptr(a, l, r);
+	mirror_ptr(a, l,     r);
+}
+
+// Swaps two sequential sub-arrays ranges a[ l .. m ] and a[ m + 1 .. r ]
+// Seems to be the fastest version, as if mirror of the two blocks brings into the cache the most of the whole array for the last mirror to do.
+template< class _Type >
+inline void block_exchange_mirror_par(_Type* a, int l, int m, int r, int threshold = 64 * 1024)
+{
+	int length = r - l + 1;
+	if (length < threshold)
+		block_exchange_mirror(a, l, m, r);
+	else
+	{
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		Concurrency::parallel_invoke(
+#else
+		tbb::parallel_invoke(
+#endif
+			[&] { mirror_ptr(a, l,     m); },
+			[&] { mirror_ptr(a, m + 1, r); }
+		);
+		mirror_ptr(a, l, r);
+	}
 }
 
 template< class _Type >
@@ -338,7 +394,8 @@ inline void p_merge_in_place_2(_Type* t, int l, int m, int r)
 		//		block_exchange_7< 16 >( t, q1, m, q2 - 1 );
 		//		block_exchange_mirror_reverse_order(( t, q1, m, q2 - 1 );
 		//		p_block_exchange( t, q1, m, q2 - 1 );
-		block_exchange_mirror(t, q1, m, q2 - 1);		// 2X speedup
+		//block_exchange_mirror(t, q1, m, q2 - 1);		// 2X speedup
+		block_exchange_mirror_par(t, q1, m, q2 - 1);
 //		block_exchange_juggling_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
 //		block_swap_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
@@ -363,7 +420,8 @@ inline void p_merge_in_place_2(_Type* t, int l, int m, int r)
 		//		block_exchange_7< 16 >( t, q2, m, q1 );
 		//		block_exchange_mirror_reverse_order(( t, q2, m, q1 );
 		//		p_block_exchange( t, q2, m, q1 );
-		block_exchange_mirror(t, q2, m, q1);			// 2X speedup
+		//block_exchange_mirror(t, q2, m, q1);			// 2X speedup
+		block_exchange_mirror_par(t, q2, m, q1);
 //		block_exchange_juggling_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
 //		block_swap_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
