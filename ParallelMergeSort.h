@@ -227,16 +227,16 @@ namespace ParallelAlgorithms
 
     // Pure Serial Merge Sort, using divide-and-conquer algorthm
     template< class _Type >
-    inline void merge_sort(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
+    inline void merge_sort(_Type* src, int l, int r, _Type* dst, bool srcToDst = true)
     {
         if (r < l)  return;
         if (r == l) {    // termination/base case of sorting a single element
             if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
             return;
         }
-        size_t m = ((r + l) / 2);
+        int m = (r + l) / 2;
 
-        merge_sort(src, l, m, dst, !srcToDst);          // reverse direction of srcToDst for the next level of recursion
+        merge_sort(src, l,     m, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
         merge_sort(src, m + 1, r, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
 
         if (srcToDst) merge_dac(src, l, m, m + 1, r, dst, l);
@@ -257,7 +257,7 @@ namespace ParallelAlgorithms
             //stable_sort( src + l, src + r + 1 );  // STL stable_sort can be used instead, but is slightly slower than Insertion Sort
             return;
         }
-        size_t m = ((r + l) / 2);
+        size_t m = (r + l) / 2;
 
         merge_sort_hybrid(src, l,     m, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
         merge_sort_hybrid(src, m + 1, r, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
@@ -267,7 +267,7 @@ namespace ParallelAlgorithms
     }
 
     template< class _Type >
-    inline void merge_sort_inplace_hybrid(_Type* src, int l, int r, int threshold = 1024)
+    inline void merge_sort_inplace_hybrid_with_sort(_Type* src, int l, int r, int threshold = 1024)
     {
         if (r <= l) {
             return;
@@ -276,13 +276,31 @@ namespace ParallelAlgorithms
             std::sort(src + l, src + r + 1);    // could be insertion sort, with a smaller threshold
             return;
         }
-        int m = ((r + l) / 2);
+        int m = (r + l) / 2;
 
-        merge_sort_inplace_hybrid(src, l,     m, threshold);
-        merge_sort_inplace_hybrid(src, m + 1, r, threshold);
+        merge_sort_inplace_hybrid_with_sort(src, l,     m, threshold);
+        merge_sort_inplace_hybrid_with_sort(src, m + 1, r, threshold);
 
         std::inplace_merge(src + l, src + m + 1, src + r + 1);
     }
+
+    template< class _Type >
+    inline void merge_sort_inplace_hybrid_with_insertion(_Type* src, size_t l, size_t r)
+    {
+        if (r <= l) return;
+        if ((r - l) <= 48) {
+            insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);
+            return;
+        }
+
+        size_t m = l + (r - l) / 2;             // computes the average without overflow
+
+        merge_sort_inplace_hybrid_with_insertion(src, l,     m);
+        merge_sort_inplace_hybrid_with_insertion(src, m + 1, r);
+
+        std::inplace_merge(src + l, src + m + 1, src + r + 1);
+    }
+
 
     template< class _Type >
     inline void parallel_inplace_merge_sort_hybrid_inner(_Type* src, size_t l, size_t r, size_t parallelThreshold = 1024)
@@ -294,7 +312,7 @@ namespace ParallelAlgorithms
             std::sort(src + l, src + r + 1);
             return;
         }
-        size_t m = ((r + l) / 2);
+        size_t m = (r + l) / 2;
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
         Concurrency::parallel_invoke(
 #else
@@ -329,23 +347,6 @@ namespace ParallelAlgorithms
 
         merge_sort_inplace(src, l,     m);
         merge_sort_inplace(src, m + 1, r);
-
-        std::inplace_merge(src + l, src + m + 1, src + r + 1);
-    }
-
-    template< class _Type >
-    inline void merge_sort_hybrid_inplace(_Type* src, size_t l, size_t r)
-    {
-        if (r <= l) return;
-        if ((r - l) <= 48) {
-            insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);
-            return;
-        }
-
-        size_t m = l + (r - l) / 2;             // computes the average without overflow
-
-        merge_sort_hybrid_inplace(src, l,     m);
-        merge_sort_hybrid_inplace(src, m + 1, r);
 
         std::inplace_merge(src + l, src + m + 1, src + r + 1);
     }
