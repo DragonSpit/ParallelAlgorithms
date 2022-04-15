@@ -566,7 +566,7 @@ inline void SortRadixPar(unsigned long* a, unsigned long* tmp_work_buff, size_t 
 	// may return 0 when not able to detect
 	auto processor_count = std::thread::hardware_concurrency();
 	//printf("Number of cores = %u \n", processor_count);
-	//processor_count = 8;									// Fastest on 48-core AWS Intel machine
+	//processor_count = 16;
 
 	if ((processor_count > 0) && (parallelThreshold * processor_count) < a_size)
 		parallelThreshold = a_size / processor_count;
