@@ -23,7 +23,7 @@ extern int ParallelMergeSortBenchmark(vector<unsigned>&      uints);
 extern int main_quicksort();
 extern int ParallelMergeBenchmark();
 extern int ParallelRadixSortLsdBenchmark(vector<unsigned long>& ulongs);
-
+extern int RadixSortMsdBenchmark(vector<unsigned long>& ulongs);
 
 int main()
 {
@@ -63,12 +63,13 @@ int main()
 	std::cout << std::endl << std::endl;
 
 	// Provide the same input random array of doubles to all sorting algorithms
-	const size_t testSize = 10'000'000;
+	const size_t testSize = 100'000'000;
 	random_device rd;
 
 	const auto processor_count = std::thread::hardware_concurrency();
 	printf("Number of cores = %u \n", processor_count);
 
+#if 0
 	// generate some random doubles:
 	printf("Testing with %zu rendom doubles...\n", testSize);
 	vector<double> doubles(testSize);
@@ -80,6 +81,7 @@ int main()
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark(doubles);
+#endif
 
 	// generate some random unsigned longs:
 	printf("\nTesting with %zu random unsigned longs...\n\n", testSize);
@@ -89,6 +91,8 @@ int main()
 	}
 	printf("Finished initializing unsigned long array\n");
 
+#if 1
+	RadixSortMsdBenchmark(ulongs);
 
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample(ulongs);
@@ -101,6 +105,7 @@ int main()
 
 	// Benchmark Parallel InPlace Merge Sort algorithm
 	ParallelInPlaceMergeSortBenchmark(ulongs);
+#endif
 	// Benchmark Radix Sort LSD algorithm
 	RadixSortLsdBenchmark(ulongs);
 
@@ -114,6 +119,9 @@ int main()
 		else
 			ulongs[i] = static_cast<unsigned long>(i);
 	}
+
+	RadixSortMsdBenchmark(ulongs);
+
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample(ulongs);
 
@@ -133,6 +141,9 @@ int main()
 	for (size_t i = 0; i < ulongs.size(); i++) {
 		ulongs[i] = 10;
 	}
+
+	RadixSortMsdBenchmark(ulongs);
+
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample(ulongs);
 
