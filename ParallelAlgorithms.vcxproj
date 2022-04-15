@@ -163,6 +163,7 @@
     <ClInclude Include="RadixSortCommon.h" />
     <ClInclude Include="RadixSortLSD.h" />
     <ClInclude Include="RadixSortLsdParallel.h" />
+    <ClInclude Include="RadixSortMSD.h" />
     <ClInclude Include="SortParallel.h" />
   </ItemGroup>
   <ItemGroup>
@@ -175,6 +176,10 @@
     <ClCompile Include="ParallelStdCppExample.cpp" />
     <ClCompile Include="RadixSortLsdBenchmark.cpp" />
     <ClCompile Include="ParallelQuickSort.cpp" />
+    <ClCompile Include="RadixSortMsdBenchmark.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="TODO.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
