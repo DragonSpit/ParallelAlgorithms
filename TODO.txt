@@ -1,0 +1,9 @@
+TODO: C++ added support for new without throwing exception to improve performance. This needs to be used everywhere, especially in Adaptive algorithms.
+        _Type* sorted = new(std::nothrow) _Type[src_size];
+      Benchmarking for comparison would be a great one too, to see how much time exception throwing takes
+TODO: Change all interfaces to be either start_iterator/end_iterator or to start_pointer/size. Otherwise, size_t left and size_t right has a problem of not being able to
+      support zero element at zero starting location, forcing the right/end index to be exclusive and left/start being inclusive which seems ackward since they are not the same.
+      Another possibility is to adapt C++ method of iterators for both bounds, and C++ users are used to having the end iterator being exclusive.
+      Another possibility is to adapt C# method of using start/length pair for bounds specification, which I like better than C++ convention of inclusive/exclusive start/end iterator pair.
+      Right now we are getting away with it because sorting 0 elements and sorting 1 element are equivalent to not doing anything and it's impossible to tell the difference, as sorting
+      starts permuting with 2 array elements and larger, otherwise nothing is done.
