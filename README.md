@@ -12,10 +12,10 @@ Benchmark Results of the following C++17 algorithms on Ubuntu 20.04 using g++, s
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
-sort single core |11|35|1667| 6-core Intel i7-9750H, with hyperthreading
-sort multi-core |62|152|1639| 6-core Intel i7-9750H, with hyperthreading
-sort single core |11|32|1492| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-sort multi-core |93|250|1492| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+sort single core |11|35|1667| 6-core Intel i7-9750H
+sort multi-core |62|152|1639| 6-core Intel i7-9750H
+sort single core |11|32|1492| 24-core Intel Xeon 8275CL
+sort multi-core |93|250|1492| 24-core Intel Xeon 8275CL
 
 the units in the table above are Millions of unsigned longs per second. Pre-sorted array is actually nearly pre-sorted, with every 100-th element being a random value.
 
@@ -28,15 +28,15 @@ Additional sorting algorithms provided are:
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
-LSD Radix Sort single core (two phase) |145|125|104| 6-core Intel i7-9750H, with hyperthreading
-LSD Radix Sort multi-core |285|294|322| 6-core Intel i7-9750H, with hyperthreading
-LSD Radix Sort single core |60|64|112| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-LSD Radix Sort multi-core |434|476|714| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-Merge Sort single-core |19|93|114| 6-core Intel i7-9750H, with hyperthreading
-Merge Sort multi-core |105|222|243| 6-core Intel i7-9750H, with hyperthreading
-Merge Sort multi-core |626|1010|1136| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-In-Place Merge Sort multi-core |58|139|313| 6-core Intel i7-9750H, with hyperthreading
-In-Place Merge Sort multi-core |179|286|333| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+LSD Radix Sort single core (two phase) |145|125|104| 6-core Intel i7-9750H
+LSD Radix Sort multi-core |325|294|322| 6-core Intel i7-9750H
+LSD Radix Sort single core |68|76|108| 24-core Intel Xeon 8275CL
+LSD Radix Sort multi-core |434|476|714| 24-core Intel Xeon 8275CL
+Merge Sort single-core |19|93|114| 6-core Intel i7-9750H
+Merge Sort multi-core |105|222|243| 6-core Intel i7-9750H
+Merge Sort multi-core |626|1010|1136| 24-core Intel Xeon 8275CL
+In-Place Merge Sort multi-core |58|139|313| 6-core Intel i7-9750H
+In-Place Merge Sort multi-core |179|286|333| 24-core Intel Xeon 8275CL
 
 Parallel Merge Sort is over 6X faster than C++ standard sort, on a 48-core machine, showing better scaling
 with more cores. It is also 70% faster on 6-core machine. It is also 4X faster for nearly pre-sorted arrays.
@@ -45,10 +45,10 @@ with more cores. It is also 70% faster on 6-core machine. It is also 4X faster f
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
-LSD Radix Sort single core |143|128|110| 6-core Intel i7-9750H, with hyperthreading
-LSD Radix Sort multi-core |325|294|322| 6-core Intel i7-9750H, with hyperthreading
-LSD Radix Sort single core |68|76|108| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
-LSD Radix Sort multi-core |434|476|714| 48-core Intel Xeon, with hyperthreading (96 vCPUs)
+LSD Radix Sort single core |143|128|110| 6-core Intel i7-9750H
+LSD Radix Sort multi-core |325|294|322| 6-core Intel i7-9750H
+LSD Radix Sort single core |68|76|108| 24-core Intel Xeon 8275CL
+LSD Radix Sort multi-core |434|476|714| 24-core Intel Xeon 8275CL
 
 ## Building on Ubuntu 20.04 Linux
 To install g++ which supports C++17:
@@ -73,7 +73,7 @@ Intel Compiler produces higher performance Parallel Merge Sort and LSD Radix Sor
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
-LSD Radix Sort multi-core |248|240|288| 6-core Intel i7-9750H, with hyperthreading
+LSD Radix Sort multi-core |248|240|288| 6-core Intel i7-9750H
 
 ## Reference Blogs
 - Parallel Merge for merging two arrays of any data type supporting comparison. Described in blog https://duvanenko.tech.blog/2018/01/14/parallel-merge/
