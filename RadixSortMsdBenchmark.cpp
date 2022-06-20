@@ -9,6 +9,7 @@
 #include <execution>
 
 #include "RadixSortMSD.h"
+#include "RadixSortMsdParallel.h"
 
 using std::chrono::duration;
 using std::chrono::duration_cast;
@@ -42,13 +43,22 @@ int RadixSortMsdBenchmark(vector<unsigned long>& ulongs)
 		}
 		// Eliminate compiler ability to optimize paging-in of the input and output arrays
 		// Paging-in source and destination arrays leads to a 50% speed-up on Linux, and 15% on Windows
+
+		vector<unsigned long> sorted_reference(ulongs);
+		sort(sorted_reference.begin(), sorted_reference.end());
+
 		printf("ulongsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", ulongsCopy, sorted, sorted[static_cast<unsigned>(rd()) % ulongs.size()], ulongsCopy[static_cast<unsigned>(rd()) % ulongs.size()]);
 		const auto startTime = high_resolution_clock::now();
 		//RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
 		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
-		HybridSort(ulongsCopy, (unsigned long)ulongs.size());
+		//HybridSort(ulongsCopy, (unsigned long)ulongs.size());
+		HybridSortPar(ulongsCopy, (unsigned long)ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Radix Sort MSD", ulongsCopy, ulongs.size(), startTime, endTime);
+		if (std::equal(sorted_reference.begin(), sorted_reference.end(), ulongsCopy))
+			printf("Arrays are equal\n");
+		else
+			printf("Arrays are not equal\n");
 	}
 
 	delete[] sorted;
