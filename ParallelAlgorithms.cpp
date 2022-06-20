@@ -63,7 +63,7 @@ int main()
 	std::cout << std::endl << std::endl;
 
 	// Provide the same input random array of doubles to all sorting algorithms
-	const size_t testSize = 100'000'000;
+	const size_t testSize = 10'000'000;
 	random_device rd;
 
 	const auto processor_count = std::thread::hardware_concurrency();
