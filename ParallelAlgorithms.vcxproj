@@ -164,6 +164,7 @@
     <ClInclude Include="RadixSortLSD.h" />
     <ClInclude Include="RadixSortLsdParallel.h" />
     <ClInclude Include="RadixSortMSD.h" />
+    <ClInclude Include="RadixSortMsdParallel.h" />
     <ClInclude Include="SortParallel.h" />
   </ItemGroup>
   <ItemGroup>
