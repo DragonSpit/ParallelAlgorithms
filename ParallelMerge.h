@@ -375,6 +375,9 @@ inline void block_exchange_mirror_par(_Type* a, int l, int m, int r, int thresho
 	}
 }
 
+// Merge two ranges of source array T[ l .. m, m+1 .. r ] in-place.
+// Based on not-in-place algorithm in 3rd ed. of "Introduction to Algorithms" p. 798-802, extending it to be in-place
+// and my Dr. Dobb's paper https://www.drdobbs.com/parallel/parallel-in-place-merge/240008783 or https://web.archive.org/web/20141217133856/http://www.drdobbs.com/parallel/parallel-in-place-merge/240008783
 template< class _Type >
 inline void p_merge_in_place_2(_Type* t, int l, int m, int r)
 {
