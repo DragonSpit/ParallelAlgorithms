@@ -108,6 +108,7 @@ inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], 
 	return countLeft;
 }
 
+
 // Serial LSD Radix Sort, with Counting separated into its own phase, followed by a permutation phase, as is done in HPCsharp in C#
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
 inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase(unsigned long* input_array, unsigned long* output_array, long last, unsigned long bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
@@ -410,7 +411,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 	}
 }
 
-
+// This method is referenced in the Parallel LSD Radix Sort section of Victor's book.
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline void SortRadixInnerPar(unsigned long* inputArray, unsigned long* outputArray, size_t inputSize, size_t SortRadixParallelWorkQuanta = 64 * 1024)
 {
