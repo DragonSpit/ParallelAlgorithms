@@ -152,10 +152,10 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_1(unsigned
 	}
 	// Done with processing, copy all of the bins
 	if (_output_array_has_result && inputArrayIsDestination)
-		for (long _current = 0; _current <= last; _current++)	// copy from output array into the input array
+		for (size_t _current = 0; _current <= last; _current++)	// copy from output array into the input array
 			_input_array[_current] = _output_array[_current];
 	if (!_output_array_has_result && !inputArrayIsDestination)
-		for (long _current = 0; _current <= last; _current++)	// copy from input array back into the output array
+		for (size_t _current = 0; _current <= last; _current++)	// copy from input array back into the output array
 			_output_array[_current] = _input_array[_current];
 
 	delete[] count2D;
@@ -235,7 +235,7 @@ void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned lo
 	unsigned long* _output_array = output_array;
 	bool _output_array_has_result = false;
 	unsigned long currentDigit = 0;
-	static const unsigned long bufferDepth = 16;
+	static const unsigned long bufferDepth = 128;
 	__declspec(align(64)) unsigned long bufferDerandomize[numberOfBins][bufferDepth];
 	__declspec(align(64)) unsigned long bufferIndex[numberOfBins] = { 0 };
 
