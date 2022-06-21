@@ -29,17 +29,67 @@ using namespace tbb;
 #include "RadixSortCommon.h"
 #include "InsertionSort.h"
 
+template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
+inline size_t* HistogramOneByteComponentParallel(unsigned long inArray[], size_t l, size_t r, unsigned long shiftRight, size_t parallelThreshold = 64 * 1024)
+{
+	const unsigned long numberOfBins = PowerOfTwoRadix;
+
+	size_t* countLeft  = NULL;
+	size_t* countRight = NULL;
+
+	if (l > r)      // zero elements to compare
+	{
+		countLeft = new size_t[numberOfBins];
+		for (size_t j = 0; j < numberOfBins; j++)
+			countLeft[j] = 0;
+		return countLeft;
+	}
+	if ((r - l + 1) <= parallelThreshold)
+	{
+		countLeft = new size_t[numberOfBins];
+		for (size_t j = 0; j < numberOfBins; j++)
+			countLeft[j] = 0;
+
+		for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+			countLeft[(inArray[current] >> shiftRight) & 0xff]++;
+
+		return countLeft;
+	}
+
+	size_t m = (r + l) / 2;
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+	Concurrency::parallel_invoke(
+#else
+	tbb::parallel_invoke(
+#endif
+		[&] { countLeft  = HistogramOneByteComponentParallel <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l,     m, shiftRight, parallelThreshold); },
+		[&] { countRight = HistogramOneByteComponentParallel <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, shiftRight, parallelThreshold); }
+	);
+	// Combine left and right results
+	for (size_t j = 0; j < numberOfBins; j++)
+		countLeft[j] += countRight[j];
+
+	delete[] countRight;
+
+	return countLeft;
+}
+
 
 // Simplified the implementation of the inner loop.
 template< class _Type, unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold >
 inline void _RadixSort_Unsigned_PowerOf2Radix_Par_L1(_Type* a, size_t a_size, _Type bitMask, unsigned long shiftRightAmount)
 {
 	size_t last = a_size - 1;
+#if 0
 	size_t count[PowerOfTwoRadix];
-// TODO: Implement/Bring-in Parallel Count for a single digit/byte
+
 	for (unsigned long i = 0; i < PowerOfTwoRadix; i++)     count[i] = 0;
 	for (size_t _current = 0; _current <= last; _current++)	    // Scan the array and count the number of times each value appears
 		count[(unsigned long)((a[_current] & bitMask) >> shiftRightAmount)]++;
+#else
+	size_t* count = HistogramOneByteComponentParallel< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(a, 0, last, shiftRightAmount);
+#endif
 
 	size_t startOfBin[PowerOfTwoRadix + 1], endOfBin[PowerOfTwoRadix], nextBin = 1;
 	startOfBin[0] = endOfBin[0] = 0;    startOfBin[PowerOfTwoRadix] = 0;			// sentinal
@@ -66,8 +116,8 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Par_L1(_Type* a, size_t a_size, _T
 #if 0
 		for (unsigned long i = 0; i < PowerOfTwoRadix; i++)
 		{
-			size_t numberOfElements = endOfBin[i] - startOfBin[i];
-			if (numberOfElements >= Threshold)		// endOfBin actually points to one beyond the bin
+			size_t numberOfElements = endOfBin[i] - startOfBin[i];		// endOfBin actually points to one beyond the bin
+			if (numberOfElements >= Threshold)
 				_RadixSort_Unsigned_PowerOf2Radix_Par_L1< _Type, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(&a[startOfBin[i]], numberOfElements, bitMask, shiftRightAmount);
 			else if (numberOfElements >= 2)
 				insertionSortSimilarToSTLnoSelfAssignment(&a[startOfBin[i]], numberOfElements);
@@ -83,7 +133,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Par_L1(_Type* a, size_t a_size, _T
 		{
 			size_t numberOfElements = endOfBin[i] - startOfBin[i];
 			if (numberOfElements >= Threshold)		// endOfBin actually points to one beyond the bin
-				g.run([=] {																// important to not pass by reference, as all tasks will then get the same/last value
+				g.run([=] {							// important to not pass by reference, as all tasks will then get the same/last value
 					_RadixSort_Unsigned_PowerOf2Radix_Par_L1< _Type, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(&a[startOfBin[i]], numberOfElements, bitMask, shiftRightAmount);
 				});
 			else if (numberOfElements >= 2)
