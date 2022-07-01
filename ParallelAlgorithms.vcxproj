@@ -168,6 +168,7 @@
     <ClInclude Include="SortParallel.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AverageTests.cpp" />
     <ClCompile Include="ParallelAlgorithms.cpp" />
     <ClCompile Include="ParallelMergeSort.h">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/std:c++latest %(AdditionalOptions)</AdditionalOptions>
