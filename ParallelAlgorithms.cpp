@@ -24,9 +24,13 @@ extern int main_quicksort();
 extern int ParallelMergeBenchmark();
 extern int ParallelRadixSortLsdBenchmark(vector<unsigned long>& ulongs);
 extern int RadixSortMsdBenchmark(vector<unsigned long>& ulongs);
+extern void TestAverageOfTwoIntegers();
 
 int main()
 {
+	// Test cases for averaging of two integers
+	TestAverageOfTwoIntegers();
+
 	// Benchmark QuickSort
 	main_quicksort();
 
