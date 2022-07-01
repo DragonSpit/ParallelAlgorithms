@@ -49,13 +49,13 @@ namespace ParallelAlgorithms
 
     // Listing 1
     template< class _Type >
-    inline void parallel_merge_sort_simplest_r(_Type* src, int l, int r, _Type* dst, bool srcToDst = true)	// srcToDst specifies direction for this level of recursion
+    inline void parallel_merge_sort_simplest_r(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)	// srcToDst specifies direction for this level of recursion
     {
         if (r == l) {    // termination/base case of sorting a single element
             if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
             return;
         }
-        int m = (r + l) / 2;
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
         Concurrency::parallel_invoke(
 #else
@@ -90,7 +90,7 @@ namespace ParallelAlgorithms
 
     // Listing 3
     template< class _Type >
-    inline void parallel_merge_sort_hybrid_rh(_Type* src, int l, int r, _Type* dst, bool srcToDst = true)
+    inline void parallel_merge_sort_hybrid_rh(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
     {
         if (r < l)  return;
         if (r == l) {    // termination/base case of sorting a single element
@@ -103,7 +103,7 @@ namespace ParallelAlgorithms
             if (srcToDst) for (int i = l; i <= r; i++)    dst[i] = src[i];    // copy from src to dst, when the result needs to be in dst
             return;
         }
-        int m = (r + l) / 2;
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
         Concurrency::parallel_invoke(
 #else
@@ -130,7 +130,7 @@ namespace ParallelAlgorithms
             //stable_sort( src + l, src + r + 1 );  // STL stable_sort can be used instead, but is slightly slower than Insertion Sort
             return;
         }
-        size_t m = ((r + l) / 2);
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
         Concurrency::parallel_invoke(
 #else
@@ -153,11 +153,12 @@ namespace ParallelAlgorithms
         }
         if ((r - l) <= parallelThreshold && !srcToDst) {
             std::sort(src + l, src + r + 1);
+            //std::sort(std::execution::par_unseq, src + l, src + r + 1);
             //if (srcToDst)
             //    for (int i = l; i <= r; i++)    dst[i] = src[i];
             return;
         }
-        size_t m = (r + l) / 2;
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
         Concurrency::parallel_invoke(
 #else
@@ -171,7 +172,7 @@ namespace ParallelAlgorithms
     }
 
     template< class _Type >
-    inline void parallel_merge_sort_hybrid(_Type* src, int l, int r, _Type* dst, bool srcToDst = true, int parallelThreshold = 24 * 1024)
+    inline void parallel_merge_sort_hybrid(_Type* src, int l, int r, _Type* dst, bool srcToDst = true, int parallelThreshold = 16 * 1024)
     {
         // may return 0 when not able to detect
         const auto processor_count = std::thread::hardware_concurrency();
@@ -181,6 +182,7 @@ namespace ParallelAlgorithms
             parallelThreshold = (r - l + 1) / processor_count;
 
         parallel_merge_sort_hybrid_rh_2(src, l, r, dst, srcToDst, parallelThreshold);
+        //parallel_merge_sort_hybrid_rh_1(src, l, r, dst, srcToDst);
     }
 
     inline void parallel_merge_sort_hybrid_radix_inner(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
@@ -192,9 +194,9 @@ namespace ParallelAlgorithms
             return;
         }
         if ((r - l) <= parallelThreshold && !srcToDst) {
-            RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
+            //RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
             //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
-            //RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
+            RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
             //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
             //if (srcToDst)
             //    for (int i = l; i <= r; i++)    dst[i] = src[i];
@@ -225,16 +227,28 @@ namespace ParallelAlgorithms
         parallel_merge_sort_hybrid_radix_inner(src, l, r, dst, srcToDst, parallelThreshold);
     }
 
+    inline void parallel_merge_sort_hybrid_radix_single_buffer(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 24 * 1024)
+    {
+        // may return 0 when not able to detect
+        const auto processor_count = std::thread::hardware_concurrency();
+        //printf("Number of cores = %u   parallelThreshold = %d\n", processor_count, parallelThreshold);
+
+        if ((parallelThreshold * processor_count) < (r - l + 1))
+            parallelThreshold = (r - l + 1) / processor_count;
+
+        parallel_merge_sort_hybrid_radix_inner(src, l, r, dst, srcToDst, parallelThreshold);
+    }
+
     // Pure Serial Merge Sort, using divide-and-conquer algorthm
     template< class _Type >
-    inline void merge_sort(_Type* src, int l, int r, _Type* dst, bool srcToDst = true)
+    inline void merge_sort(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
     {
         if (r < l)  return;
         if (r == l) {    // termination/base case of sorting a single element
             if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
             return;
         }
-        int m = (r + l) / 2;
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 
         merge_sort(src, l,     m, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
         merge_sort(src, m + 1, r, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
@@ -257,7 +271,7 @@ namespace ParallelAlgorithms
             //stable_sort( src + l, src + r + 1 );  // STL stable_sort can be used instead, but is slightly slower than Insertion Sort
             return;
         }
-        size_t m = (r + l) / 2;
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 
         merge_sort_hybrid(src, l,     m, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
         merge_sort_hybrid(src, m + 1, r, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
@@ -267,7 +281,7 @@ namespace ParallelAlgorithms
     }
 
     template< class _Type >
-    inline void merge_sort_inplace_hybrid_with_sort(_Type* src, int l, int r, int threshold = 1024)
+    inline void merge_sort_inplace_hybrid_with_sort(_Type* src, size_t l, size_t r, int threshold = 1024)
     {
         if (r <= l) {
             return;
@@ -276,7 +290,7 @@ namespace ParallelAlgorithms
             std::sort(src + l, src + r + 1);    // could be insertion sort, with a smaller threshold
             return;
         }
-        int m = (r + l) / 2;
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 
         merge_sort_inplace_hybrid_with_sort(src, l,     m, threshold);
         merge_sort_inplace_hybrid_with_sort(src, m + 1, r, threshold);
@@ -293,7 +307,7 @@ namespace ParallelAlgorithms
             return;
         }
 
-        size_t m = l + (r - l) / 2;             // computes the average without overflow
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 
         merge_sort_inplace_hybrid_with_insertion(src, l,     m);
         merge_sort_inplace_hybrid_with_insertion(src, m + 1, r);
@@ -312,7 +326,7 @@ namespace ParallelAlgorithms
             std::sort(src + l, src + r + 1);
             return;
         }
-        size_t m = (r + l) / 2;
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
         Concurrency::parallel_invoke(
 #else
@@ -343,7 +357,7 @@ namespace ParallelAlgorithms
     {
         if (r <= l) return;
 
-        size_t m = l + ( r - l ) / 2;             // computes the average without overflow
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 
         merge_sort_inplace(src, l,     m);
         merge_sort_inplace(src, m + 1, r);

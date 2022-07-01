@@ -24,7 +24,7 @@
 // Compare with the smallest element and if it's smaller then we are done as well and need to move the entire array over 
 
 // Searches for the value within array "a", from a[ left ] to a[ right ] inclusively
-// Returns the the left-most index at which the element of the array is larger than the value.
+// Returns the left-most index at which the element of the array is larger than the value.
 // Thus, the return index can be between left and (right + 1)
 // Expects "a" array to be pre-sorted with the smallest element on the left and the largest on the right.
 // It would be cool if the routine worked automagically for the condition of right < left  (i.e. no  elements) - return left
@@ -37,7 +37,7 @@ inline size_t my_binary_search( _Type value, const _Type* a, size_t left, size_t
 	size_t high = std::max( left, right + 1 );
 	while( low < high )
 	{
-		size_t mid = ( low + high ) / 2;
+		size_t mid = low + ((high - low) / 2);		// overflow-free average calculation, since high > low is the condition for entering while-loop body
 		if ( value <= a[ mid ] )	high = mid;
 		else						low  = mid + 1;	// because we compared to a[mid] and the value was larger than a[mid].
 													// Thus, the next array element to the right from mid is the next possible
