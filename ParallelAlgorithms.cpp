@@ -12,7 +12,7 @@ using std::random_device;
 using std::vector;
 
 extern int ParallelStdCppExample(vector<double>&             doubles);
-extern int ParallelStdCppExample(vector<unsigned long>&      ulongs);
+extern int ParallelStdCppExample(vector<unsigned long>&      ulongs, bool stable = false);
 extern int ParallelTbbCppExample(vector<unsigned long>& ulongs);
 extern int ParallelStdCppExample(vector<unsigned>&           uints);
 extern int RadixSortLsdBenchmark(vector<unsigned long>&      ulongs);
@@ -28,6 +28,8 @@ extern void TestAverageOfTwoIntegers();
 
 int main()
 {
+	// Test configuration options
+	bool UseStableStdSort = true;
 	// Test cases for averaging of two integers
 	TestAverageOfTwoIntegers();
 
@@ -99,7 +101,7 @@ int main()
 	RadixSortMsdBenchmark(ulongs);
 
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample(ulongs);
+	ParallelStdCppExample(ulongs, UseStableStdSort);
 
 	// Example of C++17 Standard C++ Parallel Sorting
 	//ParallelTbbCppExample(ulongs);
@@ -127,7 +129,7 @@ int main()
 	RadixSortMsdBenchmark(ulongs);
 
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample(ulongs);
+	ParallelStdCppExample(ulongs, UseStableStdSort);
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark(ulongs);
@@ -149,7 +151,7 @@ int main()
 	RadixSortMsdBenchmark(ulongs);
 
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample(ulongs);
+	ParallelStdCppExample(ulongs, UseStableStdSort);
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark(ulongs);
