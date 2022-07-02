@@ -127,7 +127,6 @@ namespace ParallelAlgorithms
         }
         if ((r - l) <= 48 && !srcToDst) {     // 32 or 64 or larger seem to perform well
             insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);    // want to do dstToSrc, can just do it in-place, just sort the src, no need to copy
-            //stable_sort( src + l, src + r + 1 );  // STL stable_sort can be used instead, but is slightly slower than Insertion Sort
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
@@ -144,7 +143,7 @@ namespace ParallelAlgorithms
     }
 
     template< class _Type >
-    inline void parallel_merge_sort_hybrid_rh_2(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
+    inline void parallel_merge_sort_hybrid_rh_2(_Type* src, size_t l, size_t r, _Type* dst, bool stable = true, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
     {
         if (r < l)  return;
         if (r == l) {   // termination/base case of sorting a single element
@@ -152,8 +151,11 @@ namespace ParallelAlgorithms
             return;
         }
         if ((r - l) <= parallelThreshold && !srcToDst) {
-            std::sort(src + l, src + r + 1);
-            //std::sort(std::execution::par_unseq, src + l, src + r + 1);
+            if (!stable)
+                std::sort(src + l, src + r + 1);
+                //std::sort(std::execution::par_unseq, src + l, src + r + 1);
+            else
+                std::stable_sort( src + l, src + r + 1 );
             //if (srcToDst)
             //    for (int i = l; i <= r; i++)    dst[i] = src[i];
             return;
@@ -164,8 +166,8 @@ namespace ParallelAlgorithms
 #else
         tbb::parallel_invoke(
 #endif
-            [&] { parallel_merge_sort_hybrid_rh_2(src, l,     m, dst, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
-            [&] { parallel_merge_sort_hybrid_rh_2(src, m + 1, r, dst, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
+            [&] { parallel_merge_sort_hybrid_rh_2(src, l,     m, dst, stable, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
+            [&] { parallel_merge_sort_hybrid_rh_2(src, m + 1, r, dst, stable, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
         );
         if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
         else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
@@ -181,7 +183,7 @@ namespace ParallelAlgorithms
         if ((int)(parallelThreshold * processor_count) < (r - l + 1))
             parallelThreshold = (r - l + 1) / processor_count;
 
-        parallel_merge_sort_hybrid_rh_2(src, l, r, dst, srcToDst, parallelThreshold);
+        parallel_merge_sort_hybrid_rh_2(src, l, r, dst, false, srcToDst, parallelThreshold);
         //parallel_merge_sort_hybrid_rh_1(src, l, r, dst, srcToDst);
     }
 
@@ -202,7 +204,7 @@ namespace ParallelAlgorithms
             //    for (int i = l; i <= r; i++)    dst[i] = src[i];
             return;
         }
-        size_t m = (r + l) / 2;
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
         Concurrency::parallel_invoke(
 #else
@@ -268,7 +270,7 @@ namespace ParallelAlgorithms
         }
         if ((r - l) <= 48 && !srcToDst) {     // 32 or 64 or larger seem to perform well
             insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);    // want to do dstToSrc, can just do it in-place, just sort the src, no need to copy
-            //stable_sort( src + l, src + r + 1 );  // STL stable_sort can be used instead, but is slightly slower than Insertion Sort
+            //stable_sort( src + l, src + r + 1 );  // STL stable_sort can be used instead, but is slightly slower than Insertion Sort. Threshold needs to be bigger
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
