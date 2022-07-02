@@ -95,14 +95,17 @@ int ParallelStdCppExample(vector<double>& doubles)
 	return 0;
 }
 
-int ParallelStdCppExample(vector<unsigned long>& ulongs)
+int ParallelStdCppExample(vector<unsigned long>& ulongs, bool stable = false)
 {
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		vector<unsigned long> sorted(ulongs);
 		const auto startTime = high_resolution_clock::now();
-		sort(sorted.begin(), sorted.end());
+		if (!stable)
+			sort(sorted.begin(), sorted.end());
+		else
+			stable_sort(sorted.begin(), sorted.end());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Serial", sorted, startTime, endTime);
 	}
@@ -112,7 +115,10 @@ int ParallelStdCppExample(vector<unsigned long>& ulongs)
 		vector<unsigned long> sorted(ulongs);
 		const auto startTime = high_resolution_clock::now();
 		// same sort call as above, but with par_unseq:
-		sort(std::execution::par_unseq, sorted.begin(), sorted.end());
+		if (!stable)
+			sort(std::execution::par_unseq, sorted.begin(), sorted.end());
+		else
+			stable_sort(std::execution::par_unseq, sorted.begin(), sorted.end());
 		const auto endTime = high_resolution_clock::now();
 		// in our output, note that these are the parallel results:
 		print_results("Parallel", sorted, startTime, endTime);
@@ -125,7 +131,10 @@ int ParallelStdCppExample(vector<unsigned long>& ulongs)
 			s[j] = ulongs[j];
 		}
 		const auto startTime = high_resolution_clock::now();
-		sort(std::execution::par_unseq, s, s + ulongs.size());
+		if (!stable)
+			sort(std::execution::par_unseq, s, s + ulongs.size());
+		else
+			std::stable_sort(std::execution::par_unseq, s, s + ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Array", s[0], s[ulongs.size() - 1], startTime, endTime);
 		delete[] s;
