@@ -179,7 +179,7 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned long* a, unsign
 	else {
 		// TODO: Substitute Merge Sort, as it will get rid off the for loop, since it's internal to MergeSort
 		insertionSortSimilarToSTLnoSelfAssignment(a, a_size);
-		for (unsigned long j = 0; j < a_size; j++)	// copy from input array to the destination array
+		for (size_t j = 0; j < a_size; j++)	// copy from input array to the destination array
 			b[j] = a[j];
 	}
 }
