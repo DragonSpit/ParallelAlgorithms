@@ -135,7 +135,7 @@ namespace ParallelAlgorithms
 #else
         tbb::parallel_invoke(
 #endif
-            [&] { parallel_merge_sort_hybrid_rh_1(src, l, m, dst, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
+            [&] { parallel_merge_sort_hybrid_rh_1(src, l,     m, dst, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
             [&] { parallel_merge_sort_hybrid_rh_1(src, m + 1, r, dst, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
         );
         if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
@@ -173,8 +173,33 @@ namespace ParallelAlgorithms
         else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
     }
 
+template< class _Type >
+inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t r, _Type* dst, bool stable = true, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
+{
+    if (r < l)  return;
+    if (r == l) {   // termination/base case of sorting a single element
+        if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
+        return;
+    }
+    if ((r - l) <= parallelThreshold) {
+        merge_sort_hybrid(src, l, r, dst, srcToDst);
+        return;
+    }
+    size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    Concurrency::parallel_invoke(
+#else
+    tbb::parallel_invoke(
+#endif
+        [&] { parallel_merge_merge_sort_hybrid_inner(src, l,     m, dst, stable, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
+        [&] { parallel_merge_merge_sort_hybrid_inner(src, m + 1, r, dst, stable, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
+    );
+    if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
+    else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
+}
+
     template< class _Type >
-    inline void parallel_merge_sort_hybrid(_Type* src, int l, int r, _Type* dst, bool srcToDst = true, int parallelThreshold = 16 * 1024)
+    inline void parallel_merge_merge_sort_hybrid(_Type* src, int l, int r, _Type* dst, bool srcToDst = true, int parallelThreshold = 32 * 1024)
     {
         // may return 0 when not able to detect
         const auto processor_count = std::thread::hardware_concurrency();
@@ -183,8 +208,21 @@ namespace ParallelAlgorithms
         if ((int)(parallelThreshold * processor_count) < (r - l + 1))
             parallelThreshold = (r - l + 1) / processor_count;
 
-        parallel_merge_sort_hybrid_rh_2(src, l, r, dst, false, srcToDst, parallelThreshold);
-        //parallel_merge_sort_hybrid_rh_1(src, l, r, dst, srcToDst);
+        parallel_merge_merge_sort_hybrid_inner(src, l, r, dst, false, srcToDst, parallelThreshold);
+    }
+
+    template< class _Type >
+    inline void parallel_merge_sort_hybrid(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true, size_t parallelThreshold = 16 * 1024)
+    {
+        // may return 0 when not able to detect
+        //const auto processor_count = std::thread::hardware_concurrency();
+        //printf("Number of cores = %u \n", processor_count);
+
+        //if ((int)(parallelThreshold * processor_count) < (r - l + 1))
+        //    parallelThreshold = (r - l + 1) / processor_count;
+
+        //parallel_merge_sort_hybrid_rh_2(src, l, r, dst, true, srcToDst, parallelThreshold);
+        parallel_merge_sort_hybrid_rh_1(src, l, r, dst, srcToDst);
     }
 
     inline void parallel_merge_sort_hybrid_radix_inner(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
@@ -197,8 +235,8 @@ namespace ParallelAlgorithms
         }
         if ((r - l) <= parallelThreshold && !srcToDst) {
             //RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
-            //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
             RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
+            //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
             //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
             //if (srcToDst)
             //    for (int i = l; i <= r; i++)    dst[i] = src[i];
@@ -283,66 +321,71 @@ namespace ParallelAlgorithms
     }
 
     template< class _Type >
-    inline void merge_sort_inplace_hybrid_with_sort(_Type* src, size_t l, size_t r, int threshold = 1024)
+    inline void merge_sort_inplace_hybrid_with_sort(_Type* src, size_t l, size_t r, bool stable = false, int threshold = 1024)
     {
         if (r <= l) {
             return;
         }
         if ((r - l) <= threshold) {
-            std::sort(src + l, src + r + 1);    // could be insertion sort, with a smaller threshold
+            if (!stable)
+                std::sort(src + l, src + r + 1);
+            else
+                std::stable_sort(src + l, src + r + 1);
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 
-        merge_sort_inplace_hybrid_with_sort(src, l,     m, threshold);
-        merge_sort_inplace_hybrid_with_sort(src, m + 1, r, threshold);
+        merge_sort_inplace_hybrid_with_sort(src, l,     m, true, threshold);
+        merge_sort_inplace_hybrid_with_sort(src, m + 1, r, true, threshold);
 
         std::inplace_merge(src + l, src + m + 1, src + r + 1);
     }
 
     template< class _Type >
-    inline void merge_sort_inplace_hybrid_with_insertion(_Type* src, size_t l, size_t r)
-    {
-        if (r <= l) return;
-        if ((r - l) <= 48) {
-            insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);
-            return;
-        }
-
-        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
-
-        merge_sort_inplace_hybrid_with_insertion(src, l,     m);
-        merge_sort_inplace_hybrid_with_insertion(src, m + 1, r);
-
-        std::inplace_merge(src + l, src + m + 1, src + r + 1);
-    }
-
-
-    template< class _Type >
-    inline void parallel_inplace_merge_sort_hybrid_inner(_Type* src, size_t l, size_t r, size_t parallelThreshold = 1024)
+    inline void parallel_inplace_merge_sort_hybrid_inner(_Type* src, size_t l, size_t r, bool stable = false, size_t parallelThreshold = 1024)
     {
         if (r <= l) {
             return;
         }
-        if ((r - l) <= parallelThreshold) {
-            std::sort(src + l, src + r + 1);
+#if 1
+        if ((r - l) <= parallelThreshold) {             // Faster than Insertion Sort for use in parallel in-place merge sort
+            if (!stable)
+                std::sort(src + l, src + r + 1);
+            else
+                std::stable_sort(src + l, src + r + 1);
             return;
         }
+#endif
+#if 0
+        if ((r - l) <= parallelThreshold) {             // This seems to be the fastest version
+            //merge_sort_inplace_hybrid_with_insertion(src, l, r);
+            merge_sort_inplace_hybrid_with_sort(src, l, r, stable);
+            return;
+        }
+#endif
+#if 0
+        if ((r - l) <= 48) {     // 32 or 64 or larger seem to perform well. Don't want users to be able to set threshold too large, as O(N^2)
+            insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);
+            return;
+        }
+#endif
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
         Concurrency::parallel_invoke(
 #else
         tbb::parallel_invoke(
 #endif
-            [&] { parallel_inplace_merge_sort_hybrid_inner(src, l,     m, parallelThreshold); },
-            [&] { parallel_inplace_merge_sort_hybrid_inner(src, m + 1, r, parallelThreshold); }
+            [&] { parallel_inplace_merge_sort_hybrid_inner(src, l,     m, stable, parallelThreshold); },
+            [&] { parallel_inplace_merge_sort_hybrid_inner(src, m + 1, r, stable, parallelThreshold); }
         );
+        //std::inplace_merge(src + l, src + m + 1, src + r + 1);
+        //merge_in_place(src, l, m, r);       // merge the results
         //std::inplace_merge(std::execution::par_unseq, src + l, src + m + 1, src + r + 1);
         p_merge_in_place_2(src, l, m, r);
     }
 
     template< class _Type >
-    inline void parallel_inplace_merge_sort_hybrid(_Type* src, size_t l, size_t r, size_t parallelThreshold = 24 * 1024)
+    inline void parallel_inplace_merge_sort_hybrid(_Type* src, size_t l, size_t r, bool stable = false, size_t parallelThreshold = 24 * 1024)
     {
         // may return 0 when not able to detect
         const auto processor_count = std::thread::hardware_concurrency();
@@ -351,7 +394,7 @@ namespace ParallelAlgorithms
         if ((parallelThreshold * processor_count) < (r - l + 1))
             parallelThreshold = (r - l + 1) / processor_count;
 
-        parallel_inplace_merge_sort_hybrid_inner(src, l, r, parallelThreshold);
+        parallel_inplace_merge_sort_hybrid_inner(src, l, r, stable, parallelThreshold);
     }
 
     template< class _Type >
@@ -367,29 +410,52 @@ namespace ParallelAlgorithms
         std::inplace_merge(src + l, src + m + 1, src + r + 1);
     }
 
-    template< class _Type >
-    inline void merge_sort_bottom_up_inplace(_Type* src, size_t l, size_t r)
-    {
-        for (size_t m = 1; m <= r - l; m = m + m)
-            for (size_t i = l; i <= r - m; i += m + m)
-                std::inplace_merge(src + i, src + i + m, src + __min(i + m + m, r + 1));
-                //merge_in_place(src, i, i + m - 1, __min(i + m + m - 1, r));     // slower than C++ standard inplace_merge
-    }
+template< class _Type >
+inline void merge_sort_bottom_up_inplace(_Type* src, size_t start, size_t length)
+{
+    if (length <= 1)  return;       // nothing to sort since in-place
+    size_t l = start;
+    size_t r = l + length - 1;      // l and r are inclusive
+    for (size_t m = 1; m <= r - l; m = m + m)
+        for (size_t i = l; i <= r - m; i += m + m)
+            std::inplace_merge(src + i, src + i + m, src + __min(i + m + m, r + 1));
+            //merge_in_place(src, i, i + m - 1, __min(i + m + m - 1, r));     // slower than C++ standard inplace_merge
+}
 
-    template< class _Type >
-    inline void merge_sort_bottom_up_inplace_hybrid(_Type* src, size_t l, size_t r)
-    {
-        // TODO: Use insertion sort for the first 32 element chunks
-        if ((r - l) <= 32) {
-            insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);
-            return;
-        }
-        size_t m = 32;
-        for (size_t i = l; i <= r; i += m)
-            insertionSortSimilarToSTLnoSelfAssignment(src + i, __min(m, r - m + 1));
-        for (; m <= r - l; m = m + m)
-            for (size_t i = l; i <= r - m; i += m + m)
-                std::inplace_merge(src + i, src + i + m, src + __min(i + m + m, r + 1));
+template< class _Type >
+inline void merge_sort_inplace_hybrid_with_insertion(_Type* src, size_t l, size_t r)
+{
+    if (r <= l) return;
+    if ((r - l) <= 48) {
+        insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);
+        return;
+    }
+    size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
+
+    merge_sort_inplace_hybrid_with_insertion(src, l,     m);
+    merge_sort_inplace_hybrid_with_insertion(src, m + 1, r);
+
+    merge_in_place_L1(a, l, m, r);       // merge the results
+    //std::inplace_merge(src + l, src + m + 1, src + r + 1);
+}
+
+// TODO: It seems like this algorithm implementation could be simplified, possibly eliminating the first if statement
+template< class _Type >
+inline void merge_sort_bottom_up_inplace_hybrid(_Type* src, size_t start, size_t length)
+{
+    if (length <= 1)  return;       // nothing to sort since in-place
+    size_t l = start;
+    size_t r = l + length - 1;      // l and r are inclusive
+    if (length <= 32) {
+        insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);
+        return;
+    }
+    size_t m = 32;
+    for (size_t i = l; i <= r; i += m)
+        insertionSortSimilarToSTLnoSelfAssignment(src + i, __min(m, r - m + 1));
+    for (; m <= r - l; m = m + m)
+        for (size_t i = l; i <= r - m; i += m + m)
+            std::inplace_merge(src + i, src + i + m, src + __min(i + m + m, r + 1));
                 //merge_in_place(src, i, i + m - 1, __min(i + m + m - 1, r));     // slower than using C++ standard inplace_merge, because standard one is adaptive. I could make mine adaptive too. Performance order is definitely noticable for 100M element array
                 // TODO: Create an adaptive version of my own in-place merge and see if it's faster
         // TODO: This leads to a terrific idea of implementing an adaptive in-place merge sort, which performs not-in-place parallel merge sort when there is sufficient memory, and falls back to the truly in-place merge sort when it has to,
