@@ -78,27 +78,30 @@ int ParallelMergeSortBenchmark(vector<double>& doubles)
 	return 0;
 }
 
-int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
+int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs, const size_t& testSize)
 {
 	random_device rd;
 
 	// generate some random uints:
-	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned longs (each of %lu bytes)...\n", ulongs.size(), (unsigned long)sizeof(unsigned long));
-	unsigned long* ulongsCopy  = new unsigned long[ulongs.size()];
-	unsigned long* ulongsCopy2 = new unsigned long[ulongs.size()];
-	unsigned long* sorted      = new unsigned long[ulongs.size()];
-	vector<unsigned long> ulongsCopyVec(ulongs);
-	vector<unsigned long> ulongsCopyVec2(ulongs);
+	//printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned longs (each of %lu bytes)...\n", ulongs.size(), (unsigned long)sizeof(unsigned long));
+	//const size_t testSize = 1'000'000'000;
+	unsigned long* ulongsCopy  = new unsigned long[testSize];
+	unsigned long* ulongsCopy2 = new unsigned long[testSize];
+	unsigned long* sorted      = new unsigned long[testSize];
+	//printf("Allocations of arrays succeeded using new\n");
+	//vector<unsigned long> ulongsCopyVec(ulongs);
+	//vector<unsigned long> ulongsCopyVec2(ulongs);
+	//printf("Allocations of arrays succeeded using vector\n");
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
-		for (unsigned int j = 0; j < ulongs.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+		for (size_t j = 0; j < ulongs.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			ulongsCopy[ j] = ulongs[j];
 			ulongsCopy2[j] = ulongs[j];
 			sorted[j] = j;									// page in the destination array into system memory
-			ulongsCopyVec[ j] = ulongs[j];
-			ulongsCopyVec2[j] = ulongs[j];
+			//ulongsCopyVec[ j] = ulongs[j];
+			//ulongsCopyVec2[j] = ulongs[j];
 		}
 		const auto startTime = high_resolution_clock::now();
 		// Example of usages, which trade off ease of use and performance
@@ -111,13 +114,15 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs)
 		//sort(ulongsCopyVec.begin(), ulongsCopyVec.end());												//     in-place adaptive interface (vector)
 		//ParallelAlgorithms::merge_sort(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
 		//ParallelAlgorithms::merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
-		ParallelAlgorithms::parallel_merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
+	    //ParallelAlgorithms::parallel_merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
-		//ParallelAlgorithms::parallel_merge_sort_hybrid_radix(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted, false, ulongs.size() / 48 );	// ParallelMergeSort modifies the source array
+		ParallelAlgorithms::parallel_merge_merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
+		ParallelAlgorithms::parallel_merge_sort_hybrid_radix(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted, false );	// ParallelMergeSort modifies the source array
 		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(ulongsCopy, sorted, ulongs.size());
 		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(ulongsCopy, sorted, ulongs.size());
 
 		const auto endTime = high_resolution_clock::now();
+		printf("ParallelAlgorithms sorting is done\n");
 		sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
 		//sort(std::execution::par_unseq, ulongsCopyVec2.begin(), ulongsCopyVec2.end());
 		//if (std::equal(sorted, sorted + ulongs.size(), ulongsCopy2))
@@ -156,18 +161,19 @@ int ParallelInPlaceMergeSortBenchmark(vector<unsigned long>& ulongs)
 		}
 		const auto startTime = high_resolution_clock::now();
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(ulongsCopy, 0, ulongs.size() - 1, sorted);	// ParallelMergeSort modifies the source array
-		//ParallelAlgorithms::merge_sort_bottom_up_inplace(ulongsCopy, 0, ulongs.size() - 1);
-		//ParallelAlgorithms::merge_sort_bottom_up_inplace_hybrid(ulongsCopy, 0, ulongs.size() - 1);
+		//ParallelAlgorithms::merge_sort_bottom_up_inplace(ulongsCopy, 0, ulongs.size());
+		//ParallelAlgorithms::merge_sort_bottom_up_inplace_hybrid(ulongsCopy, 0, ulongs.size());
 		//ParallelAlgorithms::merge_sort_inplace(ulongsCopy, 0, ulongs.size() - 1);
 		//ParallelAlgorithms::merge_sort_inplace_hybrid_with_insertion(ulongsCopy, 0, ulongs.size() - 1);
-		//ParallelAlgorithms::merge_sort_inplace_hybrid_with_sort(ulongsCopy2, 0, (int)(ulongs.size() - 1));  // slightly faster than insertion sort hybrid
+		//ParallelAlgorithms::merge_sort_inplace_hybrid_with_sort(ulongsCopy, 0, ulongs.size() - 1, false);
 		//std::cout << "Before parallel inplace merge sort" << std::endl;
 		//parallel_inplace_merge_sort_hybrid_inner(ulongsCopy2, 0, (int)(ulongs.size() - 1));
-		//ParallelAlgorithms::parallel_inplace_merge_sort_hybrid(ulongsCopy, 0, (int)(ulongs.size() - 1));
-		ParallelAlgorithms::parallel_inplace_merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, ulongs.size() / 48);
+		ParallelAlgorithms::parallel_inplace_merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, true);
+		//ParallelAlgorithms::parallel_inplace_merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, false, ulongs.size() / 48);
 		//std::sort(ulongsCopy, ulongsCopy + ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		std::sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
+		//std::stable_sort(std::execution::par_unseq, ulongsCopy2, ulongsCopy2 + ulongs.size());
 		//if (std::equal(sorted, sorted + ulongs.size(), ulongsCopy2))
 		if (std::equal(ulongsCopy, ulongsCopy + ulongs.size(), ulongsCopy2))
 			std::cout << "Arrays are equal ";
