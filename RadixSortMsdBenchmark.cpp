@@ -38,6 +38,7 @@ int RadixSortMsdBenchmark(vector<unsigned long>& ulongs)
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		for (unsigned int j = 0; j < ulongs.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+			//ulongs[j] = j + 2;							// for pre-sorted array testing
 			ulongsCopy[j] = ulongs[j];
 			sorted[j] = j;									// page in the destination array into system memory
 		}
