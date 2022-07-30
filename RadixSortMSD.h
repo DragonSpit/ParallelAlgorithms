@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _RadixSortLSD_h
-#define _RadixSortLSD_h
+#ifndef _RadixSortMSD_h
+#define _RadixSortMSD_h
 
 #include "RadixSortCommon.h"
 #include "InsertionSort.h"

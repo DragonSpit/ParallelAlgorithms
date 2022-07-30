@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _RadixSortMSD_h
-#define _RadixSortMSD_h
+#ifndef _RadixSortMsdParallel_h
+#define _RadixSortMsdParallel_h
 
 #include "InsertionSort.h"
 #include "BinarySearch.h"
