@@ -486,5 +486,21 @@ inline void p_merge_in_place_2(_Type* t, int l, int m, int r)
 	}
 }
 
+template< class _Type >
+inline void p_merge_in_place_adaptive(_Type* src, size_t l, size_t m, size_t r)
+{
+	size_t src_size = r - l + 1;
+	_Type* merged = new(std::nothrow) _Type[src_size];
+
+	if (!merged)
+		p_merge_in_place_2(src, l, m, r);
+	else
+	{
+		merge_parallel_L5(src, l, m, m + 1, r, merged, 0);
+		std::copy(merged + 0, merged + src_size, src + l);
+		delete[] merged;
+	}
+}
+
 
 #endif
