@@ -30,6 +30,7 @@
 #include "BinarySearch.h"
 #include "ParallelMerge.h"
 #include "RadixSortLSD.h"
+#include "RadixSortMSD.h"
 #include "RadixSortLsdParallel.h"
 
 namespace ParallelAlgorithms
@@ -109,7 +110,7 @@ namespace ParallelAlgorithms
 #else
         tbb::parallel_invoke(
 #endif
-            [&] { parallel_merge_sort_hybrid_rh(src, l, m, dst, !srcToDst); },        // reverse direction of srcToDst for the next level of recursion
+            [&] { parallel_merge_sort_hybrid_rh(src, l,     m, dst, !srcToDst); },    // reverse direction of srcToDst for the next level of recursion
             [&] { parallel_merge_sort_hybrid_rh(src, m + 1, r, dst, !srcToDst); }     // reverse direction of srcToDst for the next level of recursion
         );
         if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
@@ -258,11 +259,11 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
     inline void parallel_merge_sort_hybrid_radix(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 24 * 1024)
     {
         // may return 0 when not able to detect
-        const auto processor_count = std::thread::hardware_concurrency();
+        //const auto processor_count = std::thread::hardware_concurrency();
         //printf("Number of cores = %u   parallelThreshold = %d\n", processor_count, parallelThreshold);
 
-        if ((parallelThreshold * processor_count) < (r - l + 1))
-            parallelThreshold = (r - l + 1) / processor_count;
+        //if ((parallelThreshold * processor_count) < (r - l + 1))
+        //    parallelThreshold = (r - l + 1) / processor_count;
 
         parallel_merge_sort_hybrid_radix_inner(src, l, r, dst, srcToDst, parallelThreshold);
     }
@@ -395,6 +396,44 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
             parallelThreshold = (r - l + 1) / processor_count;
 
         parallel_inplace_merge_sort_hybrid_inner(src, l, r, stable, parallelThreshold);
+    }
+
+    template< class _Type >
+    inline void parallel_inplace_merge_sort_radix_hybrid_inner(_Type* src, size_t l, size_t r, bool stable = false, size_t parallelThreshold = 1024)
+    {
+        if (r <= l) {
+            return;
+        }
+        if ((r - l) <= parallelThreshold) {
+            HybridSort(src + l, r - l + 1);
+            return;
+        }
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+        Concurrency::parallel_invoke(
+#else
+        tbb::parallel_invoke(
+#endif
+            [&] { parallel_inplace_merge_sort_radix_hybrid_inner(src, l,     m, parallelThreshold); },
+            [&] { parallel_inplace_merge_sort_radix_hybrid_inner(src, m + 1, r, parallelThreshold); }
+        );
+        //std::inplace_merge(src + l, src + m + 1, src + r + 1);
+        //merge_in_place(src, l, m, r);       // merge the results
+        //std::inplace_merge(std::execution::par_unseq, src + l, src + m + 1, src + r + 1);
+        p_merge_in_place_2(src, l, m, r);
+    }
+
+    template< class _Type >
+    inline void parallel_inplace_merge_sort_radix_hybrid(_Type* src, size_t l, size_t r, size_t parallelThreshold = 24 * 1024)
+    {
+        // may return 0 when not able to detect
+        //const auto processor_count = std::thread::hardware_concurrency();
+        //printf("Number of cores = %u \n", processor_count);
+
+        //if ((parallelThreshold * processor_count) < (r - l + 1))
+        //    parallelThreshold = (r - l + 1) / processor_count;
+
+        parallel_inplace_merge_sort_radix_hybrid_inner(src, l, r, parallelThreshold);
     }
 
     template< class _Type >
