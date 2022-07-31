@@ -399,7 +399,7 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
     }
 
     template< class _Type >
-    inline void parallel_inplace_merge_sort_radix_hybrid_inner(_Type* src, size_t l, size_t r, bool stable = false, size_t parallelThreshold = 1024)
+    inline void parallel_inplace_merge_sort_radix_hybrid_inner(_Type* src, size_t l, size_t r, size_t parallelThreshold = 1024)
     {
         if (r <= l) {
             return;
@@ -420,7 +420,8 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
         //std::inplace_merge(src + l, src + m + 1, src + r + 1);
         //merge_in_place(src, l, m, r);       // merge the results
         //std::inplace_merge(std::execution::par_unseq, src + l, src + m + 1, src + r + 1);
-        p_merge_in_place_2(src, l, m, r);
+        //p_merge_in_place_2(src, l, m, r);
+        p_merge_in_place_adaptive(src, l, m, r);
     }
 
     template< class _Type >
