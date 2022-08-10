@@ -241,7 +241,7 @@ void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned lo
 	__declspec(align(64)) unsigned long bufferIndex[numberOfBins] = { 0 };
 #else
 	auto bufferDerandomize = new unsigned long[numberOfBins][bufferDepth];
-	auto bufferIndex = new unsigned long[numberOfBins] { 0 };
+	auto bufferIndex       = new unsigned long[numberOfBins] { 0 };
 #endif
 
 	unsigned long* count2D = HistogramByteComponents_1 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
@@ -271,7 +271,7 @@ void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned lo
 	if (!_output_array_has_result && !inputArrayIsDestination)
 		for (long _current = 0; _current <= last; _current++)	// copy from input array back into the output array
 			_output_array[_current] = _input_array[_current];
-#if 0
+#if 1
 	delete[] bufferIndex;
 	delete[] bufferDerandomize;
 #endif
