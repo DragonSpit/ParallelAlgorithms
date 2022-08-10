@@ -376,9 +376,10 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 	unsigned long* inputArray, unsigned long* outputArray, size_t q, size_t** startOfBin, size_t startIndex, size_t endIndex,
 	unsigned long bitMask, unsigned long shiftRightAmount, size_t** bufferIndex, unsigned long** bufferDerandomize, size_t* bufferIndexEnd, unsigned long BufferDepth)
 {
+	size_t* startOfBinLoc = startOfBin[q];
+#if 1
 	const unsigned long numberOfBins = PowerOfTwoRadix;
 
-	size_t* startOfBinLoc = startOfBin[q];
 	size_t* bufferIndexLoc = bufferIndex[q];
 	unsigned long* bufferDerandomizeLoc = bufferDerandomize[q];
 
@@ -409,6 +410,11 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 		memcpy(&(outputArray[outIndex]), &(bufferDerandomizeLoc[buffStartIndex]), numItems * sizeof(unsigned long));
 		bufferIndexLoc[whichBuff] = whichBuff * BufferDepth;
 	}
+#else
+	// TODO: Figure out why this without-de-randomization version is not working correctly
+	for (size_t _current = startIndex; _current <= endIndex; _current++)
+		outputArray[startOfBinLoc[extractDigit(inputArray[_current], bitMask, shiftRightAmount)]++] = inputArray[_current];
+#endif
 }
 
 // This method is referenced in the Parallel LSD Radix Sort section of Victor's book.
@@ -642,7 +648,7 @@ void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase_DeRandomize(uns
 	unsigned long* _output_array = output_array;
 	bool _output_array_has_result = false;
 	unsigned long currentDigit = 0;
-	static const unsigned long bufferDepth = 64;
+	static const unsigned long bufferDepth = 128;
 	alignas(64) unsigned long bufferDerandomize[numberOfBins][bufferDepth];
 	alignas(64) unsigned long bufferIndex[numberOfBins] = { 0 };
 
