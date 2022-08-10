@@ -274,7 +274,7 @@ inline void merge_dac_hybrid(const _Type* t, int p1, int r1, int p2, int r2, _Ty
 
 // Listing 5
 template< class _Type >
-inline void merge_parallel_L5(_Type* t, size_t p1, size_t r1, size_t p2, size_t r2, _Type* a, size_t p3)
+inline void merge_parallel_L5(_Type* t, size_t p1, size_t r1, size_t p2, size_t r2, _Type* a, size_t p3, size_t parallel_threshold = 32768)
 {
 	size_t length1 = r1 - p1 + 1;
 	size_t length2 = r2 - p2 + 1;
@@ -284,13 +284,13 @@ inline void merge_parallel_L5(_Type* t, size_t p1, size_t r1, size_t p2, size_t 
 		exchange(length1, length2);
 	}
 	if (length1 == 0)	return;
-	if ((length1 + length2) <= 32768) {	// 8192 threshold is much better than 16. 32K seems to be an even better threshold
+	if ((length1 + length2) <= parallel_threshold) {	// 8192 threshold is much better than 16. 32K seems to be an even better threshold
 		//merge_ptr( &t[ p1 ], &t[ p1 + length1 ], &t[ p2 ], &t[ p2 + length2 ], &a[ p3 ] );	// in DDJ paper
 		merge_ptr_1(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);				// slightly faster than merge_ptr version due to fewer loop comparisons
 		//merge_ptr_3(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);				// new merge concept, which turned out slower
 	}
 	else {
-		size_t q1 = (p1 + r1) / 2;
+		size_t q1 = p1 / 2 + r1 / 2 + (p1 % 2 + r1 % 2) / 2;   // average without overflow
 		size_t q2 = my_binary_search(t[q1], t, p2, r2);
 		size_t q3 = p3 + (q1 - p1) + (q2 - p2);
 		a[q3] = t[q1];
@@ -354,13 +354,23 @@ inline void block_exchange_mirror(_Type* a, int l, int m, int r)
 }
 
 // Swaps two sequential sub-arrays ranges a[ l .. m ] and a[ m + 1 .. r ]
+// Faster version than using a while/for loop, as the version right above does
+template< class _Type >
+inline void block_exchange_mirror_1(_Type* a, int l, int m, int r)
+{
+	std::reverse(a + l,     a + m + 1);
+	std::reverse(a + m + 1, a + r + 1);
+	std::reverse(a + l,     a + r + 1);
+}
+
+// Swaps two sequential sub-arrays ranges a[ l .. m ] and a[ m + 1 .. r ]
 // Seems to be the fastest version, as if mirror of the two blocks brings into the cache the most of the whole array for the last mirror to do.
 template< class _Type >
 inline void block_exchange_mirror_par(_Type* a, int l, int m, int r, int threshold = 64 * 1024)
 {
 	int length = r - l + 1;
 	if (length < threshold)
-		block_exchange_mirror(a, l, m, r);
+		block_exchange_mirror_1(a, l, m, r);
 	else
 	{
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
@@ -368,10 +378,13 @@ inline void block_exchange_mirror_par(_Type* a, int l, int m, int r, int thresho
 #else
 		tbb::parallel_invoke(
 #endif
-			[&] { mirror_ptr(a, l,     m); },
-			[&] { mirror_ptr(a, m + 1, r); }
+			[&] { std::reverse(a + l,     a + m + 1); },
+			[&] { std::reverse(a + m + 1, a + r + 1); }
+		    //[&] { mirror_ptr(a, l, m); },
+			//[&] { mirror_ptr(a, m + 1, r); }
 		);
-		mirror_ptr(a, l, r);
+		std::reverse(a + l, a + r + 1);
+		//mirror_ptr(a, l, r);
 	}
 }
 
@@ -498,6 +511,7 @@ inline void p_merge_in_place_adaptive(_Type* src, size_t l, size_t m, size_t r)
 	{
 		merge_parallel_L5(src, l, m, m + 1, r, merged, 0);
 		std::copy(merged + 0, merged + src_size, src + l);
+		//memcpy(src + l, merged, src_size * sizeof(_Type));	// same speed as std::copy
 		delete[] merged;
 	}
 }
