@@ -157,6 +157,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BinarySearch.h" />
+    <ClInclude Include="CountingSort.h" />
+    <ClInclude Include="CountingSortParallel.h" />
     <ClInclude Include="InplaceMerge.h" />
     <ClInclude Include="InsertionSort.h" />
     <ClInclude Include="ParallelMerge.h" />
@@ -169,6 +171,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AverageTests.cpp" />
+    <ClCompile Include="CountingSortParallelBenchmark.cpp" />
+    <ClCompile Include="FillParallel.h" />
     <ClCompile Include="ParallelAlgorithms.cpp" />
     <ClCompile Include="ParallelMergeSort.h">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/std:c++latest %(AdditionalOptions)</AdditionalOptions>
