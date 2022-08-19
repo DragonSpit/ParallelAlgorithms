@@ -27,6 +27,7 @@
 using namespace tbb;
 
 #include "RadixSortCommon.h"
+#include "RadixSortMSD.h"
 #include "InsertionSort.h"
 
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
@@ -154,6 +155,8 @@ template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, lo
 inline void _RadixSortMSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized_1(unsigned long* inout_array, size_t startIndex, size_t endIndex, unsigned long bitMask, unsigned long shiftRightAmount,
 	size_t* startOfBin, size_t* endOfBin, unsigned long bufferIndex[], unsigned long bufferDerandomize[][BufferDepth])
 {
+	// TODO: This version is broken and needs to be fixed!!
+
 	//printf("Permute Derandomized #1: startIndex = %zu   endIndex = %zu   bitMask = %lx   shiftRight = %lu \n", startIndex, endIndex, bitMask, shiftRightAmount);
 	const unsigned long numberOfBins = PowerOfTwoRadix;
 	size_t writeEndOfBin[numberOfBins];									// write pointers to each bin
@@ -271,7 +274,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Derandomized_Par_L1(unsigned long*
 	for (unsigned long i = 1; i < PowerOfTwoRadix; i++)
 		startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
-#if 0
+#if 1
 	size_t nextBin = 1;
 	for (size_t _current = 0; _current <= last; )
 	{
@@ -285,6 +288,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Derandomized_Par_L1(unsigned long*
 		_current = endOfBin[nextBin - 1];
 	}
 #else
+	// TODO: This version is broken and needs to be fixed!!
 	const unsigned long numberOfBins = PowerOfTwoRadix;
 	static const unsigned long bufferDepth = 128;
 	__declspec(align(64)) unsigned long bufferDerandomize[numberOfBins][bufferDepth];
@@ -301,7 +305,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Derandomized_Par_L1(unsigned long*
 		if (shiftRightAmount >= Log2ofPowerOfTwoRadix)	shiftRightAmount -= Log2ofPowerOfTwoRadix;
 		else											shiftRightAmount = 0;
 
-#if 1
+#if 0
 		for (unsigned long i = 0; i < PowerOfTwoRadix; i++)
 		{
 			size_t numberOfElements = endOfBin[i] - startOfBin[i];		// endOfBin actually points to one beyond the bin
