@@ -59,7 +59,10 @@ int RadixSortMsdBenchmark(vector<unsigned long>& ulongs)
 		if (std::equal(sorted_reference.begin(), sorted_reference.end(), ulongsCopy))
 			printf("Arrays are equal\n");
 		else
+		{
 			printf("Arrays are not equal\n");
+			exit(1);
+		}
 	}
 
 	delete[] sorted;

@@ -64,7 +64,7 @@ inline void HybridSort(unsigned long* a, unsigned long a_size)
 
 	const long PowerOfTwoRadix = 256;
 	const long Log2ofPowerOfTwoRadix = 8;
-	const long Threshold = 100;
+	const long Threshold = 48;
 
 	unsigned long bitMask = 0x80000000;	// bitMask controls how many bits we process at a time
 	unsigned long shiftRightAmount = 31;
