@@ -7,3 +7,8 @@ TODO: Change all interfaces to be either start_iterator/end_iterator or to start
       Another possibility is to adapt C# method of using start/length pair for bounds specification, which I like better than C++ convention of inclusive/exclusive start/end iterator pair.
       Right now we are getting away with it because sorting 0 elements and sorting 1 element are equivalent to not doing anything and it's impossible to tell the difference, as sorting
       starts permuting with 2 array elements and larger, otherwise nothing is done.
+TODO: For interfaces that use size_t left and right boundary, support for zero elements in the array needs to be supported in some way.
+      This can be done in two ways: start-length pair like C# prefers, or left-inclusive and right-exclusive like C++ prefers.
+      For C++ it seems like this should be handled in a C++ fashion to make algorithms have a familiar interface for C++ developers.
+      It's possible to add a wrapper that does inclusive-left and exclusive-right in C++, checks for zero length and returns. This handles size_t left and right
+      boundary condition. This may be the solution at the moment.
