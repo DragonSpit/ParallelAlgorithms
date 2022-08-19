@@ -86,7 +86,7 @@ inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], 
 		return countLeft;
 	}
 
-	int m = ((r + l) / 2);
+	int m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;   // average without overflow
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 	Concurrency::parallel_invoke(
