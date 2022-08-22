@@ -50,8 +50,8 @@ int CountingSortBenchmark(vector<unsigned long>& ulongs)
 
 		//printf("ulongsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", ucharCopy, sorted, sorted[static_cast<unsigned>(rd()) % ulongs.size()], ulongsCopy[static_cast<unsigned>(rd()) % ulongs.size()]);
 		const auto startTime = high_resolution_clock::now();
-		ParallelAlgorithms::counting_sort(ucharCopy, 0, ulongs.size());
-		//ParallelAlgorithms::counting_sort_parallel(ucharCopy, ulongs.size());
+		//ParallelAlgorithms::counting_sort(ucharCopy, 0, ulongs.size());
+		ParallelAlgorithms::counting_sort_parallel(ucharCopy, ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Counting Sort", ucharCopy, ulongs.size(), startTime, endTime);
 		if (std::equal(sorted_reference.begin(), sorted_reference.end(), ucharCopy))

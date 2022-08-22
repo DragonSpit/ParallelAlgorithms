@@ -43,12 +43,24 @@ int RadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 		}
 		// Eliminate compiler ability to optimize paging-in of the input and output arrays
 		// Paging-in source and destination arrays leads to a 50% speed-up on Linux, and 15% on Windows
+
+		vector<unsigned long> sorted_reference(ulongs);
+		sort(sorted_reference.begin(), sorted_reference.end());
+
 		printf("ulongsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", ulongsCopy, sorted, sorted[static_cast<unsigned>(rd()) % ulongs.size()], ulongsCopy[static_cast<unsigned>(rd()) % ulongs.size()]);
 		const auto startTime = high_resolution_clock::now();
-		//RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
-		RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
+		RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
+		RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(ulongsCopy, sorted, (unsigned long)ulongs.size());
+		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Radix Sort LSD", sorted, ulongs.size(), startTime, endTime);
+		if (std::equal(sorted_reference.begin(), sorted_reference.end(), ulongsCopy))
+			printf("Arrays are equal\n");
+		else
+		{
+			printf("Arrays are not equal\n");
+			exit(1);
+		}
 	}
 
 	delete[] sorted;
@@ -88,14 +100,17 @@ int ParallelRadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 		printf("ulongsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", ulongsCopy, tmp_working, tmp_working[static_cast<unsigned>(rd()) % ulongs.size()], ulongsCopy[static_cast<unsigned>(rd()) % ulongs.size()]);
 		const auto startTime = high_resolution_clock::now();
 		//RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(ulongsCopy, tmp_working, (unsigned long)ulongs.size());
-		RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(ulongsCopy, tmp_working, (unsigned long)ulongs.size());
-		//SortRadixPar(ulongsCopy, tmp_working, (unsigned long)ulongs.size());
+		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(ulongsCopy, tmp_working, (unsigned long)ulongs.size());
+		SortRadixPar(ulongsCopy, tmp_working, ulongs.size(), ulongs.size() / 6);
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Radix Sort LSD", tmp_working, ulongs.size(), startTime, endTime);
 		if (std::equal(sorted_reference.begin(), sorted_reference.end(), ulongsCopy))
 			printf("Arrays are equal\n");
 		else
+		{
 			printf("Arrays are not equal\n");
+			exit(1);
+		}
 	}
 
 	//delete[] tmp_working;

@@ -17,7 +17,7 @@ extern int ParallelTbbCppExample(vector<unsigned long>& ulongs);
 extern int ParallelStdCppExample(vector<unsigned>&           uints);
 extern int RadixSortLsdBenchmark(vector<unsigned long>&      ulongs);
 extern int ParallelMergeSortBenchmark(vector<double>&        doubles);
-extern int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs);
+extern int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs, const size_t& testSize);
 extern int ParallelInPlaceMergeSortBenchmark(vector<unsigned long>& ulongs);
 extern int ParallelMergeSortBenchmark(vector<unsigned>&      uints);
 extern int main_quicksort();
@@ -25,11 +25,13 @@ extern int ParallelMergeBenchmark();
 extern int ParallelRadixSortLsdBenchmark(vector<unsigned long>& ulongs);
 extern int RadixSortMsdBenchmark(vector<unsigned long>& ulongs);
 extern void TestAverageOfTwoIntegers();
+extern int CountingSortBenchmark(vector<unsigned long>& ulongs);
 
 int main()
 {
 	// Test configuration options
-	bool UseStableStdSort = true;
+	//bool UseStableStdSort = false;
+	
 	// Test cases for averaging of two integers
 	TestAverageOfTwoIntegers();
 
@@ -69,7 +71,7 @@ int main()
 	std::cout << std::endl << std::endl;
 
 	// Provide the same input random array of doubles to all sorting algorithms
-	const size_t testSize = 10'000'000;
+	const size_t testSize = 100'000'000;
 	random_device rd;
 
 	const auto processor_count = std::thread::hardware_concurrency();
@@ -98,25 +100,28 @@ int main()
 	printf("Finished initializing unsigned long array\n");
 
 #if 1
-	RadixSortMsdBenchmark(ulongs);
+	//RadixSortMsdBenchmark(ulongs);
+
+	CountingSortBenchmark(ulongs);
 
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample(ulongs, UseStableStdSort);
+	//ParallelStdCppExample(ulongs, UseStableStdSort);
 
 	// Example of C++17 Standard C++ Parallel Sorting
 	//ParallelTbbCppExample(ulongs);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	ParallelMergeSortBenchmark(ulongs);
+	//ParallelMergeSortBenchmark(ulongs, testSize);
 
-	// Benchmark Parallel InPlace Merge Sort algorithm
-	ParallelInPlaceMergeSortBenchmark(ulongs);
 #endif
-	// Benchmark Radix Sort LSD algorithm
-	RadixSortLsdBenchmark(ulongs);
+	// Benchmark Parallel InPlace Merge Sort algorithm
+	//ParallelInPlaceMergeSortBenchmark(ulongs);
 
 	// Benchmark Radix Sort LSD algorithm
-	ParallelRadixSortLsdBenchmark(ulongs);
+	//RadixSortLsdBenchmark(ulongs);
+
+	// Benchmark Radix Sort LSD algorithm
+	//ParallelRadixSortLsdBenchmark(ulongs);
 
 	printf("\nTesting with %zu nearly pre-sorted unsigned longs...\n\n", testSize);
 	for (size_t i = 0; i < ulongs.size(); i++) {
@@ -126,44 +131,50 @@ int main()
 			ulongs[i] = static_cast<unsigned long>(i);
 	}
 
-	RadixSortMsdBenchmark(ulongs);
+	CountingSortBenchmark(ulongs);
+
+	//RadixSortMsdBenchmark(ulongs);
 
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample(ulongs, UseStableStdSort);
+	//ParallelStdCppExample(ulongs, UseStableStdSort);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	ParallelMergeSortBenchmark(ulongs);
+	//ParallelMergeSortBenchmark(ulongs, testSize);
 
 	// Benchmark Parallel InPlace Merge Sort algorithm
-	ParallelInPlaceMergeSortBenchmark(ulongs);
+	//ParallelInPlaceMergeSortBenchmark(ulongs);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	RadixSortLsdBenchmark(ulongs);
+	//RadixSortLsdBenchmark(ulongs);
 
 	// Benchmark Radix Sort LSD algorithm
-	ParallelRadixSortLsdBenchmark(ulongs);
+	//ParallelRadixSortLsdBenchmark(ulongs);
 
 	printf("\nTesting with %zu constant unsigned longs...\n\n", testSize);
 	for (size_t i = 0; i < ulongs.size(); i++) {
 		ulongs[i] = 10;
 	}
 
-	RadixSortMsdBenchmark(ulongs);
+	CountingSortBenchmark(ulongs);
+
+	//RadixSortMsdBenchmark(ulongs);
 
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample(ulongs, UseStableStdSort);
+	//ParallelStdCppExample(ulongs, UseStableStdSort);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	ParallelMergeSortBenchmark(ulongs);
+	//ParallelMergeSortBenchmark(ulongs, testSize);
 
 	// Benchmark Parallel InPlace Merge Sort algorithm
-	ParallelInPlaceMergeSortBenchmark(ulongs);
+	//ParallelInPlaceMergeSortBenchmark(ulongs);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	RadixSortLsdBenchmark(ulongs);
+	//RadixSortLsdBenchmark(ulongs);
 
 	// Benchmark Radix Sort LSD algorithm
-	ParallelRadixSortLsdBenchmark(ulongs);
+	//ParallelRadixSortLsdBenchmark(ulongs);
+
+	return 0;
 
 	// generate some random unsigned integers:
 	printf("\nTesting with %zu random unsigned integers...\n\n", testSize);
