@@ -85,7 +85,7 @@ void TestAverageOfTwoIntegers()
 	int f_i = INT32_MAX;
 
 	int ave_ef_0 = (e_i + f_i) / 2;         // wrong result of -1073741824
-	int ave_ef_1 = e_i + (e_i - f_i) / 2;   // wrong result of -1073741822
+	int ave_ef_1 = f_i + (e_i - f_i) / 2;   // correct result of 1073741824
 	int ave_ef_2 = e_i + (f_i - e_i) / 2;	// correct result of 1073741824
 	int sum_ef_0 = e_i + f_i;				// wrong result of -2147483648
 
@@ -94,13 +94,25 @@ void TestAverageOfTwoIntegers()
 	e_i = -1;
 	f_i = INT32_MIN;
 
-	ave_ef_0 = (e_i + f_i) / 2;         // wrong result of 1073741823
-	ave_ef_1 = e_i + (e_i - f_i) / 2;   // wrong result of 1073741822
+	ave_ef_0 = (e_i + f_i) / 2;         // wrong   result of  1073741823
+	ave_ef_1 = f_i + (e_i - f_i) / 2;   // correct result of -1073741824
 	ave_ef_2 = e_i + (f_i - e_i) / 2;	// correct result of -1073741824
 	int ave_ef_3 = ((unsigned)e_i + (unsigned)f_i) >> 1;   // wrong result 1073741823
 	sum_ef_0 = e_i + f_i;				// wrong result of 2147483647
 
 	printf("Average #0 = %d   Average #1 = %d   Average #2 = %d   Average #3 = %d   Sum #0 = %d\n", ave_ef_0, ave_ef_1, ave_ef_2, ave_ef_3, sum_ef_0);
+
+	e_i = 1;
+	f_i = INT32_MIN;
+
+	ave_ef_0 = (e_i + f_i) / 2;         // corrent result of -1073741823
+	ave_ef_1 = f_i + (e_i - f_i) / 2;   // wrong   result of  1073741825
+	ave_ef_2 = e_i + (f_i - e_i) / 2;	// wrong   result of  1073741824
+	ave_ef_3 = ((unsigned)e_i + (unsigned)f_i) >> 1;   // wrong result of 1073741824
+	sum_ef_0 = e_i + f_i;				// correct result of -2147483647
+	int sub_ef_0 = e_i - f_i;			// wrong   result of -2147483647
+
+	printf("Average #0 = %d   Average #1 = %d   Average #2 = %d   Average #3 = %d   Sum #0 = %d   Sub #0 = %d\n", ave_ef_0, ave_ef_1, ave_ef_2, ave_ef_3, sum_ef_0, sub_ef_0);
 
 	// Idea for unsigned: compare the two values, use the case of (larger - smaller)
 	// Idea for signed: compare the two values with zero, if both negative then compare to each other and use (smaller - larger)
