@@ -1,3 +1,5 @@
+// TODO: Add a version of the Parallel Count/Histogram, which does not allocate the count array, but instead allocates a single array that's big enough to fit all of the needed count arrays
+//       as a single buffer. A unique ID would also need to be provided to each of the leaf node (have done this before) to select a unique sub-buffer within the single buffer.
 #pragma once
 
 // Parallel Counting Sort implementations
@@ -24,6 +26,19 @@
 
 #include "RadixSortMsdParallel.h"
 #include "FillParallel.h"
+
+using std::chrono::duration;
+using std::chrono::duration_cast;
+using std::chrono::high_resolution_clock;
+using std::milli;
+using std::random_device;
+using std::sort;
+using std::vector;
+
+void print_results_par(const char* const tag, high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime)
+{
+	printf("%s: Time: %fms\n", tag, duration_cast<duration<double, milli>>(endTime - startTime).count());
+}
 
 namespace ParallelAlgorithms
 {
@@ -73,28 +88,34 @@ namespace ParallelAlgorithms
 		return countLeft;
 	}
 
-    template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold >
-    inline void counting_sort_parallel_inner(unsigned char *array_to_sort, size_t l, size_t r)
+    template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
+    inline void counting_sort_parallel_inner(unsigned char *array_to_sort, size_t l, size_t r, size_t threshold_count = 16 * 1024, size_t threshold_fill = 16 * 1024)
     {
-        size_t* counts = HistogramOneByteComponentParallel< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(array_to_sort, l, r);
+		//const auto startTimeHistogram = high_resolution_clock::now();
 
-        size_t start_index = 0;
+		size_t* counts = HistogramOneByteComponentParallel< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(array_to_sort, l, r, threshold_count);
+
+		//const auto endTimeHistogram = high_resolution_clock::now();
+		//print_results_par("Parallel Histogram inside byte array Counting Sort", startTimeHistogram, endTimeHistogram);
+
+		const auto startTimeFill = high_resolution_clock::now();
+		size_t start_index = 0;
         for (size_t count_index = 0; count_index < PowerOfTwoRadix; count_index++)
         {
             // TODO: Fill needs to be a parallel function to be done in parallel, with each value done in parallel and within each value as well
             // Then use both of these combined to show that full memory bandwidth can be achieved in C# and C++. In C++ we can use memset() to do SSE
-			if (counts[count_index] > 0)
-			{
-				parallel_fill_r(array_to_sort, (unsigned char)count_index, start_index, start_index + counts[count_index] - 1, (size_t)Threshold);
-				//memset(array_to_sort + start_index, count_index, counts[count_index]);
+			//parallel_fill_r(array_to_sort, (unsigned char)count_index, start_index, start_index + counts[count_index] - 1, threshold);
+			parallel_fill_r2(array_to_sort, (unsigned char)count_index, start_index, counts[count_index], threshold_fill);
+			//memset(array_to_sort + start_index, count_index, counts[count_index]);
 
-				//size_t end_index = start_index + counts[count_index];		// for loop leads to 3X slower algorithm
-				//for (size_t i = start_index; i <= end_index; i++)
-				//	array_to_sort[i] = count_index;
-			}
+			//size_t end_index = start_index + counts[count_index];		// for loop leads to 3X slower algorithm
+			//for (size_t i = start_index; i <= end_index; i++)
+			//	array_to_sort[i] = count_index;
             start_index += counts[count_index];
         }
-    }
+		const auto endTimeFill = high_resolution_clock::now();
+		print_results_par("Parallel Fill inside byte array Counting Sort", startTimeFill, endTimeFill);
+	}
 
 	inline void counting_sort_parallel(unsigned char* a, std::size_t a_size)
 	{
@@ -102,9 +123,10 @@ namespace ParallelAlgorithms
 
 		const unsigned long PowerOfTwoRadix = 256;
 		const unsigned long Log2ofPowerOfTwoRadix = 8;
-		const long Threshold = 16 * 1024;
+		const long threshold_count = a_size / 12;
+		const long threshold_fill  = 256 * 1024;
 
-        counting_sort_parallel_inner< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, (std::size_t)0, (std::size_t)(a_size - 1));
+        counting_sort_parallel_inner< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(a, (std::size_t)0, (std::size_t)(a_size - 1), threshold_count, threshold_fill);
 	}
 }
 #endif
