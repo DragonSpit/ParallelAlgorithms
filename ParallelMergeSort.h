@@ -203,11 +203,11 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
     inline void parallel_merge_merge_sort_hybrid(_Type* src, int l, int r, _Type* dst, bool srcToDst = true, int parallelThreshold = 32 * 1024)
     {
         // may return 0 when not able to detect
-        const auto processor_count = std::thread::hardware_concurrency();
+        //const auto processor_count = std::thread::hardware_concurrency();
         //printf("Number of cores = %u \n", processor_count);
 
-        if ((int)(parallelThreshold * processor_count) < (r - l + 1))
-            parallelThreshold = (r - l + 1) / processor_count;
+        //if ((int)(parallelThreshold * processor_count) < (r - l + 1))
+        //    parallelThreshold = (r - l + 1) / processor_count;
 
         parallel_merge_merge_sort_hybrid_inner(src, l, r, dst, false, srcToDst, parallelThreshold);
     }
@@ -222,8 +222,8 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
         //if ((int)(parallelThreshold * processor_count) < (r - l + 1))
         //    parallelThreshold = (r - l + 1) / processor_count;
 
-        //parallel_merge_sort_hybrid_rh_2(src, l, r, dst, true, srcToDst, parallelThreshold);
-        parallel_merge_sort_hybrid_rh_1(src, l, r, dst, srcToDst);
+        parallel_merge_sort_hybrid_rh_2(src, l, r, dst, false, srcToDst, parallelThreshold);
+        //parallel_merge_sort_hybrid_rh_1(src, l, r, dst, srcToDst);
     }
 
     inline void parallel_merge_sort_hybrid_radix_inner(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
@@ -236,8 +236,8 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
         }
         if ((r - l) <= parallelThreshold && !srcToDst) {
             //RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
-            RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
-            //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
+            RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);             // fastest with 8-cores on 24-core CPU
+            //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(src + l, dst + l, r - l + 1);               // fastest with 4-cores on  6-core CPU
             //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
             //if (srcToDst)
             //    for (int i = l; i <= r; i++)    dst[i] = src[i];
