@@ -98,14 +98,14 @@ namespace ParallelAlgorithms
 		//const auto endTimeHistogram = high_resolution_clock::now();
 		//print_results_par("Parallel Histogram inside byte array Counting Sort", startTimeHistogram, endTimeHistogram);
 
-		const auto startTimeFill = high_resolution_clock::now();
+		//const auto startTimeFill = high_resolution_clock::now();
+#if 0
 		size_t start_index = 0;
         for (size_t count_index = 0; count_index < PowerOfTwoRadix; count_index++)
         {
-            // TODO: Fill needs to be a parallel function to be done in parallel, with each value done in parallel and within each value as well
             // Then use both of these combined to show that full memory bandwidth can be achieved in C# and C++. In C++ we can use memset() to do SSE
-			//parallel_fill_r(array_to_sort, (unsigned char)count_index, start_index, start_index + counts[count_index] - 1, threshold);
-			parallel_fill_r2(array_to_sort, (unsigned char)count_index, start_index, counts[count_index], threshold_fill);
+			parallel_fill(array_to_sort, (unsigned char)count_index, start_index, start_index + counts[count_index], threshold_fill);
+			//parallel_fill_2(array_to_sort, (unsigned char)count_index, start_index, counts[count_index], threshold_fill);
 			//memset(array_to_sort + start_index, count_index, counts[count_index]);
 
 			//size_t end_index = start_index + counts[count_index];		// for loop leads to 3X slower algorithm
@@ -113,8 +113,18 @@ namespace ParallelAlgorithms
 			//	array_to_sort[i] = count_index;
             start_index += counts[count_index];
         }
-		const auto endTimeFill = high_resolution_clock::now();
-		print_results_par("Parallel Fill inside byte array Counting Sort", startTimeFill, endTimeFill);
+#else
+		size_t start_indexes[PowerOfTwoRadix];
+		start_indexes[0] = 0;
+		for (size_t count_index = 1; count_index < PowerOfTwoRadix; count_index++)
+			start_indexes[count_index] = start_indexes[count_index - 1] + counts[count_index - 1];
+
+		Concurrency::parallel_for(size_t(0), size_t(PowerOfTwoRadix), [&](size_t count_index) {
+			parallel_fill(array_to_sort, (unsigned char)count_index, start_indexes[count_index], start_indexes[count_index] + counts[count_index], threshold_fill);
+			});
+#endif
+		//const auto endTimeFill = high_resolution_clock::now();
+		//print_results_par("Parallel Fill inside byte array Counting Sort", startTimeFill, endTimeFill);
 	}
 
 	inline void counting_sort_parallel(unsigned char* a, std::size_t a_size)
@@ -123,8 +133,8 @@ namespace ParallelAlgorithms
 
 		const unsigned long PowerOfTwoRadix = 256;
 		const unsigned long Log2ofPowerOfTwoRadix = 8;
-		const long threshold_count = a_size / 12;
-		const long threshold_fill  = 256 * 1024;
+		const long threshold_count = a_size / 24;
+		const long threshold_fill  = 64 * 1024;
 
         counting_sort_parallel_inner< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(a, (std::size_t)0, (std::size_t)(a_size - 1), threshold_count, threshold_fill);
 	}
