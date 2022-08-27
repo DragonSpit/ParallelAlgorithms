@@ -28,6 +28,7 @@ int CountingSortBenchmark(vector<unsigned long>& ulongs)
 {
 	unsigned char* ucharCopy = new unsigned char[ulongs.size()];
 	unsigned char* sorted    = new unsigned char[ulongs.size()];
+	unsigned long long* u64array = new unsigned long long[ulongs.size()];
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
@@ -36,6 +37,7 @@ int CountingSortBenchmark(vector<unsigned long>& ulongs)
 			//ulongs[j] = j + 2;							// for pre-sorted array testing
 			ucharCopy[j] = (unsigned char)ulongs[j];
 			sorted[j]    = (unsigned char)j;				// page in the destination array into system memory
+			u64array[j]  = (unsigned long long)j;
 		}
 		// Eliminate compiler ability to optimize paging-in of the input and output arrays
 		// Paging-in source and destination arrays leads to a 50% speed-up on Linux, and 15% on Windows
@@ -45,6 +47,7 @@ int CountingSortBenchmark(vector<unsigned long>& ulongs)
 			sorted_reference[j] = (unsigned char)ulongs[j];
 		const auto startTimeRef = high_resolution_clock::now();
 		sort(sorted_reference.begin(), sorted_reference.end());
+		//sort(std::execution::par_unseq, sorted_reference.begin(), sorted_reference.end());
 		const auto endTimeRef = high_resolution_clock::now();
 		print_results("std::sort of byte array", ucharCopy, ulongs.size(), startTimeRef, endTimeRef);
 
@@ -52,6 +55,9 @@ int CountingSortBenchmark(vector<unsigned long>& ulongs)
 		const auto startTime = high_resolution_clock::now();
 		//ParallelAlgorithms::counting_sort(ucharCopy, 0, ulongs.size());
 		ParallelAlgorithms::counting_sort_parallel(ucharCopy, ulongs.size());
+		//ParallelAlgorithms::parallel_fill<unsigned long long>(u64array, 0, 0, ulongs.size(), ulongs.size() / 24);	// same performance for filling array of 64-bit
+		//ParallelAlgorithms::parallel_fill<unsigned char>(sorted, 0, 0, ulongs.size(), ulongs.size() / 24);        // dividing by # cores provides more consistent performance
+		//std::fill(std::execution::par_unseq, ucharCopy + 0, ucharCopy + ulongs.size(), 10);						// does not support parallel
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Counting Sort", ucharCopy, ulongs.size(), startTime, endTime);
 		if (std::equal(sorted_reference.begin(), sorted_reference.end(), ucharCopy))
