@@ -52,16 +52,12 @@ namespace ParallelAlgorithms
 
 		if (l > r)      // zero elements to compare
 		{
-			countLeft = new size_t[numberOfBins];
-			for (size_t j = 0; j < numberOfBins; j++)
-				countLeft[j] = 0;
+			countLeft = new size_t[numberOfBins]{};
 			return countLeft;
 		}
 		if ((r - l + 1) <= parallelThreshold)
 		{
-			countLeft = new size_t[numberOfBins];
-			for (size_t j = 0; j < numberOfBins; j++)
-				countLeft[j] = 0;
+			countLeft = new size_t[numberOfBins]{};
 
 			for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 				countLeft[inArray[current]]++;
@@ -88,12 +84,80 @@ namespace ParallelAlgorithms
 		return countLeft;
 	}
 
+	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
+	inline size_t* HistogramOneByteComponentParallel_2(unsigned char inArray[], size_t l, size_t r, size_t parallelThreshold = 16 * 1024)
+	{
+		const unsigned long numberOfBins = PowerOfTwoRadix;
+
+		size_t* countLeft_0 = NULL;
+		size_t* countLeft_1 = NULL;
+		size_t* countLeft_2 = NULL;
+		size_t* countLeft_3 = NULL;
+		size_t* countRight  = NULL;
+
+		if (l > r)      // zero elements to compare
+		{
+			countLeft_0 = new size_t[numberOfBins]{};
+			return countLeft_0;
+		}
+		if ((r - l + 1) <= parallelThreshold)
+		{
+			countLeft_0 = new size_t[numberOfBins]{};
+			countLeft_1 = new size_t[numberOfBins]{};
+			countLeft_2 = new size_t[numberOfBins]{};
+			countLeft_3 = new size_t[numberOfBins]{};
+
+			size_t last_by_four = (r / 4) * 4;
+			size_t current = l;
+			for (; current <= last_by_four;)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+			{
+				countLeft_0[inArray[current]]++;  current++;
+				countLeft_1[inArray[current]]++;  current++;
+				countLeft_2[inArray[current]]++;  current++;
+				countLeft_3[inArray[current]]++;  current++;
+			}
+			for (; current <= r; current++)    // possibly last element
+				countLeft_0[inArray[current]]++;
+
+			// Combine the two count arrays into a single arrray to return
+			for (size_t count_index = 0; count_index < numberOfBins; count_index++)
+			{
+				countLeft_0[count_index] += countLeft_1[count_index];
+				countLeft_0[count_index] += countLeft_2[count_index];
+				countLeft_0[count_index] += countLeft_3[count_index];
+			}
+
+			delete[] countLeft_1;
+			delete[] countLeft_2;
+			delete[] countLeft_3;
+			return countLeft_0;
+		}
+
+		size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;  // average without overflow
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		Concurrency::parallel_invoke(
+#else
+		tbb::parallel_invoke(
+#endif
+			[&] { countLeft_0 = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l,     m, parallelThreshold); },
+			[&] { countRight  = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, parallelThreshold); }
+		);
+		// Combine left and right results
+		for (size_t j = 0; j < numberOfBins; j++)
+			countLeft_0[j] += countRight[j];
+
+		delete[] countRight;
+
+		return countLeft_0;
+	}
+
     template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
     inline void counting_sort_parallel_inner(unsigned char *array_to_sort, size_t l, size_t r, size_t threshold_count = 16 * 1024, size_t threshold_fill = 16 * 1024)
     {
 		//const auto startTimeHistogram = high_resolution_clock::now();
 
-		size_t* counts = HistogramOneByteComponentParallel< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(array_to_sort, l, r, threshold_count);
+		size_t* counts = HistogramOneByteComponentParallel_2< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(array_to_sort, l, r, threshold_count);
 
 		//const auto endTimeHistogram = high_resolution_clock::now();
 		//print_results_par("Parallel Histogram inside byte array Counting Sort", startTimeHistogram, endTimeHistogram);
@@ -133,8 +197,8 @@ namespace ParallelAlgorithms
 
 		const unsigned long PowerOfTwoRadix = 256;
 		const unsigned long Log2ofPowerOfTwoRadix = 8;
-		const long threshold_count = a_size / 24;
-		const long threshold_fill  = 64 * 1024;
+		const long threshold_count = a_size / 12;   // 18 cores on 24-core seems to lead to maximal performance. 12-cores seems to be a good value for 6-core CPU
+		const long threshold_fill  = a_size / 2;	// 10-12 cores on 24-core seems to lead to maximal performance, with 24-cores slowing down by 2X. 2-cores seems to be the best value for 6-core CPU
 
         counting_sort_parallel_inner< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(a, (std::size_t)0, (std::size_t)(a_size - 1), threshold_count, threshold_fill);
 	}
