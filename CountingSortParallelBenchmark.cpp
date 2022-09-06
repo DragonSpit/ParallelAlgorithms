@@ -46,8 +46,8 @@ int CountingSortBenchmark(vector<unsigned long>& ulongs)
 		for (size_t j = 0; j < ulongs.size(); j++)
 			sorted_reference[j] = (unsigned char)ulongs[j];
 		const auto startTimeRef = high_resolution_clock::now();
-		sort(sorted_reference.begin(), sorted_reference.end());
-		//sort(std::execution::par_unseq, sorted_reference.begin(), sorted_reference.end());
+		//sort(sorted_reference.begin(), sorted_reference.end());
+		sort(std::execution::par_unseq, sorted_reference.begin(), sorted_reference.end());
 		const auto endTimeRef = high_resolution_clock::now();
 		print_results("std::sort of byte array", ucharCopy, ulongs.size(), startTimeRef, endTimeRef);
 
@@ -56,7 +56,7 @@ int CountingSortBenchmark(vector<unsigned long>& ulongs)
 		//ParallelAlgorithms::counting_sort(ucharCopy, 0, ulongs.size());
 		ParallelAlgorithms::counting_sort_parallel(ucharCopy, ulongs.size());
 		//ParallelAlgorithms::parallel_fill<unsigned long long>(u64array, 0, 0, ulongs.size(), ulongs.size() / 24);	// same performance for filling array of 64-bit
-		//ParallelAlgorithms::parallel_fill<unsigned char>(sorted, 0, 0, ulongs.size(), ulongs.size() / 24);        // dividing by # cores provides more consistent performance
+		//ParallelAlgorithms::parallel_fill<unsigned char>(sorted, 0, 0, ulongs.size(), ulongs.size() / 2);        // dividing by # cores provides more consistent performance
 		//std::fill(std::execution::par_unseq, ucharCopy + 0, ucharCopy + ulongs.size(), 10);						// does not support parallel
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Counting Sort", ucharCopy, ulongs.size(), startTime, endTime);
