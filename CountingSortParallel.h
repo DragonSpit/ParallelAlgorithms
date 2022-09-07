@@ -1,6 +1,6 @@
 // TODO: Add a version of the Parallel Count/Histogram, which does not allocate the count array, but instead allocates a single array that's big enough to fit all of the needed count arrays
 //       as a single buffer. A unique ID would also need to be provided to each of the leaf node (have done this before) to select a unique sub-buffer within the single buffer.
-// TODO: Debug what seems to be a memory allocation problem with Parallel Count #2 which crashes for small parallel_threashold setting
+// TODO: Combine reading 64-bits technique with multi-buffering that removed dependency across for loop iterations into a single implementation to see if it performs even faster and more consistent.
 #pragma once
 
 // Parallel Counting Sort implementations
@@ -43,6 +43,7 @@ void print_results_par(const char* const tag, high_resolution_clock::time_point 
 
 namespace ParallelAlgorithms
 {
+	// left (l) boundary is inclusive and right (r) boundary is exclusive
 	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 	inline size_t* HistogramOneByteComponentParallel(unsigned char inArray[], size_t l, size_t r, size_t parallelThreshold = 16 * 1024)
 	{
@@ -51,16 +52,16 @@ namespace ParallelAlgorithms
 		size_t* countLeft  = NULL;
 		size_t* countRight = NULL;
 
-		if (l > r)      // zero elements to compare
+		if (l >= r)      // zero elements to compare
 		{
 			countLeft = new size_t[numberOfBins]{};
 			return countLeft;
 		}
-		if ((r - l + 1) <= parallelThreshold)
+		if ((r - l) <= parallelThreshold)
 		{
 			countLeft = new size_t[numberOfBins]{};
 
-			for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+			for (size_t current = l; current < r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 				countLeft[inArray[current]]++;
 
 			return countLeft;
@@ -73,8 +74,8 @@ namespace ParallelAlgorithms
 #else
 		tbb::parallel_invoke(
 #endif
-			[&] { countLeft  = HistogramOneByteComponentParallel <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l,     m, parallelThreshold); },
-			[&] { countRight = HistogramOneByteComponentParallel <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, parallelThreshold); }
+			[&] { countLeft  = HistogramOneByteComponentParallel <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l, m, parallelThreshold); },
+			[&] { countRight = HistogramOneByteComponentParallel <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m, r, parallelThreshold); }
 		);
 		// Combine left and right results
 		for (size_t j = 0; j < numberOfBins; j++)
@@ -146,6 +147,7 @@ namespace ParallelAlgorithms
 	}
 
 
+	// left (l) boundary is inclusive and right (r) boundary is exclusive
 	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 	inline size_t* HistogramOneByteComponentParallel_2(unsigned char inArray[], size_t l, size_t r, size_t parallelThreshold = 16 * 1024)
 	{
@@ -157,19 +159,19 @@ namespace ParallelAlgorithms
 		size_t* countLeft_3 = NULL;
 		size_t* countRight  = NULL;
 
-		if (l > r)      // zero elements to compare
+		if (l >= r)      // zero elements to compare
 		{
 			countLeft_0 = new size_t[numberOfBins]{};
 			return countLeft_0;
 		}
-		if ((r - l + 1) <= parallelThreshold)
+		if ((r - l) <= parallelThreshold)
 		{
 			countLeft_0 = new size_t[numberOfBins]{};
 			countLeft_1 = new size_t[numberOfBins]{};
 			countLeft_2 = new size_t[numberOfBins]{};
 			countLeft_3 = new size_t[numberOfBins]{};
 
-			size_t last_by_four = l + ((r - l + 1) / 4) * 4;
+			size_t last_by_four = l + ((r - l) / 4) * 4;
 			size_t current = l;
 			for (; current < last_by_four;)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 			{
@@ -178,7 +180,7 @@ namespace ParallelAlgorithms
 				countLeft_2[inArray[current]]++;  current++;
 				countLeft_3[inArray[current]]++;  current++;
 			}
-			for (; current <= r; current++)    // possibly last element
+			for (; current < r; current++)    // possibly last element
 				countLeft_0[inArray[current]]++;
 
 			// Combine the two count arrays into a single arrray to return
@@ -202,8 +204,8 @@ namespace ParallelAlgorithms
 #else
 		tbb::parallel_invoke(
 #endif
-			[&] { countLeft_0 = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l,     m, parallelThreshold); },
-			[&] { countRight  = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, parallelThreshold); }
+			[&] { countLeft_0 = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l, m, parallelThreshold); },
+			[&] { countRight  = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m, r, parallelThreshold); }
 		);
 		// Combine left and right results
 		for (size_t j = 0; j < numberOfBins; j++)
@@ -213,6 +215,8 @@ namespace ParallelAlgorithms
 
 		return countLeft_0;
 	}
+
+	// left (l) boundary is inclusive and right (r) boundary is exclusive
 	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 	inline size_t* HistogramOneByteComponentParallel_3(unsigned char inArray[], size_t l, size_t r, size_t parallelThreshold = 16 * 1024)
 	{
@@ -221,19 +225,19 @@ namespace ParallelAlgorithms
 		size_t* countLeft_0 = NULL;
 		size_t* countRight  = NULL;
 
-		if (l > r)      // zero elements to compare
+		if (l >= r)      // zero elements to compare
 		{
 			countLeft_0 = new size_t[numberOfBins]{};
 			return countLeft_0;
 		}
-		if ((r - l + 1) <= parallelThreshold)
+		if ((r - l) <= parallelThreshold)
 		{
 			countLeft_0 = new size_t[numberOfBins]{};
 			__declspec(align(64)) size_t countLeft_1[numberOfBins] = { 0 };
 			__declspec(align(64)) size_t countLeft_2[numberOfBins] = { 0 };
 			__declspec(align(64)) size_t countLeft_3[numberOfBins] = { 0 };
 
-			size_t last_by_four = l + ((r - l + 1) / 4) * 4;
+			size_t last_by_four = l + ((r - l) / 4) * 4;
 			size_t current = l;
 			for (; current < last_by_four;)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 			{
@@ -242,7 +246,7 @@ namespace ParallelAlgorithms
 				countLeft_2[inArray[current]]++;  current++;
 				countLeft_3[inArray[current]]++;  current++;
 			}
-			for (; current <= r; current++)    // possibly last element
+			for (; current < r; current++)    // possibly last element
 				countLeft_0[inArray[current]]++;
 
 			// Combine the two count arrays into a single arrray to return
@@ -263,8 +267,8 @@ namespace ParallelAlgorithms
 #else
 		tbb::parallel_invoke(
 #endif
-			[&] { countLeft_0 = HistogramOneByteComponentParallel_3 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l,     m, parallelThreshold); },
-			[&] { countRight  = HistogramOneByteComponentParallel_3 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, parallelThreshold); }
+			[&] { countLeft_0 = HistogramOneByteComponentParallel_3 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l, m, parallelThreshold); },
+			[&] { countRight  = HistogramOneByteComponentParallel_3 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m, r, parallelThreshold); }
 		);
 		// Combine left and right results
 		for (size_t j = 0; j < numberOfBins; j++)
@@ -275,12 +279,13 @@ namespace ParallelAlgorithms
 		return countLeft_0;
 	}
 
-    template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
+	// left (l) boundary is inclusive and right (r) boundary is exclusive
+	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
     inline void counting_sort_parallel_inner(unsigned char *array_to_sort, size_t l, size_t r, size_t threshold_count = 16 * 1024, size_t threshold_fill = 16 * 1024)
     {
 		//const auto startTimeHistogram = high_resolution_clock::now();
 
-		size_t* counts = HistogramOneByteComponentParallel_4< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(array_to_sort, l, r, threshold_count);
+		size_t* counts = HistogramOneByteComponentParallel_3< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(array_to_sort, l, r, threshold_count);
 		//size_t* counts = HistogramOneByteComponentParallel< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(array_to_sort, l, r, threshold_count);
 
 		//const auto endTimeHistogram = high_resolution_clock::now();
