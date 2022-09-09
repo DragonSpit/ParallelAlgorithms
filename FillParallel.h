@@ -1,3 +1,4 @@
+// TODO: Possible improvement is to provide an option to go around the CPU cache using SSE instructions for writes that can go around the cache, to not evict items out of the cache.
 // Parallel Fill implementations
 
 #ifndef _ParallelFill_h
