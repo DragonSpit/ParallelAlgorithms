@@ -20,6 +20,7 @@
 #include <vector>
 #include <thread>
 #include <execution>
+#include <tbb/parallel_invoke.h>
 #endif
 
 #include "RadixSortMsdParallel.h"
@@ -46,6 +47,8 @@ namespace ParallelAlgorithms
 	// left (l) boundary is inclusive and right (r) boundary is exclusive
 	inline unsigned long long SumParallel(unsigned long long in_array[], size_t l, size_t r, size_t parallelThreshold = 16 * 1024)
 	{
+		//if (((unsigned long long)(in_array + l) & 0x7) != 0)
+		//	printf("Memory alignment is not on 8-byte boundary\n");
 		if (l >= r)      // zero elements to sum
 			return 0;
 		if ((r - l) <= parallelThreshold)
@@ -53,10 +56,46 @@ namespace ParallelAlgorithms
 			unsigned long long sum_left = 0;
 			for (size_t current = l; current < r; current++)
 				sum_left += in_array[current];
+			//unsigned long long sum_left = std::accumulate(in_array + l, in_array + r, 0);
 			return sum_left;
 		}
 
 		unsigned long long sum_left = 0, sum_right = 0;
+
+		size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;  // average without overflow
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		Concurrency::parallel_invoke(
+#else
+		tbb::parallel_invoke(
+#endif
+			[&] { sum_left  = SumParallel(in_array, l, m, parallelThreshold); },
+			[&] { sum_right = SumParallel(in_array, m, r, parallelThreshold); }
+		);
+		// Combine left and right results
+		sum_left += sum_right;
+
+		return sum_left;
+	}
+	// Sum of an arbitrary numerical type to a 64-bit sum
+	// left (l) boundary is inclusive and right (r) boundary is exclusive
+	template< class _Type >
+	inline long long SumParallel(_Type in_array[], size_t l, size_t r, size_t parallelThreshold = 16 * 1024)
+	{
+		//if (((unsigned long long)(in_array + l) & 0x7) != 0)
+		//	printf("Memory alignment is not on 8-byte boundary\n");
+		if (l >= r)      // zero elements to sum
+			return 0;
+		if ((r - l) <= parallelThreshold)
+		{
+			long long sum_left = 0;
+			for (size_t current = l; current < r; current++)
+				sum_left += (long long)in_array[current];
+			//long long sum_left = std::accumulate(in_array + l, in_array + r, 0);
+			return sum_left;
+		}
+
+		long long sum_left = 0, sum_right = 0;
 
 		size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;  // average without overflow
 
