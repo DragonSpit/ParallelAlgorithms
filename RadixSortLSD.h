@@ -187,12 +187,12 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned long* a, unsign
 // Permute phase of LSD Radix Sort with de-randomized write memory accesses
 // Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold, unsigned long BufferDepth>
-inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsigned long* input_array, unsigned long* output_array, long startIndex, long endIndex, unsigned long bitMask, unsigned long shiftRightAmount,
+inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsigned long* input_array, unsigned long* output_array, size_t startIndex, size_t endIndex, unsigned long bitMask, unsigned long shiftRightAmount,
 	long* endOfBin, unsigned long bufferIndex[], unsigned long bufferDerandomize[][BufferDepth])
 {
 	const unsigned long numberOfBins = PowerOfTwoRadix;
 
-	for (long _current = startIndex; _current <= endIndex; _current++)
+	for (size_t _current = startIndex; _current <= endIndex; _current++)
 	{
 		unsigned long digit = extractDigit(input_array[_current], bitMask, shiftRightAmount);
 		if (bufferIndex[digit] < BufferDepth)
@@ -228,7 +228,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsig
 // Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
 // Parallel LSD Radix Sort, with Counting separated into its own parallel phase, followed by a serial permutation phase, as is done in HPCsharp in C#
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
-void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned long* input_array, unsigned long* output_array, long last, unsigned long bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
+void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned long* input_array, unsigned long* output_array, size_t last, unsigned long bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
 {
 	const unsigned long numberOfBins = PowerOfTwoRadix;
 	unsigned long* _input_array = input_array;
@@ -278,7 +278,7 @@ void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned lo
 }
 
 // LSD Radix Sort - stable (LSD has to be, and this may preclude LSD Radix from being able to be in-place)
-inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned long* a, unsigned long* b, unsigned long a_size)
+inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned long* a, unsigned long* b, size_t a_size)
 {
 	const unsigned long Threshold = 100;	// Threshold of when to switch to using Insertion Sort
 	const unsigned long PowerOfTwoRadix = 256;
