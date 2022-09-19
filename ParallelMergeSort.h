@@ -200,7 +200,7 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
 }
 
     template< class _Type >
-    inline void parallel_merge_merge_sort_hybrid(_Type* src, int l, int r, _Type* dst, bool srcToDst = true, int parallelThreshold = 32 * 1024)
+    inline void parallel_merge_merge_sort_hybrid(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
     {
         // may return 0 when not able to detect
         //const auto processor_count = std::thread::hardware_concurrency();
@@ -475,7 +475,7 @@ inline void merge_sort_inplace_hybrid_with_insertion(_Type* src, size_t l, size_
     merge_sort_inplace_hybrid_with_insertion(src, l,     m);
     merge_sort_inplace_hybrid_with_insertion(src, m + 1, r);
 
-    merge_in_place_L1(a, l, m, r);       // merge the results
+    merge_in_place_L1(src, l, m, r);       // merge the results
     //std::inplace_merge(src + l, src + m + 1, src + r + 1);
 }
 
