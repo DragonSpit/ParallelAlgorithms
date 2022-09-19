@@ -57,7 +57,7 @@ namespace ParallelAlgorithms
 		{
 #if 1
 			//memset(array_to_sort + start_index, count_index, counts[count_index]);
-			std::fill(array_to_sort + start_index, array_to_sort + start_index + counts[count_index], count_index);
+			std::fill(array_to_sort + start_index, array_to_sort + start_index + counts[count_index], (unsigned char)count_index);
 #else
 			size_t end_index = start_index + counts[count_index];
 			for (size_t i = start_index; i <= end_index; i++)
