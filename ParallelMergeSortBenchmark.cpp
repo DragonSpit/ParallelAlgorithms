@@ -107,7 +107,7 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs, const size_t& test
 		for (size_t j = 0; j < ulongs.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			ulongsCopy[ j] = ulongs[j];
 			ulongsCopy2[j] = ulongs[j];
-			sorted[j] = j;									// page in the destination array into system memory
+			sorted[j] = (unsigned long)j;									// page in the destination array into system memory
 			//ulongsCopyVec[ j] = ulongs[j];
 			//ulongsCopyVec2[j] = ulongs[j];
 		}
