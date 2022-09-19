@@ -1,3 +1,5 @@
+//#include <oneapi/dpl/execution>
+//#include <oneapi/dpl/algorithm>
 #include <stddef.h>
 #include <stdio.h>
 #include <iostream>
@@ -7,6 +9,7 @@
 #include <ratio>
 #include <vector>
 //#include <execution>
+//#include <oneapi/dpl/algorithm>
 
 #include "SumParallel.h"
 
@@ -87,6 +90,8 @@ int SumBenchmark(vector<unsigned long>& ulongs)
 		for (size_t i = 0; i < ulongs.size(); i++)
 			sum_ref += u64Copy[i];
 		//sum_ref = std::accumulate(u64Copy.begin(), u64Copy.end(), 0);
+		//std::fill(oneapi::dpl::execution::par_unseq, u64Copy.begin(), u64Copy.end(), 42);
+		//std::fill(u64Copy.begin(), u64Copy.end(), 42);
 		const auto endTimeRef = high_resolution_clock::now();
 		print_results("std::accumulate", sum_ref, u64Copy.size(), startTimeRef, endTimeRef);
 
