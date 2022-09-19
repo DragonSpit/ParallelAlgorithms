@@ -44,21 +44,23 @@ void print_results(const char* const tag, const unsigned long long sum, size_t s
 
 namespace ParallelAlgorithms
 {
+// left (l) boundary is inclusive and right (r) boundary is exclusive
+inline unsigned long long Sum(unsigned long long in_array[], size_t l, size_t r)
+{
+	unsigned long long sum = 0;
+	for (size_t current = l; current < r; current++)
+		sum += in_array[current];
+	//unsigned long long sum_left = std::accumulate(in_array + l, in_array + r, 0);	// may be implemented using SIMD/SSE
+	return sum;
+}
+
 	// left (l) boundary is inclusive and right (r) boundary is exclusive
 	inline unsigned long long SumParallel(unsigned long long in_array[], size_t l, size_t r, size_t parallelThreshold = 16 * 1024)
 	{
 		//if (((unsigned long long)(in_array + l) & 0x7) != 0)
 		//	printf("Memory alignment is not on 8-byte boundary\n");
-		if (l >= r)      // zero elements to sum
-			return 0;
 		if ((r - l) <= parallelThreshold)
-		{
-			unsigned long long sum_left = 0;
-			for (size_t current = l; current < r; current++)
-				sum_left += in_array[current];
-			//unsigned long long sum_left = std::accumulate(in_array + l, in_array + r, 0);
-			return sum_left;
-		}
+			return Sum( in_array, l, r );
 
 		unsigned long long sum_left = 0, sum_right = 0;
 
@@ -84,8 +86,6 @@ namespace ParallelAlgorithms
 	{
 		//if (((unsigned long long)(in_array + l) & 0x7) != 0)
 		//	printf("Memory alignment is not on 8-byte boundary\n");
-		if (l >= r)      // zero elements to sum
-			return 0;
 		if ((r - l) <= parallelThreshold)
 		{
 			long long sum_left = 0;
