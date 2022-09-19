@@ -249,10 +249,10 @@ inline void merge_parallel_L3(_Type* t, int p1, int r1, int p2, int r2, _Type* a
 // Listing 4
 // The hybrid divide-and-conquer algorithm implementation
 template< class _Type >
-inline void merge_dac_hybrid(const _Type* t, int p1, int r1, int p2, int r2, _Type* a, int p3)
+inline void merge_dac_hybrid(const _Type* t, size_t p1, size_t r1, size_t p2, size_t r2, _Type* a, size_t p3)
 {
-	int length1 = r1 - p1 + 1;
-	int length2 = r2 - p2 + 1;
+	size_t length1 = r1 - p1 + 1;
+	size_t length2 = r2 - p2 + 1;
 	if (length1 < length2)
 	{
 		exchange(p1, p2);
@@ -263,9 +263,9 @@ inline void merge_dac_hybrid(const _Type* t, int p1, int r1, int p2, int r2, _Ty
 	if ((length1 + length2) <= 8192)
 		merge_ptr_1(&t[p1], &t[p1 + length1], &t[p2], &t[p2 + length2], &a[p3]);
 	else {
-		int q1 = (p1 + r1) / 2;
-		int q2 = my_binary_search(t[q1], t, p2, r2);
-		int q3 = p3 + (q1 - p1) + (q2 - p2);
+		size_t q1 = p1 / 2 + r1 / 2 + (p1 % 2 + r1 % 2) / 2;	// average without overflow
+		size_t q2 = my_binary_search(t[q1], t, p2, r2);
+		size_t q3 = p3 + (q1 - p1) + (q2 - p2);
 		a[q3] = t[q1];
 		merge_dac_hybrid(t, p1, q1 - 1, p2, q2 - 1, a, p3);
 		merge_dac_hybrid(t, q1 + 1, r1, q2, r2, a, q3 + 1);
@@ -356,7 +356,7 @@ inline void block_exchange_mirror(_Type* a, int l, int m, int r)
 // Swaps two sequential sub-arrays ranges a[ l .. m ] and a[ m + 1 .. r ]
 // Faster version than using a while/for loop, as the version right above does
 template< class _Type >
-inline void block_exchange_mirror_1(_Type* a, int l, int m, int r)
+inline void block_exchange_mirror_1(_Type* a, size_t l, size_t m, size_t r)
 {
 	std::reverse(a + l,     a + m + 1);
 	std::reverse(a + m + 1, a + r + 1);
@@ -366,9 +366,9 @@ inline void block_exchange_mirror_1(_Type* a, int l, int m, int r)
 // Swaps two sequential sub-arrays ranges a[ l .. m ] and a[ m + 1 .. r ]
 // Seems to be the fastest version, as if mirror of the two blocks brings into the cache the most of the whole array for the last mirror to do.
 template< class _Type >
-inline void block_exchange_mirror_par(_Type* a, int l, int m, int r, int threshold = 64 * 1024)
+inline void block_exchange_mirror_par(_Type* a, size_t l, size_t m, size_t r, size_t threshold = 64 * 1024)
 {
-	int length = r - l + 1;
+	size_t length = r - l + 1;
 	if (length < threshold)
 		block_exchange_mirror_1(a, l, m, r);
 	else
@@ -440,10 +440,10 @@ inline void merge_in_place(_Type* t, int l, int m, int r)
 // Based on not-in-place algorithm in 3rd ed. of "Introduction to Algorithms" p. 798-802, extending it to be in-place
 // and my Dr. Dobb's paper https://www.drdobbs.com/parallel/parallel-in-place-merge/240008783 or https://web.archive.org/web/20141217133856/http://www.drdobbs.com/parallel/parallel-in-place-merge/240008783
 template< class _Type >
-inline void p_merge_in_place_2(_Type* t, int l, int m, int r)
+inline void p_merge_in_place_2(_Type* t, size_t l, size_t m, size_t r)
 {
-	int length1 = m - l + 1;
-	int length2 = r - m;
+	size_t length1 = m - l + 1;
+	size_t length2 = r - m;
 	if (length1 >= length2)
 	{
 		if (length2 <= 0)	return;
@@ -452,9 +452,9 @@ inline void p_merge_in_place_2(_Type* t, int l, int m, int r)
 		//		if (( length1 + length2 ) <= 1024 )	{ mergeSedgewick_small_arrays_only< 1024 >( t, l, m, r );  return; }	// 2X speedup
 		if ((length1 + length2) <= 1024) { std::inplace_merge(t + l, t + m + 1, t + r + 1);  return; }
 		//		if ( length1 < 1024 )	{ merge_inplace_forward< 1024 >( t, l, m, r );  return; }	
-		int q1 = (l + m) / 2;								// q1 is mid-point of the larger segment
-		int q2 = my_binary_search(t[q1], t, m + 1, r);	// q2 is q1 partitioning element within the smaller sub-array (and q2 itself is part of the sub-array that does not move)
-		int q3 = q1 + (q2 - m - 1);
+		size_t q1 = l / 2 + m / 2 + (l % 2 + m % 2) / 2;	// q1 is mid-point of the larger segment
+		size_t q2 = my_binary_search(t[q1], t, m + 1, r);	// q2 is q1 partitioning element within the smaller sub-array (and q2 itself is part of the sub-array that does not move)
+		size_t q3 = q1 + (q2 - m - 1);
 		//		block_exchange_7< 16 >( t, q1, m, q2 - 1 );
 		//		block_exchange_mirror_reverse_order(( t, q1, m, q2 - 1 );
 		//		p_block_exchange( t, q1, m, q2 - 1 );
@@ -478,9 +478,9 @@ inline void p_merge_in_place_2(_Type* t, int l, int m, int r)
 		//		if (( length1 + length2 ) <= 1024 )	{ mergeSedgewick_small_arrays_only< 1024 >( t, l, m, r );  return; }	// 2X speedup
 		if ((length1 + length2) <= 1024) { std::inplace_merge(t + l, t + m + 1, t + r + 1);  return; }
 		//		if ( length2 < 1024 )	{ merge_inplace_reverse< 1024 >( t, l, m, r );  return; }	
-		int q1 = (m + 1 + r) / 2;							// q1 is mid-point of the larger segment
-		int q2 = my_binary_search(t[q1], t, l, m);		// q2 is q1 partitioning element within the smaller sub-array (and q2 itself is part of the sub-array that does not move)
-		int q3 = q2 + (q1 - m - 1);
+		size_t q1 = (m + 1) / 2 + r / 2 + ((m + 1) % 2 + r % 2) / 2;	// q1 is mid-point of the larger segment
+		size_t q2 = my_binary_search(t[q1], t, l, m);					// q2 is q1 partitioning element within the smaller sub-array (and q2 itself is part of the sub-array that does not move)
+		size_t q3 = q2 + (q1 - m - 1);
 		//		block_exchange_7< 16 >( t, q2, m, q1 );
 		//		block_exchange_mirror_reverse_order(( t, q2, m, q1 );
 		//		p_block_exchange( t, q2, m, q1 );
