@@ -8,6 +8,9 @@
 #ifndef _ParallelCountingSort_h
 #define _ParallelCountingSort_h
 
+//#include <oneapi/dpl/execution>
+//#include <oneapi/dpl/algorithm>
+
 //#include <cstddef>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
@@ -293,6 +296,7 @@ namespace ParallelAlgorithms
 			//parallel_fill_2(array_to_sort, (unsigned char)count_index, start_index, counts[count_index], threshold_fill);
 			//memset(array_to_sort + start_index, count_index, counts[count_index]);
 			//std::fill(array_to_sort + start_index, array_to_sort + start_index + counts[count_index], count_index);
+			//std::fill(oneapi::dpl::execution::par_unseq, array_to_sort + start_index, array_to_sort + start_index + counts[count_index], count_index);
 
 			//size_t end_index = start_index + counts[count_index];		// for loop leads to 3X slower algorithm
 			//for (size_t i = start_index; i <= end_index; i++)
@@ -307,6 +311,7 @@ namespace ParallelAlgorithms
 
 		Concurrency::parallel_for(size_t(0), size_t(NumberOfBins), [&](size_t count_index) {
 			parallel_fill(array_to_sort, (unsigned char)count_index, start_indexes[count_index], start_indexes[count_index] + counts[count_index], threshold_fill);
+			//std::fill(oneapi::dpl::execution::par_unseq, array_to_sort + start_indexes[count_index], array_to_sort + start_indexes[count_index] + counts[count_index], count_index);
 			});
 #endif
 		//const auto endTimeFill = high_resolution_clock::now();
