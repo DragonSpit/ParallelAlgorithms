@@ -48,6 +48,7 @@ int CountingSortBenchmark(vector<unsigned long>& ulongs)
 		const auto startTimeRef = high_resolution_clock::now();
 		//sort(sorted_reference.begin(), sorted_reference.end());
 		sort(std::execution::par_unseq, sorted_reference.begin(), sorted_reference.end());
+		//sort(oneapi::dpl::execution::par_unseq, sorted_reference.begin(), sorted_reference.end());
 		const auto endTimeRef = high_resolution_clock::now();
 		print_results("std::sort of byte array", ucharCopy, ulongs.size(), startTimeRef, endTimeRef);
 
@@ -74,3 +75,32 @@ int CountingSortBenchmark(vector<unsigned long>& ulongs)
 
 	return 0;
 }
+
+// Test memory allocation
+int TestMemoryAllocation()
+{
+	const size_t NUM_TIMES = 1000;
+	const size_t SIZE_OF_ARRAY = 100'000'000;
+	unsigned char* array_of_pointers[NUM_TIMES]{};
+	size_t sum = 0;
+
+	for (size_t i = 0; i < NUM_TIMES; ++i)
+	{
+		array_of_pointers[i] = new unsigned char[SIZE_OF_ARRAY];
+		for (size_t j = 0; j < SIZE_OF_ARRAY; ++j)
+			array_of_pointers[i][j] = (unsigned char)j;
+		for (size_t j = 0; j < SIZE_OF_ARRAY; ++j)
+			sum += array_of_pointers[i][j];
+		printf("Allocated array: %zu   sum = %zu\n", i, sum);
+		std::this_thread::sleep_for(std::chrono::milliseconds(300));
+	}
+	printf("Final sum = %zu\n", sum);
+
+	for (size_t i = 0; i < NUM_TIMES; ++i)
+	{
+		delete[] array_of_pointers[i];
+	}
+
+	return 0;
+}
+
