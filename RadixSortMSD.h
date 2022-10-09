@@ -58,7 +58,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_L1(_Type* a, size_t a_size, _Type 
 	}
 }
 
-inline void HybridSort(unsigned long* a, unsigned long a_size)
+inline void HybridSort(unsigned long* a, size_t a_size)
 {
 	if (a_size < 2)	return;
 
