@@ -8,7 +8,11 @@
 #define _RadixSortLSD_h
 
 #include "RadixSortCommon.h"
+#include "RadixSortMSD.h"
 #include "InsertionSort.h"
+
+extern unsigned long long physical_memory_used_in_megabytes();
+extern unsigned long long physical_memory_total_in_megabytes();
 
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline unsigned long** HistogramByteComponents(unsigned long inArray[], int l, int r)
@@ -300,5 +304,40 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned lon
 	}
 }
 
+inline void sort_radix_in_place_adaptive(unsigned long* src, size_t src_size, double physical_memory_threshold = 0.75)
+{
+	double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
+	printf("sort_radix_in_place_adaptive: physical memory used = %llu   physical memory total = %llu\n",
+		physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+
+	if (physical_memory_fraction > physical_memory_threshold)
+	{
+		printf("Running truly in-place MSD Radix Sort\n");
+		HybridSort(src, src_size);		// in-place, not stable
+	}
+	else
+	{
+		unsigned long* working_array = new(std::nothrow) unsigned long[src_size];
+
+		if (!working_array)
+		{
+			printf("Running truly in-place MSD Radix Sort\n");
+			HybridSort(src, src_size);		// in-place, not stable
+		}
+		else
+		{
+			for (size_t i = 0; i < src_size; i++)		// page in allocated array. Only then it shows up in memory usage measurements
+				working_array[i] = (unsigned long)i;
+
+			physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
+			printf("sort_radix_in_place_adaptive #2: physical memory used = %llu   physical memory total = %llu\n",
+				physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+
+			printf("Running not-in-place LSD Radix Sort\n");
+			RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src, working_array, src_size);	// not-in-place, stable
+			delete[] working_array;
+		}
+	}
+}
 
 #endif
