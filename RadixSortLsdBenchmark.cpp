@@ -49,8 +49,10 @@ int RadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 
 		printf("ulongsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", ulongsCopy, sorted, sorted[static_cast<unsigned>(rd()) % ulongs.size()], ulongsCopy[static_cast<unsigned>(rd()) % ulongs.size()]);
 		const auto startTime = high_resolution_clock::now();
-		RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
-		RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(ulongsCopy, sorted, (unsigned long)ulongs.size());
+		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
+		sort_radix_in_place_adaptive(ulongsCopy, (unsigned long)ulongs.size(), 0.9);
+
+		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(ulongsCopy, sorted, (unsigned long)ulongs.size());
 		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Radix Sort LSD", sorted, ulongs.size(), startTime, endTime);
