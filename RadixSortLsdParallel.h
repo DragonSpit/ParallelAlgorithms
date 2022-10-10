@@ -1,5 +1,6 @@
 // TODO: Try DeRandomized version, but without using Parallel Histogram
-#pragma once
+#ifndef _RadixSortLsdParallel_h
+#define _RadixSortLsdParallel_h
 
 #include "InsertionSort.h"
 #include "BinarySearch.h"
@@ -707,3 +708,4 @@ inline void RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(unsi
 			b[j] = a[j];
 	}
 }
+#endif
