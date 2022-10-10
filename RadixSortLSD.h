@@ -2,7 +2,6 @@
 // TODO: Switch histogram calculation from mask/shift to union
 // TODO: Create a version of Radix Sort that handles 64-bit indexes (size_t) for arrays larger than 4GigaElements
 // TODO: Detect the size of array and use unsigned/32-bit counts for smaller arrays and size_t/64-bit counts for larger arrays
-#pragma once
 
 #ifndef _RadixSortLSD_h
 #define _RadixSortLSD_h
@@ -10,6 +9,7 @@
 #include "RadixSortCommon.h"
 #include "RadixSortMSD.h"
 #include "InsertionSort.h"
+#include "ParallelMergeSort.h"
 
 extern unsigned long long physical_memory_used_in_megabytes();
 extern unsigned long long physical_memory_total_in_megabytes();
@@ -304,6 +304,7 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned lon
 	}
 }
 
+// Stability is not needed when sorting an array of integers
 inline void sort_radix_in_place_adaptive(unsigned long* src, size_t src_size, double physical_memory_threshold = 0.75)
 {
 	double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
@@ -323,6 +324,61 @@ inline void sort_radix_in_place_adaptive(unsigned long* src, size_t src_size, do
 		{
 			printf("Running truly in-place MSD Radix Sort\n");
 			HybridSort(src, src_size);		// in-place, not stable
+		}
+		else
+		{
+			for (size_t i = 0; i < src_size; i++)		// page in allocated array. Only then it shows up in memory usage measurements
+				working_array[i] = (unsigned long)i;
+
+			physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
+			printf("sort_radix_in_place_adaptive #2: physical memory used = %llu   physical memory total = %llu\n",
+				physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+
+			printf("Running not-in-place LSD Radix Sort\n");
+			RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src, working_array, src_size);	// not-in-place, stable
+			delete[] working_array;
+		}
+	}
+}
+
+// l boundary is inclusive and r boundary is exclusive
+template< class _Type >
+inline void merge_sort_inplace_hybrid_with_insertion(_Type* src, size_t l, size_t r)
+{
+	if (r <= l) return;
+	if ((r - l) <= 48) {
+		insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l);
+		return;
+	}
+	size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
+
+	merge_sort_inplace_hybrid_with_insertion(src, l, m);
+	merge_sort_inplace_hybrid_with_insertion(src, m, r);
+
+	//merge_in_place(src, l, m, r);       // merge the results (TODO: Needs size_t for arguments and modified to be truly in-place all the way down)
+	std::inplace_merge(src + l, src + m, src + r);
+}
+
+inline void sort_radix_in_place_stable_adaptive(unsigned long* src, size_t src_size, double physical_memory_threshold = 0.75)
+{
+	double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
+	printf("sort_radix_in_place_adaptive: physical memory used = %llu   physical memory total = %llu\n",
+		physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+
+	if (physical_memory_fraction > physical_memory_threshold)
+	{
+		printf("Running in-place stable adaptive sort\n");
+		std::stable_sort(src + 0, src + src_size);	// problematic as it is not purely in-place algorithm, which is what is needed to keep memory footprint low
+		//merge_sort_inplace_hybrid_with_insertion(src, 0, src_size);
+	}
+	else
+	{
+		unsigned long* working_array = new(std::nothrow) unsigned long[src_size];
+
+		if (!working_array)
+		{
+			printf("Running truly in-place MSD Radix Sort\n");
+			std::stable_sort(src + 0, src + src_size);
 		}
 		else
 		{
