@@ -386,6 +386,7 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
         //merge_in_place(src, l, m, r);       // merge the results
         //std::inplace_merge(std::execution::par_unseq, src + l, src + m + 1, src + r + 1);
         p_merge_in_place_2(src, l, m, r);
+        //p_merge_truly_in_place(src, l, m, r);
     }
 
     template< class _Type >
@@ -425,6 +426,50 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
         //std::inplace_merge(std::execution::par_unseq, src + l, src + m + 1, src + r + 1);
         //p_merge_in_place_2(src, l, m, r);
         p_merge_in_place_adaptive(src, l, m, r);
+    }
+
+    template< class _Type >
+    inline void preventative_adaptive_inplace_merge_sort(_Type* src, size_t l, size_t r, double physical_memory_threshold = 0.75, size_t threshold = 48)
+    {
+        if (r <= l) {
+            return;
+        }
+        if ((r - l) <= threshold) {     // 32 or 64 or larger seem to perform well. Need to avoid setting threshold too large, as O(N^2)
+            insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);  // truly in-place
+            return;
+        }
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+        Concurrency::parallel_invoke(
+#else
+        tbb::parallel_invoke(
+#endif
+            [&] { preventative_adaptive_inplace_merge_sort(src, l,     m, physical_memory_threshold, threshold); },
+            [&] { preventative_adaptive_inplace_merge_sort(src, m + 1, r, physical_memory_threshold, threshold); }
+        );
+        merge_in_place_preventative_adaptive(src, l, m, r, physical_memory_threshold);
+    }
+
+    template< class _Type >
+    inline void parallel_preventative_adaptive_inplace_merge_sort(_Type* src, size_t l, size_t r, double physical_memory_threshold = 0.75, size_t parallelThreshold = 48)
+    {
+        if (r <= l) {
+            return;
+        }
+        if ((r - l) <= parallelThreshold) {     // 32 or 64 or larger seem to perform well. Need to avoid setting threshold too large, as O(N^2)
+            insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);  // truly in-place
+            return;
+        }
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+        Concurrency::parallel_invoke(
+#else
+        tbb::parallel_invoke(
+#endif
+            [&] { parallel_preventative_adaptive_inplace_merge_sort(src, l,     m, physical_memory_threshold, parallelThreshold); },
+            [&] { parallel_preventative_adaptive_inplace_merge_sort(src, m + 1, r, physical_memory_threshold, parallelThreshold); }
+        );
+        p_merge_in_place_preventative_adaptive(src, l, m, r, physical_memory_threshold);
     }
 
     template< class _Type >
