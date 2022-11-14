@@ -439,15 +439,11 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-        Concurrency::parallel_invoke(
-#else
-        tbb::parallel_invoke(
-#endif
-            [&] { preventative_adaptive_inplace_merge_sort(src, l,     m, physical_memory_threshold, threshold); },
-            [&] { preventative_adaptive_inplace_merge_sort(src, m + 1, r, physical_memory_threshold, threshold); }
-        );
-        merge_in_place_preventative_adaptive(src, l, m, r, physical_memory_threshold);
+
+        preventative_adaptive_inplace_merge_sort(src, l,     m, physical_memory_threshold, threshold);
+        preventative_adaptive_inplace_merge_sort(src, m + 1, r, physical_memory_threshold, threshold);
+        
+        merge_inplace_preventative_adaptive(src, l, m, r, physical_memory_threshold);
     }
 
     template< class _Type >
