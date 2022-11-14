@@ -24,6 +24,9 @@
 #include <tbb/parallel_invoke.h>
 #endif
 
+extern unsigned long long physical_memory_used_in_megabytes();
+extern unsigned long long physical_memory_total_in_megabytes();
+
 template < class Item >
 inline void exchange(Item& A, Item& B)
 {
@@ -389,6 +392,54 @@ inline void block_exchange_mirror_par(_Type* a, size_t l, size_t m, size_t r, si
 }
 
 template< class _Type >
+inline void merge_truly_in_place(_Type* t, size_t l, size_t m, size_t r)
+{
+	size_t length1 = m - l + 1;
+	size_t length2 = r - m;
+	if (length1 >= length2)
+	{
+		if (length2 <= 0)	return;
+		//		if ( length1 <= 32 && length2 <= 32 )	{ mergeInPlace( t, l, m, r );  return; }
+		//		if (( length1 <= 16*1024 ) && ( length2 <= 16*1024 ))	{ _mergeSedgewick( t, l, m, r );  return; }
+		//		if (( length1 + length2 ) <= 1024 )	{ mergeSedgewick_small_arrays_only< 1024 >( t, l, m, r );  return; }	// 2X speedup
+		//      if ((length1 + length2) <= 1024) { std::inplace_merge(t + l, t + m + 1, t + r + 1);  return; }
+		//		if ( length1 < 1024 )	{ merge_inplace_forward< 1024 >( t, l, m, r );  return; }	
+		size_t q1 = l / 2 + m / 2 + (l % 2 + m % 2) / 2;								// q1 is mid-point of the larger segment
+		size_t q2 = my_binary_search(t[q1], t, m + 1, r);	// q2 is q1 partitioning element within the smaller sub-array (and q2 itself is part of the sub-array that does not move)
+		size_t q3 = q1 + (q2 - m - 1);
+		//		block_exchange_7< 16 >( t, q1, m, q2 - 1 );
+		//		block_exchange_mirror_reverse_order(( t, q1, m, q2 - 1 );
+		//		p_block_exchange( t, q1, m, q2 - 1 );
+		block_exchange_mirror_1(t, q1, m, q2 - 1);		// 2X speedup
+		//block_exchange_mirror_par(t, q1, m, q2 - 1);
+		//		block_exchange_juggling_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
+		//		block_swap_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
+		merge_truly_in_place(t, l,      q1 - 1, q3 - 1);	// note that q3 is now in its final place and no longer participates in further processing
+		merge_truly_in_place(t, q3 + 1, q2 - 1, r     );
+	}
+	else {
+		if (length1 <= 0)	return;
+		//		if ( length1 <= 32 && length2 <= 32 )	{ mergeInPlace( t, l, m, r );  return; }
+		//		if (( length1 <= 16*1024 ) && ( length2 <= 16*1024 ))	{ _mergeSedgewick( t, l, m, r );  return; }
+		//		if (( length1 + length2 ) <= 1024 )	{ mergeSedgewick_small_arrays_only< 1024 >( t, l, m, r );  return; }	// 2X speedup
+		//      if ((length1 + length2) <= 1024) { std::inplace_merge(t + l, t + m + 1, t + r + 1);  return; }
+		//		if ( length2 < 1024 )	{ merge_inplace_reverse< 1024 >( t, l, m, r );  return; }	
+		size_t q1 = (m + 1) / 2 + r / 2 + ((m % 2 ) + r % 2) / 2;							// q1 is mid-point of the larger segment
+		size_t q2 = my_binary_search(t[q1], t, l, m);		// q2 is q1 partitioning element within the smaller sub-array (and q2 itself is part of the sub-array that does not move)
+		size_t q3 = q2 + (q1 - m - 1);
+		//		block_exchange_7< 16 >( t, q2, m, q1 );
+		//		block_exchange_mirror_reverse_order(( t, q2, m, q1 );
+		//		p_block_exchange( t, q2, m, q1 );
+		block_exchange_mirror_1(t, q2, m, q1);			// 2X speedup
+		//block_exchange_mirror_par(t, q2, m, q1);
+		//		block_exchange_juggling_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
+		//		block_swap_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
+		merge_truly_in_place(t, l,      q2 - 1, q3 - 1);	// note that q3 is now in its final place and no longer participates in further processing
+		merge_truly_in_place(t, q3 + 1, q1,     r     );
+	}
+}
+
+template< class _Type >
 inline void merge_in_place(_Type* t, int l, int m, int r)
 {
 	int length1 = m - l + 1;
@@ -499,6 +550,100 @@ inline void p_merge_in_place_2(_Type* t, size_t l, size_t m, size_t r)
 	}
 }
 
+// Assumes that "a" segment is followed by the "b" segment of the same size, with the result ending up in "ab".
+// NOTE: I also need to state this to be similar to Insertion Sort, which is also O( n^2 ) and in-place.
+template< class _Type >
+inline void mergeInPlace(_Type* a, unsigned long a_size)
+{
+	unsigned long b_size = a_size, a_i = 0, b_i = a_size;
+	// IDEA: Would doing my min( a_size, b_size ) trick help performance here? No, it didn't.
+	for (; a_size > 0 && b_size > 0; a_i++)
+		if (a[a_i] > a[b_i]) {		// nothing to do if a[ a_i ] <= a[ b_i ]
+			_Type currentElement = a[b_i];
+			for (unsigned long j = b_i++; a_i < j; j--)   a[j] = a[j - 1];
+			a[a_i] = currentElement;
+			b_size--;
+		}
+		else	a_size--;
+}
+template< class _Type >
+inline void mergeInPlace(_Type* a, int l, int m, int r)
+{
+	int a_size = m - l + 1, b_size = r - m, a_i = 0, b_i = m + 1;
+	for (; a_size > 0 && b_size > 0; a_i++)
+		if (a[a_i] > a[b_i]) {			// nothing to do if a[ a_i ] <= a[ b_i ]
+			_Type currentElement = a[b_i];
+			for (int j = b_i++; a_i < j; j--)   a[j] = a[j - 1];
+			a[a_i] = currentElement;
+			b_size--;
+		}
+		else	a_size--;
+}
+// Merge two ranges of source array T[ l .. m, m+1 .. r ] in-place.
+// Based on not-in-place algorithm in 3rd ed. of "Introduction to Algorithms" p. 798-802, extending it to be in-place
+// and my Dr. Dobb's paper https://www.drdobbs.com/parallel/parallel-in-place-merge/240008783 or https://web.archive.org/web/20141217133856/http://www.drdobbs.com/parallel/parallel-in-place-merge/240008783
+template< class _Type >
+inline void p_merge_truly_in_place(_Type* t, size_t l, size_t m, size_t r)
+{
+	size_t length1 = m - l + 1;
+	size_t length2 = r - m;
+	if (length1 >= length2)
+	{
+		if (length2 <= 0)	return;
+		if (length1 <= 32 && length2 <= 32) { merge_truly_in_place(t, l, m, r);  return; }
+		//      if ( length1 <= 32 && length2 <= 32 )	{ mergeInPlace( t, l, m, r );  return; }
+		//		if (( length1 <= 16*1024 ) && ( length2 <= 16*1024 ))	{ _mergeSedgewick( t, l, m, r );  return; }
+		//		if (( length1 + length2 ) <= 1024 )	{ mergeSedgewick_small_arrays_only< 1024 >( t, l, m, r );  return; }	// 2X speedup
+		//      if ((length1 + length2) <= 1024) { std::inplace_merge(t + l, t + m + 1, t + r + 1);  return; }
+		//		if ( length1 < 1024 )	{ merge_inplace_forward< 1024 >( t, l, m, r );  return; }	
+		size_t q1 = l / 2 + m / 2 + (l % 2 + m % 2) / 2;	// q1 is mid-point of the larger segment
+		size_t q2 = my_binary_search(t[q1], t, m + 1, r);	// q2 is q1 partitioning element within the smaller sub-array (and q2 itself is part of the sub-array that does not move)
+		size_t q3 = q1 + (q2 - m - 1);
+		//		block_exchange_7< 16 >( t, q1, m, q2 - 1 );
+		//		block_exchange_mirror_reverse_order(( t, q1, m, q2 - 1 );
+		//		p_block_exchange( t, q1, m, q2 - 1 );
+		//      block_exchange_mirror(t, q1, m, q2 - 1);		// 2X speedup
+		block_exchange_mirror_par(t, q1, m, q2 - 1);
+		//		block_exchange_juggling_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
+		//		block_swap_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		Concurrency::parallel_invoke(
+#else
+		tbb::parallel_invoke(
+#endif
+			[&] { p_merge_truly_in_place(t, l, q1 - 1, q3 - 1); },	// note that q3 is now in its final place and no longer participates in further processing
+			[&] { p_merge_truly_in_place(t, q3 + 1, q2 - 1, r); }
+		);
+	}
+	else {
+		if (length1 <= 0)	return;
+		if ( length1 <= 32 && length2 <= 32 )	{ merge_truly_in_place( t, l, m, r );  return; }
+		//if (length1 <= 32 && length2 <= 32) { mergeInPlace(t, l, m, r);  return; }
+		//		if (( length1 <= 16*1024 ) && ( length2 <= 16*1024 ))	{ _mergeSedgewick( t, l, m, r );  return; }
+		//		if (( length1 + length2 ) <= 1024 )	{ mergeSedgewick_small_arrays_only< 1024 >( t, l, m, r );  return; }	// 2X speedup
+		//      if ((length1 + length2) <= 1024) { std::inplace_merge(t + l, t + m + 1, t + r + 1);  return; }
+		//		if ( length2 < 1024 )	{ merge_inplace_reverse< 1024 >( t, l, m, r );  return; }	
+		size_t q1 = (m + 1) / 2 + r / 2 + ((m + 1) % 2 + r % 2) / 2;	// q1 is mid-point of the larger segment
+		size_t q2 = my_binary_search(t[q1], t, l, m);					// q2 is q1 partitioning element within the smaller sub-array (and q2 itself is part of the sub-array that does not move)
+		size_t q3 = q2 + (q1 - m - 1);
+		//		block_exchange_7< 16 >( t, q2, m, q1 );
+		//		block_exchange_mirror_reverse_order(( t, q2, m, q1 );
+		//		p_block_exchange( t, q2, m, q1 );
+		//     block_exchange_mirror(t, q2, m, q1);			// 2X speedup
+		block_exchange_mirror_par(t, q2, m, q1);
+		//		block_exchange_juggling_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
+		//		block_swap_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		Concurrency::parallel_invoke(
+#else
+		tbb::parallel_invoke(
+#endif
+			[&] { p_merge_truly_in_place(t, l, q2 - 1, q3 - 1); },	// note that q3 is now in its final place and no longer participates in further processing
+			[&] { p_merge_truly_in_place(t, q3 + 1, q1, r); }
+		);
+	}
+}
+
 template< class _Type >
 inline void p_merge_in_place_adaptive(_Type* src, size_t l, size_t m, size_t r)
 {
@@ -513,6 +658,62 @@ inline void p_merge_in_place_adaptive(_Type* src, size_t l, size_t m, size_t r)
 		std::copy(merged + 0, merged + src_size, src + l);
 		//memcpy(src + l, merged, src_size * sizeof(_Type));	// same speed as std::copy
 		delete[] merged;
+	}
+}
+
+template< class _Type >
+inline void merge_in_place_preventative_adaptive(_Type* src, size_t l, size_t m, size_t r, double physical_memory_threshold = 0.75)
+{
+	double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
+	//printf("merge_in_place_preventative_adaptive: physical memory used = %llu   physical memory total = %llu\n",
+	//	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+
+	if (physical_memory_fraction > physical_memory_threshold)
+	{
+		//printf("Running purely in-place merge\n");
+		merge_truly_in_place(src, l, m, r);
+	}
+	else
+	{
+		size_t src_size = r - l + 1;
+		_Type* merged = new(std::nothrow) _Type[src_size];
+
+		if (!merged)
+			merge_truly_in_place(src, l, m, r);
+		else
+		{
+			merge_ptr_1(src + l, src + m + 1, src + m + 1, src + r + 1, merged + 0);
+			std::copy(merged + 0, merged + src_size, src + l);
+			delete[] merged;
+		}
+	}
+}
+
+template< class _Type >
+inline void p_merge_in_place_preventative_adaptive(_Type* src, size_t l, size_t m, size_t r, double physical_memory_threshold = 0.75)
+{
+	double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
+	//printf("p_merge_in_place_preventative_adaptive: physical memory used = %llu   physical memory total = %llu\n",
+	//	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+
+	if (physical_memory_fraction > physical_memory_threshold)
+	{
+		//printf("Running purely in-place parallel merge\n");
+		p_merge_truly_in_place(src, l, m, r);
+	}
+	else
+	{
+		size_t src_size = r - l + 1;
+		_Type* merged = new(std::nothrow) _Type[src_size];
+
+		if (!merged)
+			p_merge_truly_in_place(src, l, m, r);
+		else
+		{
+			merge_parallel_L5(src, l, m, m + 1, r, merged, 0);
+			std::copy(merged + 0, merged + src_size, src + l);
+			delete[] merged;
+		}
 	}
 }
 
