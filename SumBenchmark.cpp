@@ -101,12 +101,15 @@ int SumBenchmark(vector<unsigned long>& ulongs)
 		//unsigned long long sum = ParallelAlgorithms::SumParallel(u64Array, 0, ulongs.size());	// Running on 24-core is fastest, however with 2.7X run-to-run variation
 		//unsigned long long sum = ParallelAlgorithms::SumParallel(u64Array, 0, ulongs.size(), ulongs.size() / 24);	// Running on 24-core is fastest, however with 2.7X run-to-run variation
 		//unsigned long long sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, ulongs.size());
-		//unsigned long long sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, ulongs.size(), ulongs.size() / 24);
+		//unsigned long long sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, ulongs.size(), ulongs.size() / 8);
 		unsigned long long sum = 0;
-		for (int j = 0; j < 10000; ++j)
-			sum = ParallelAlgorithms::SumParallelNonRecursiveNoHyperthreading(u64Array, 0, ulongs.size(), ulongs.size() / 8);
-		//unsigned long long sum = ParallelAlgorithms::SumNonRecursive(u64Array, 0, ulongs.size());
-		//unsigned long long sum = ParallelAlgorithms::SumParallel(u64Array, 0, ulongs.size());
+		for (int j = 0; j < 100; ++j)
+		{
+			//sum = ParallelAlgorithms::SumParallelNonRecursiveNoHyperthreading(u64Array, 0, ulongs.size(), ulongs.size() / 16);
+			//sum = ParallelAlgorithms::SumNonRecursive(u64Array, 0, ulongs.size());
+			//sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, ulongs.size(), ulongs.size() / 32);
+			sum = ParallelAlgorithms::SumParallel(u64Array, 0, ulongs.size(), ulongs.size() / 16);	// highest performance with /15 and /17 at half the performance
+		}
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Sum", sum, ulongs.size(), startTime, endTime);
 		if (sum == sum_ref)
