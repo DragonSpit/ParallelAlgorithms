@@ -30,6 +30,75 @@ using namespace tbb;
 #include "RadixSortMSD.h"
 #include "InsertionSort.h"
 
+// This version did not seem to speed up over the single count array version. It proves that Histogram is not the bottleneck.
+template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
+inline size_t* HistogramOneByteComponentParallel_2(unsigned long inArray[], size_t l, size_t r, unsigned long shiftRight, size_t parallelThreshold = 64 * 1024)
+{
+	const unsigned long numberOfBins = PowerOfTwoRadix;
+
+	size_t* countLeft_0 = NULL;
+	size_t* countLeft_1 = NULL;
+	size_t* countLeft_2 = NULL;
+	size_t* countLeft_3 = NULL;
+	size_t* countRight  = NULL;
+
+	if (l > r)      // zero elements to compare
+	{
+		countLeft_0 = new size_t[numberOfBins]{};
+		return countLeft_0;
+	}
+	if ((r - l + 1) <= parallelThreshold)
+	{
+		countLeft_0 = new size_t[numberOfBins]{};
+		countLeft_1 = new size_t[numberOfBins]{};
+		countLeft_2 = new size_t[numberOfBins]{};
+		countLeft_3 = new size_t[numberOfBins]{};
+
+		size_t last_by_four = l + ((r - l) / 4) * 4;
+		size_t current = l;
+		for (; current < last_by_four;)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+		{
+			countLeft_0[(inArray[current] >> shiftRight) & 0xff]++;  current++;
+			countLeft_1[(inArray[current] >> shiftRight) & 0xff]++;  current++;
+			countLeft_2[(inArray[current] >> shiftRight) & 0xff]++;  current++;
+			countLeft_3[(inArray[current] >> shiftRight) & 0xff]++;  current++;
+		}
+		for (; current < r; current++)    // possibly last element
+			countLeft_0[(inArray[current] >> shiftRight) & 0xff]++;
+
+		// Combine the two count arrays into a single arrray to return
+		for (size_t count_index = 0; count_index < numberOfBins; count_index++)
+		{
+			countLeft_0[count_index] += countLeft_1[count_index];
+			countLeft_0[count_index] += countLeft_2[count_index];
+			countLeft_0[count_index] += countLeft_3[count_index];
+		}
+
+		delete[] countLeft_3;
+		delete[] countLeft_2;
+		delete[] countLeft_1;
+		return countLeft_0;
+	}
+
+	size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+	Concurrency::parallel_invoke(
+#else
+	tbb::parallel_invoke(
+#endif
+		[&] { countLeft_0 = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l,     m, shiftRight, parallelThreshold); },
+		[&] { countRight  = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, shiftRight, parallelThreshold); }
+	);
+	// Combine left and right results
+	for (size_t j = 0; j < numberOfBins; j++)
+		countLeft_0[j] += countRight[j];
+
+	delete[] countRight;
+
+	return countLeft_0;
+}
+
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline size_t* HistogramOneByteComponentParallel(unsigned long inArray[], size_t l, size_t r, unsigned long shiftRight, size_t parallelThreshold = 64 * 1024)
 {
@@ -40,16 +109,12 @@ inline size_t* HistogramOneByteComponentParallel(unsigned long inArray[], size_t
 
 	if (l > r)      // zero elements to compare
 	{
-		countLeft = new size_t[numberOfBins];
-		for (size_t j = 0; j < numberOfBins; j++)
-			countLeft[j] = 0;
+		countLeft = new size_t[numberOfBins]{};
 		return countLeft;
 	}
 	if ((r - l + 1) <= parallelThreshold)
 	{
-		countLeft = new size_t[numberOfBins];
-		for (size_t j = 0; j < numberOfBins; j++)
-			countLeft[j] = 0;
+		countLeft = new size_t[numberOfBins]{};
 
 		for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 			countLeft[(inArray[current] >> shiftRight) & 0xff]++;
@@ -57,7 +122,7 @@ inline size_t* HistogramOneByteComponentParallel(unsigned long inArray[], size_t
 		return countLeft;
 	}
 
-	size_t m = (r + l) / 2;
+	size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 	Concurrency::parallel_invoke(
