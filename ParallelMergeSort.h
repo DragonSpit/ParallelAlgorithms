@@ -32,6 +32,7 @@
 #include "RadixSortLSD.h"
 #include "RadixSortMSD.h"
 #include "RadixSortLsdParallel.h"
+#include "RadixSortMsdParallel.h"
 
 // TODO: This extern should not be needed and root-cause needs to be found
 extern void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned long* a, unsigned long* b, size_t a_size);
@@ -238,9 +239,9 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
             return;
         }
         if ((r - l) <= parallelThreshold && !srcToDst) {
-            RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
+            //RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
             //RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);             // fastest with 8-cores on 24-core CPU
-            //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(src + l, dst + l, r - l + 1);               // fastest with 4-cores on  6-core CPU
+            RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(src + l, dst + l, (unsigned long)(r - l + 1));  // fastest with 4-cores on  6-core CPU
             //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
             //if (srcToDst)
             //    for (int i = l; i <= r; i++)    dst[i] = src[i];
@@ -409,7 +410,7 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
             return;
         }
         if ((r - l) <= parallelThreshold) {
-            HybridSort(src + l, r - l + 1);
+            HybridSort(src + l, r - l + 1);     // In-Place MSD Radix Sort
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
@@ -424,8 +425,8 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
         //std::inplace_merge(src + l, src + m + 1, src + r + 1);
         //merge_in_place(src, l, m, r);       // merge the results
         //std::inplace_merge(std::execution::par_unseq, src + l, src + m + 1, src + r + 1);
-        //p_merge_in_place_2(src, l, m, r);
-        p_merge_in_place_adaptive(src, l, m, r);
+        p_merge_in_place_2(src, l, m, r);       // truly in-place parallel merge
+        //p_merge_in_place_adaptive(src, l, m, r);
     }
 
     template< class _Type >
@@ -469,16 +470,78 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
     }
 
     template< class _Type >
+    inline void parallel_preventative_adaptive_inplace_merge_sort(_Type* src, size_t l, size_t r, bool stable = false, double physical_memory_threshold = 0.75, size_t parallelThreshold = 48)
+    {
+        if (r <= l) {
+            return;
+        }
+        if ((r - l) <= parallelThreshold) {     // 32 or 64 or larger seem to perform well. Need to avoid setting threshold too large, as O(N^2)
+            if (stable)
+                insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);  // truly in-place
+            else
+                std::sort(src + l, src + r + 1);
+            return;
+        }
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+        Concurrency::parallel_invoke(
+#else
+        tbb::parallel_invoke(
+#endif
+            [&] { parallel_preventative_adaptive_inplace_merge_sort(src, l,     m, stable, physical_memory_threshold, parallelThreshold); },
+            [&] { parallel_preventative_adaptive_inplace_merge_sort(src, m + 1, r, stable, physical_memory_threshold, parallelThreshold); }
+        );
+        p_merge_in_place_preventative_adaptive(src, l, m, r, physical_memory_threshold);
+    }
+
+    template< class _Type >
     inline void parallel_inplace_merge_sort_radix_hybrid(_Type* src, size_t l, size_t r, size_t parallelThreshold = 24 * 1024)
     {
         // may return 0 when not able to detect
-        //const auto processor_count = std::thread::hardware_concurrency();
+        const auto processor_count = std::thread::hardware_concurrency();
         //printf("Number of cores = %u \n", processor_count);
 
-        //if ((parallelThreshold * processor_count) < (r - l + 1))
-        //    parallelThreshold = (r - l + 1) / processor_count;
+        if ((parallelThreshold * processor_count) < (r - l + 1))
+            parallelThreshold = (r - l + 1) / processor_count;
 
         parallel_inplace_merge_sort_radix_hybrid_inner(src, l, r, parallelThreshold);
+    }
+
+    inline void p_linear_in_place_preventative_adaptive_sort(unsigned long* src, unsigned long a_size, bool stable = false, double physical_memory_threshold = 0.75, size_t parallelThreshold = 24 * 1024)
+    {
+        double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
+        //printf("p_merge_in_place_preventative_adaptive: physical memory used = %llu   physical memory total = %llu\n",
+        //	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+
+        if (physical_memory_fraction > physical_memory_threshold)
+        {
+            if (!stable)
+            {
+                //printf("Running purely in-place parallel linear sort\n");
+                HybridSortPar(src, a_size);
+            }
+            else
+                parallel_preventative_adaptive_inplace_merge_sort(src, 0, a_size - 1, stable, physical_memory_threshold);
+                //parallel_inplace_merge_sort_radix_hybrid : this is the fastest parallel in-place algorithm in the book
+        }
+        else
+        {
+            unsigned long* tmp_buffer = new(std::nothrow) unsigned long[a_size];
+
+            if (!tmp_buffer)
+            {
+                if (!stable)
+                    HybridSortPar(src, a_size);
+                else
+                    parallel_preventative_adaptive_inplace_merge_sort(src, 0, a_size - 1, stable, physical_memory_threshold);
+                    //parallel_inplace_merge_sort_radix_hybrid : this is the fastest parallel in-place algorithm in the book
+            }
+            else
+            {
+                ParallelAlgorithms::parallel_merge_sort_hybrid_radix(src, 0, a_size - 1, tmp_buffer, false, parallelThreshold);
+                delete[] tmp_buffer;
+            }
+        }
     }
 
     template< class _Type >
