@@ -662,10 +662,10 @@ inline void p_merge_in_place_adaptive(_Type* src, size_t l, size_t m, size_t r)
 }
 
 template< class _Type >
-inline void merge_in_place_preventative_adaptive(_Type* src, size_t l, size_t m, size_t r, double physical_memory_threshold = 0.75)
+inline void merge_inplace_preventative_adaptive(_Type* src, size_t l, size_t m, size_t r, double physical_memory_threshold = 0.75)
 {
 	double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
-	//printf("merge_in_place_preventative_adaptive: physical memory used = %llu   physical memory total = %llu\n",
+	//printf("merge_inplace_preventative_adaptive: physical memory used = %llu   physical memory total = %llu\n",
 	//	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
 
 	if (physical_memory_fraction > physical_memory_threshold)
