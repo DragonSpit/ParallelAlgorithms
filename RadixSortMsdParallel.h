@@ -401,7 +401,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Derandomized_Par_L1(unsigned long*
 	}
 }
 
-inline void HybridSortPar(unsigned long* a, unsigned long a_size)
+inline void parallel_hybrid_inplace_msd_radix_sort(unsigned long* a, unsigned long a_size)
 {
 	if (a_size < 2)	return;
 
@@ -421,7 +421,7 @@ inline void HybridSortPar(unsigned long* a, unsigned long a_size)
 
 	if (a_size >= Threshold)
 	{
-		//_RadixSort_Unsigned_PowerOf2Radix_Par_L1< unsigned long, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, a_size, bitMask, shiftRightAmount);
+		//_RadixSort_Unsigned_PowerOf2Radix_Par_L1< unsigned long, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, a_size, bitMask, shiftRightAmount);	// same speed as de-randomization on 6-core
 		_RadixSort_Unsigned_PowerOf2Radix_Derandomized_Par_L1< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, a_size, bitMask, shiftRightAmount);
 	}
 	else
