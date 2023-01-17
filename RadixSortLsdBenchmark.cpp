@@ -50,7 +50,8 @@ int RadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 		printf("ulongsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", ulongsCopy, sorted, sorted[static_cast<unsigned>(rd()) % ulongs.size()], ulongsCopy[static_cast<unsigned>(rd()) % ulongs.size()]);
 		const auto startTime = high_resolution_clock::now();
 		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
-		sort_radix_in_place_adaptive(ulongsCopy, (unsigned long)ulongs.size(), 0.9);
+		//sort_radix_in_place_adaptive(ulongsCopy, (unsigned long)ulongs.size(), 0.1);
+		sort_radix_in_place_stable_adaptive(ulongsCopy, (unsigned long)ulongs.size(), 0.9);
 
 		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(ulongsCopy, sorted, (unsigned long)ulongs.size());
 		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
@@ -104,6 +105,7 @@ int ParallelRadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 		//RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(ulongsCopy, tmp_working, (unsigned long)ulongs.size());
 		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(ulongsCopy, tmp_working, (unsigned long)ulongs.size());
 		SortRadixPar(ulongsCopy, tmp_working, ulongs.size(), ulongs.size() / 6);
+		//SortRadixPar(ulongsCopy, tmp_working, ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Radix Sort LSD", tmp_working, ulongs.size(), startTime, endTime);
 		if (std::equal(sorted_reference.begin(), sorted_reference.end(), ulongsCopy))
