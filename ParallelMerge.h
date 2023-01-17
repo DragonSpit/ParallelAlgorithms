@@ -690,26 +690,28 @@ inline void merge_inplace_preventative_adaptive(_Type* src, size_t l, size_t m, 
 }
 
 template< class _Type >
-inline void p_merge_in_place_preventative_adaptive(_Type* src, size_t l, size_t m, size_t r, double physical_memory_threshold = 0.75)
+inline void p_merge_in_place_preventative_adaptive(_Type* src, size_t l, size_t m, size_t r, double physical_memory_threshold_post = 0.75)
 {
-	double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
-	//printf("p_merge_in_place_preventative_adaptive: physical memory used = %llu   physical memory total = %llu\n",
-	//	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+	size_t src_size = r - l + 1;
+	size_t anticipated_memory_usage = sizeof(_Type) * src_size / (size_t)(1024 * 1024) + physical_memory_used_in_megabytes();
+	double physical_memory_fraction = (double)anticipated_memory_usage / (double)physical_memory_total_in_megabytes();
+	//printf("p_merge_in_place_preventative_adaptive: physical memory used = %llu   physical memory total = %llu   anticipated memory used = %llu\n",
+	//	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes(), anticipated_memory_usage);
 
-	if (physical_memory_fraction > physical_memory_threshold)
+	if (physical_memory_fraction > physical_memory_threshold_post)
 	{
 		//printf("Running purely in-place parallel merge\n");
 		p_merge_truly_in_place(src, l, m, r);
 	}
 	else
 	{
-		size_t src_size = r - l + 1;
 		_Type* merged = new(std::nothrow) _Type[src_size];
 
 		if (!merged)
 			p_merge_truly_in_place(src, l, m, r);
 		else
 		{
+			//printf("Running not-in-place parallel merge\n");
 			merge_parallel_L5(src, l, m, m + 1, r, merged, 0);
 			std::copy(merged + 0, merged + src_size, src + l);
 			delete[] merged;
