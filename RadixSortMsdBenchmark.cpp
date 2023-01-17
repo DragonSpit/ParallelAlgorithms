@@ -32,7 +32,7 @@ int RadixSortMsdBenchmark(vector<unsigned long>& ulongs)
 	unsigned long* ulongsCopy = new unsigned long[ulongs.size()];
 	//unsigned long* ulongsCopy = (unsigned long*) operator new[](sizeof(unsigned long) * ulongs.size(), (std::align_val_t)(128));
 	unsigned long* sorted = new unsigned long[ulongs.size()];
-	//unsigned long* tmp_working     = (unsigned long*) operator new[](sizeof(unsigned long) * ulongs.size(), (std::align_val_t)(128));
+	unsigned long* tmp_working     = (unsigned long*) operator new[](sizeof(unsigned long) * ulongs.size(), (std::align_val_t)(128));
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
@@ -52,8 +52,9 @@ int RadixSortMsdBenchmark(vector<unsigned long>& ulongs)
 		const auto startTime = high_resolution_clock::now();
 		//RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
 		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(ulongsCopy, sorted, (unsigned long)ulongs.size());
-		//HybridSort(ulongsCopy, (unsigned long)ulongs.size());
-		HybridSortPar(ulongsCopy, (unsigned long)ulongs.size());
+		//hybrid_inplace_msd_radix_sort(ulongsCopy, (unsigned long)ulongs.size());
+		//parallel_hybrid_inplace_msd_radix_sort(ulongsCopy, (unsigned long)ulongs.size());
+		RadixSortMSDStablePowerOf2Radix_unsigned(ulongsCopy, tmp_working, (unsigned long)ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Radix Sort MSD", ulongsCopy, ulongs.size(), startTime, endTime);
 		if (std::equal(sorted_reference.begin(), sorted_reference.end(), ulongsCopy))
