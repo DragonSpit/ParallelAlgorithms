@@ -105,7 +105,7 @@ namespace ParallelAlgorithms
         if ((r - l) <= 48) {
             insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);        // in both cases sort the src
             //stable_sort( src + l, src + r + 1 );  // STL stable_sort can be used instead, but is slightly slower than Insertion Sort
-            if (srcToDst) for (int i = l; i <= r; i++)    dst[i] = src[i];    // copy from src to dst, when the result needs to be in dst
+            if (srcToDst) for (size_t i = l; i <= r; i++)    dst[i] = src[i];    // copy from src to dst, when the result needs to be in dst
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
@@ -410,7 +410,7 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
             return;
         }
         if ((r - l) <= parallelThreshold) {
-            HybridSort(src + l, r - l + 1);     // In-Place MSD Radix Sort
+            hybrid_inplace_msd_radix_sort(src + l, r - l + 1);     // truly In-Place MSD Radix Sort
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
@@ -494,6 +494,45 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
         p_merge_in_place_preventative_adaptive(src, l, m, r, physical_memory_threshold);
     }
 
+    // Adaptivity at a higher level to minimize the overhead of memory allocation and OS paging-in of newly allocated arrays
+    // Allocate the full array once and reuse it during the merge sort ping-pong operation over lg(N) recursion levels
+    // TODO: Memory allocation size could be reduced to be (r - l), where swapping of the source and work_buff would need to be done carefully since
+    //       the boundaries of one would be l and r, and the other 0 and (r - l), followed by a copy to l to r within the src
+template< class _Type >
+inline void parallel_preventative_adaptive_inplace_merge_sort_2(_Type* src, size_t l, size_t r, double physical_memory_threshold_post = 0.75, size_t parallelThreshold = 48)
+{
+    size_t src_size = r + 1;
+    size_t anticipated_memory_usage = sizeof(_Type) * src_size / (size_t)(1024 * 1024) + physical_memory_used_in_megabytes();
+    double physical_memory_fraction = (double)anticipated_memory_usage / (double)physical_memory_total_in_megabytes();
+    //printf("p_merge_in_place_preventative_adaptive: physical memory used = %llu   physical memory total = %llu   anticipated memory used = %llu\n",
+    //	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes(), anticipated_memory_usage);
+
+    if (physical_memory_fraction > physical_memory_threshold_post)
+    {
+        //printf("Running purely in-place parallel merge sort\n");
+        parallel_inplace_merge_sort_hybrid_inner(src, l, r, false, parallelThreshold);
+    }
+    else
+    {
+        _Type* work_buff = new(std::nothrow) _Type[src_size];
+
+        if (!work_buff)
+            parallel_inplace_merge_sort_hybrid_inner(src, l, r, false, parallelThreshold);
+        else
+        {
+            //printf("Running not-in-place parallel merge sort\n");
+            //parallel_merge_sort_hybrid_rh_2(src, l, r, work_buff, stable, true, parallelThreshold); // TODO: test if having it end up in Src and without a copy is faster
+#if 0
+            parallel_merge_sort_hybrid_rh_1(src, l, r, work_buff, true);    // stable. Not copying is faster, since copy is not parallel - i.e. copying in parallel within the algorithm
+            std::copy(work_buff + 0, work_buff + src_size, src + l);
+#else
+            parallel_merge_sort_hybrid_rh_1(src, l, r, work_buff, false);    // stable. Not copying is faster, since std::copy is not parallel - i.e. copying in parallel within the algorithm is faster
+#endif
+            delete[] work_buff;
+        }
+    }
+}
+
     template< class _Type >
     inline void parallel_inplace_merge_sort_radix_hybrid(_Type* src, size_t l, size_t r, size_t parallelThreshold = 24 * 1024)
     {
@@ -507,7 +546,7 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
         parallel_inplace_merge_sort_radix_hybrid_inner(src, l, r, parallelThreshold);
     }
 
-    inline void p_linear_in_place_preventative_adaptive_sort(unsigned long* src, unsigned long a_size, bool stable = false, double physical_memory_threshold = 0.75, size_t parallelThreshold = 24 * 1024)
+    inline void parallel_linear_in_place_preventative_adaptive_sort(unsigned long* src, unsigned long a_size, bool stable = false, double physical_memory_threshold = 0.75, size_t parallelThreshold = 24 * 1024)
     {
         double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
         //printf("p_merge_in_place_preventative_adaptive: physical memory used = %llu   physical memory total = %llu\n",
@@ -517,12 +556,13 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
         {
             if (!stable)
             {
-                //printf("Running purely in-place parallel linear sort\n");
-                HybridSortPar(src, a_size);
+                parallel_hybrid_inplace_msd_radix_sort(src, a_size);    // truly in-place, unstable
             }
             else
-                parallel_preventative_adaptive_inplace_merge_sort(src, 0, a_size - 1, stable, physical_memory_threshold);
-                //parallel_inplace_merge_sort_radix_hybrid : this is the fastest parallel in-place algorithm in the book
+            {
+                //parallel_preventative_adaptive_inplace_merge_sort(src, 0, a_size - 1, stable, physical_memory_threshold);   // many times slower, stable
+                parallel_inplace_merge_sort_radix_hybrid(src, 0, a_size - 1, parallelThreshold); // faster, but unstable which is ok to use for array of keys
+            }
         }
         else
         {
@@ -531,14 +571,16 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
             if (!tmp_buffer)
             {
                 if (!stable)
-                    HybridSortPar(src, a_size);
+                    parallel_hybrid_inplace_msd_radix_sort(src, a_size);
                 else
-                    parallel_preventative_adaptive_inplace_merge_sort(src, 0, a_size - 1, stable, physical_memory_threshold);
-                    //parallel_inplace_merge_sort_radix_hybrid : this is the fastest parallel in-place algorithm in the book
+                {
+                    parallel_preventative_adaptive_inplace_merge_sort(src, 0, a_size - 1, stable, physical_memory_threshold);   // many times slower, stable
+                    //parallel_inplace_merge_sort_radix_hybrid(src, 0, a_size - 1, parallelThreshold); // faster, but unstable which is ok to use for array of keys
+                }
             }
             else
             {
-                ParallelAlgorithms::parallel_merge_sort_hybrid_radix(src, 0, a_size - 1, tmp_buffer, false, parallelThreshold);
+                parallel_merge_sort_hybrid_radix(src, 0, a_size - 1, tmp_buffer, false, parallelThreshold);
                 delete[] tmp_buffer;
             }
         }
