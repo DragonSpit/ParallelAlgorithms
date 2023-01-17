@@ -176,14 +176,14 @@ inline void RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(unsigned long* a
 	}
 }
 
-// Returns count[numberOfQuantas][numberOfBins]
+// Returns count[quanta][numberOfBins]
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline size_t** HistogramByteComponentsAcrossWorkQuantasQC(unsigned long inArray[], size_t l, size_t r, size_t workQuanta, size_t numberOfQuantas, int whichByte)
 {
 	const unsigned long numberOfBins = PowerOfTwoRadix;
 	const unsigned long mask = 0xff;
 	int shiftRightAmount = (int)(8 * whichByte);
-	//cout << "HistogramQC: l = " << l << "  r = " << r << "  workQuanta = " << workQuanta << "  numberOfQuantas = " << numberOfQuantas << "  whichByte = " << whichByte << endl;
+	//cout << "HistogramQC: l = " << l << "  r = " << r << "  workQuanta = " << workQuanta << "  quanta = " << quanta << "  whichByte = " << whichByte << endl;
 
 	size_t** count = new size_t* [numberOfQuantas];
 
@@ -307,7 +307,7 @@ inline size_t** HistogramByteComponentsQCPar(unsigned long* inArray, size_t l, s
 #if 1
 	return HistogramByteComponentsQCParInner<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l, r, workQuanta, numberOfQuantas, whichByte, parallelThreshold);
 #else
-	return HistogramByteComponentsAcrossWorkQuantasQC<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l, r, workQuanta, numberOfQuantas, whichByte);
+	return HistogramByteComponentsAcrossWorkQuantasQC<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l, r, workQuanta, quanta, whichByte);
 #endif
 }
 
@@ -316,7 +316,7 @@ inline size_t** ComputeStartOfBinsPar(unsigned long* inArray, size_t size, size_
 {
 	unsigned int numberOfBins = PowerOfTwoRadix;
 
-	//unsigned long** count = HistogramByteComponentsAcrossWorkQuantasQC<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, 0, size - 1, workQuanta, numberOfQuantas, digit);
+	//unsigned long** count = HistogramByteComponentsAcrossWorkQuantasQC<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, 0, size - 1, workQuanta, quanta, digit);
 	size_t** count = HistogramByteComponentsQCPar<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, 0, size - 1, workQuanta, numberOfQuantas, digit, parallelThreshold);
 
 	parallelThreshold = 0;
@@ -414,27 +414,27 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 #else
 	// TODO: Figure out why this without-de-randomization version is not working correctly
 	for (size_t _current = startIndex; _current <= endIndex; _current++)
-		outputArray[startOfBinLoc[extractDigit(inputArray[_current], bitMask, shiftRightAmount)]++] = inputArray[_current];
+		workArray[startOfBinLoc[extractDigit(inputArray[_current], bitMask, shiftRightAmount)]++] = inputArray[_current];
 #endif
 }
 
-// This method is referenced in the Parallel LSD Radix Sort section of Victor's book.
+// This method is referenced in the Parallel LSD Radix Sort section of Practical Parallel Algorithms Book.
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
-inline void SortRadixInnerPar(unsigned long* inputArray, unsigned long* outputArray, size_t inputSize, size_t SortRadixParallelWorkQuanta = 64 * 1024)
+inline void SortRadixInnerPar(unsigned long* inputArray, unsigned long* workArray, size_t inputSize, size_t ParallelWorkQuantum = 64 * 1024)
 {
 	//unsigned int numberOfCores = std::thread::hardware_concurrency();
 	const int NumberOfBins = PowerOfTwoRadix;
 	bool outputArrayHasResult = false;
-	size_t numberOfQuantas = (inputSize % SortRadixParallelWorkQuanta) == 0 ? inputSize / SortRadixParallelWorkQuanta
-		: inputSize / SortRadixParallelWorkQuanta + 1;
+	size_t quanta = (inputSize % ParallelWorkQuantum) == 0 ? inputSize / ParallelWorkQuantum
+		                                                   : inputSize / ParallelWorkQuantum + 1;
 	// Setup de-randomization buffers for writes during the permutation phase
 	const unsigned long BufferDepth = 64;
-	unsigned long** bufferDerandomize = static_cast<unsigned long**>(operator new[](sizeof(unsigned long *) * numberOfQuantas, (std::align_val_t)(64)));
-	for (unsigned q = 0; q < numberOfQuantas; q++)
+	unsigned long** bufferDerandomize = static_cast<unsigned long**>(operator new[](sizeof(unsigned long *) * quanta, (std::align_val_t)(64)));
+	for (unsigned q = 0; q < quanta; q++)
 		bufferDerandomize[q] = static_cast<unsigned long*>(operator new[](sizeof(unsigned long) * NumberOfBins * BufferDepth, (std::align_val_t)(64)));
 
-	size_t** bufferIndex = static_cast<size_t**>(operator new[](sizeof(size_t*)* numberOfQuantas, (std::align_val_t)(64)));
-	for (size_t q = 0; q < numberOfQuantas; q++)
+	size_t** bufferIndex = static_cast<size_t**>(operator new[](sizeof(size_t*)* quanta, (std::align_val_t)(64)));
+	for (size_t q = 0; q < quanta; q++)
 	{
 		bufferIndex[q] = static_cast<size_t*>(operator new[](sizeof(size_t) * NumberOfBins, (std::align_val_t)(64)));
 		bufferIndex[q][0] = 0;
@@ -459,27 +459,27 @@ inline void SortRadixInnerPar(unsigned long* inputArray, unsigned long* outputAr
 
 	while (bitMask != 0)    // end processing digits when all the mask bits have been processed and shifted out, leaving no bits set in the bitMask
 	{
-		size_t** startOfBin = ComputeStartOfBinsPar<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inputArray, inputSize, SortRadixParallelWorkQuanta, numberOfQuantas, digit);
+		size_t** startOfBin = ComputeStartOfBinsPar<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inputArray, inputSize, ParallelWorkQuantum, quanta, digit);
 
-		size_t numberOfFullQuantas = inputSize / SortRadixParallelWorkQuanta;
+		size_t numberOfFullQuantas = inputSize / ParallelWorkQuantum;
 		size_t q;
-		//cout << "NumberOfQuantas = " << numberOfQuantas << "   NumberOfFullQuantas = " << numberOfFullQuantas << endl;
+		//cout << "NumberOfQuantas = " << quanta << "   NumberOfFullQuantas = " << numberOfFullQuantas << endl;
 #if 0
 		// Single core version of the algorithm
 		for (q = 0; q < numberOfFullQuantas; q++)
 		{
-			size_t startIndex = q * SortRadixParallelWorkQuanta;
-			size_t   endIndex = startIndex + SortRadixParallelWorkQuanta;	// non-inclusive
+			size_t startIndex = q * ParallelWorkQuantum;
+			size_t   endIndex = startIndex + ParallelWorkQuantum;	// non-inclusive
 
 			_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<PowerOfTwoRadix, Log2ofPowerOfTwoRadix, BufferDepth>(
-				inputArray, outputArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd);
+				inputArray, workArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd);
 		}
-		if (numberOfQuantas > numberOfFullQuantas)      // last partially filled workQuanta
+		if (quanta > numberOfFullQuantas)      // last partially filled workQuanta
 		{
-			size_t startIndex = q * SortRadixParallelWorkQuanta;
+			size_t startIndex = q * ParallelWorkQuantum;
 			size_t   endIndex = inputSize;									// non-inclusive
 			_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<PowerOfTwoRadix, Log2ofPowerOfTwoRadix, BufferDepth>(
-				inputArray, outputArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd);
+				inputArray, workArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd);
 		}
 #else
 		// Multi-core version of the algorithm
@@ -490,20 +490,20 @@ inline void SortRadixInnerPar(unsigned long* inputArray, unsigned long* outputAr
 #endif
 		for (q = 0; q < numberOfFullQuantas; q++)
 		{
-			size_t startIndex = q * SortRadixParallelWorkQuanta;
-			size_t   endIndex = startIndex + SortRadixParallelWorkQuanta;	// non-inclusive
+			size_t startIndex = q * ParallelWorkQuantum;
+			size_t   endIndex = startIndex + ParallelWorkQuantum;	// non-inclusive
 			g.run([=] {																// important to not pass by reference, as all tasks will then get the same/last value
 				_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<256, 8>(
-					inputArray, outputArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd, BufferDepth);
+					inputArray, workArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd, BufferDepth);
 				});
 		}
-		if (numberOfQuantas > numberOfFullQuantas)      // last partially filled workQuanta
+		if (quanta > numberOfFullQuantas)      // last partially filled workQuantum
 		{
-			size_t startIndex = q * SortRadixParallelWorkQuanta;
+			size_t startIndex = q * ParallelWorkQuantum;
 			size_t   endIndex = inputSize;									// non-inclusive
 			g.run([=] {
 				_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<256, 8>(
-					inputArray, outputArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd, BufferDepth);
+					inputArray, workArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd, BufferDepth);
 				});
 		}
 		g.wait();
@@ -514,24 +514,24 @@ inline void SortRadixInnerPar(unsigned long* inputArray, unsigned long* outputAr
 		outputArrayHasResult = !outputArrayHasResult;
 
 		unsigned long* tmp = inputArray;       // swap input and output arrays
-		inputArray = outputArray;
-		outputArray = tmp;
+		inputArray = workArray;
+		workArray = tmp;
 
-		for (q = 0; q < numberOfQuantas; q++)
+		for (q = 0; q < quanta; q++)
 			delete[] startOfBin[q];
 		delete[] startOfBin;
 	}
 	//	if (outputArrayHasResult)
 	//		for (unsigned long current = 0; current < inputSize; current++)		// copy from output array into the input array
-	//			inputArray[current] = outputArray[current];						// TODO: memcpy will most likely be faster
+	//			inputArray[current] = workArray[current];						// TODO: memcpy will most likely be faster
 	//::operator delete[](bufferIndexEnd, std::align_val_t{ 64 });
 	::operator delete[](bufferIndexEnd, std::align_val_t{ 64 });
 
-	for (size_t q = 0; q < numberOfQuantas; q++)
+	for (size_t q = 0; q < quanta; q++)
 		::operator delete[](bufferIndex[q], std::align_val_t{ 64 });
 	::operator delete[](bufferIndex, std::align_val_t{ 64 });
 
-	for (size_t q = 0; q < numberOfQuantas; q++)
+	for (size_t q = 0; q < quanta; q++)
 		::operator delete[](bufferDerandomize[q], std::align_val_t{ 64 });
 	::operator delete[](bufferDerandomize, std::align_val_t{ 64 });
 }
@@ -708,4 +708,5 @@ inline void RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(unsi
 			b[j] = a[j];
 	}
 }
+
 #endif
