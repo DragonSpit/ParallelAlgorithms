@@ -2,6 +2,7 @@
 // TODO: Switch histogram calculation from mask/shift to union
 // TODO: Create a version of Radix Sort that handles 64-bit indexes (size_t) for arrays larger than 4GigaElements
 // TODO: Detect the size of array and use unsigned/32-bit counts for smaller arrays and size_t/64-bit counts for larger arrays
+// TODO: sort_radix_in_place_stable_adaptive can be implemented as preventative adaptive and stable/unstable option in a single function
 
 #ifndef _RadixSortLSD_h
 #define _RadixSortLSD_h
@@ -305,16 +306,18 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned lon
 }
 
 // Stability is not needed when sorting an array of integers
-inline void sort_radix_in_place_adaptive(unsigned long* src, size_t src_size, double physical_memory_threshold = 0.75)
+// Post-allocation adaptivity, since the size of allocation is known in advance
+inline void sort_radix_in_place_adaptive(unsigned long* src, size_t src_size, double physical_memory_threshold_post = 0.75)
 {
-	double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
+	size_t anticipated_memory_usage = sizeof(unsigned long) * src_size + physical_memory_used_in_megabytes();
+	double physical_memory_fraction = (double)anticipated_memory_usage / (double)physical_memory_total_in_megabytes();
 	printf("sort_radix_in_place_adaptive: physical memory used = %llu   physical memory total = %llu\n",
 		physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
 
-	if (physical_memory_fraction > physical_memory_threshold)
+	if (physical_memory_fraction > physical_memory_threshold_post)
 	{
 		printf("Running truly in-place MSD Radix Sort\n");
-		HybridSort(src, src_size);		// in-place, not stable
+		hybrid_inplace_msd_radix_sort(src, src_size);		// in-place, not stable
 	}
 	else
 	{
@@ -323,16 +326,16 @@ inline void sort_radix_in_place_adaptive(unsigned long* src, size_t src_size, do
 		if (!working_array)
 		{
 			printf("Running truly in-place MSD Radix Sort\n");
-			HybridSort(src, src_size);		// in-place, not stable
+			hybrid_inplace_msd_radix_sort(src, src_size);		// in-place, not stable
 		}
 		else
 		{
-			for (size_t i = 0; i < src_size; i++)		// page in allocated array. Only then it shows up in memory usage measurements
-				working_array[i] = (unsigned long)i;
+			//for (size_t i = 0; i < src_size; i++)		// page in allocated array. Only then it shows up in memory usage measurements
+			//	working_array[i] = (unsigned long)i;
 
-			physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
-			printf("sort_radix_in_place_adaptive #2: physical memory used = %llu   physical memory total = %llu\n",
-				physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+			//physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
+			//printf("sort_radix_in_place_adaptive #2: physical memory used = %llu   physical memory total = %llu\n",
+			//	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
 
 			printf("Running not-in-place LSD Radix Sort\n");
 			RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src, working_array, src_size);	// not-in-place, stable
@@ -359,17 +362,19 @@ inline void merge_sort_inplace_hybrid_with_insertion(_Type* src, size_t l, size_
 	std::inplace_merge(src + l, src + m, src + r);
 }
 
-inline void sort_radix_in_place_stable_adaptive(unsigned long* src, size_t src_size, double physical_memory_threshold = 0.75)
+inline void sort_radix_in_place_stable_adaptive(unsigned long* src, size_t src_size, double physical_memory_threshold_post = 0.75)
 {
-	double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
-	printf("sort_radix_in_place_adaptive: physical memory used = %llu   physical memory total = %llu\n",
-		physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+	size_t memory_to_be_allocated_in_megabytes = src_size * sizeof(unsigned long) / ((size_t)1024 * 1024);
+	double physical_memory_fraction = (double)(physical_memory_used_in_megabytes() + memory_to_be_allocated_in_megabytes)
+		                             / (double)physical_memory_total_in_megabytes();
+	printf("sort_radix_in_place_adaptive: physical memory used = %llu   physical memory total = %llu   to be allocated = %llu\n",
+		physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes(), memory_to_be_allocated_in_megabytes);
 
-	if (physical_memory_fraction > physical_memory_threshold)
+	if (physical_memory_fraction > physical_memory_threshold_post)
 	{
-		printf("Running in-place stable adaptive sort\n");
-		std::stable_sort(src + 0, src + src_size);	// problematic as it is not purely in-place algorithm, which is what is needed to keep memory footprint low
-		//merge_sort_inplace_hybrid_with_insertion(src, 0, src_size);
+		//printf("Running in-place stable adaptive sort\n");
+		//std::stable_sort(src + 0, src + src_size);	// problematic as it is not purely in-place algorithm, which is what is needed to keep memory footprint low
+		merge_sort_inplace_hybrid_with_insertion(src, 0, src_size);	// truly in-place
 	}
 	else
 	{
@@ -377,19 +382,20 @@ inline void sort_radix_in_place_stable_adaptive(unsigned long* src, size_t src_s
 
 		if (!working_array)
 		{
-			printf("Running truly in-place MSD Radix Sort\n");
-			std::stable_sort(src + 0, src + src_size);
+			//printf("Running truly in-place MSD Radix Sort\n");
+			//std::stable_sort(src + 0, src + src_size);	// problematic as it is not purely in-place algorithm, which is what is needed to keep memory footprint low
+			merge_sort_inplace_hybrid_with_insertion(src, 0, src_size);
 		}
 		else
 		{
-			for (size_t i = 0; i < src_size; i++)		// page in allocated array. Only then it shows up in memory usage measurements
-				working_array[i] = (unsigned long)i;
+			//for (size_t i = 0; i < src_size; i++)		// page in allocated array. Only then it shows up in memory usage measurements
+			//	working_array[i] = (unsigned long)i;
 
-			physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
-			printf("sort_radix_in_place_adaptive #2: physical memory used = %llu   physical memory total = %llu\n",
-				physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+			//physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
+			//printf("sort_radix_in_place_adaptive #2: physical memory used = %llu   physical memory total = %llu\n",
+			//	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
 
-			printf("Running not-in-place LSD Radix Sort\n");
+			//printf("Running not-in-place LSD Radix Sort\n");
 			RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src, working_array, src_size);	// not-in-place, stable
 			delete[] working_array;
 		}
