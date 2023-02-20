@@ -36,6 +36,7 @@
 
 // TODO: This extern should not be needed and root-cause needs to be found
 extern void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned long* a, unsigned long* b, size_t a_size);
+extern void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned long* a, unsigned long* b, size_t a_size);
 
 namespace ParallelAlgorithms
 {
@@ -179,7 +180,7 @@ namespace ParallelAlgorithms
     }
 
 template< class _Type >
-inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t r, _Type* dst, bool stable = true, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
+inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
 {
     if (r < l)  return;
     if (r == l) {   // termination/base case of sorting a single element
@@ -196,8 +197,8 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
 #else
     tbb::parallel_invoke(
 #endif
-        [&] { parallel_merge_merge_sort_hybrid_inner(src, l,     m, dst, stable, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
-        [&] { parallel_merge_merge_sort_hybrid_inner(src, m + 1, r, dst, stable, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
+        [&] { parallel_merge_merge_sort_hybrid_inner(src, l,     m, dst, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
+        [&] { parallel_merge_merge_sort_hybrid_inner(src, m + 1, r, dst, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
     );
     if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
     else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
@@ -240,8 +241,8 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
         }
         if ((r - l) <= parallelThreshold && !srcToDst) {
             //RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(src + l, dst + l, r - l + 1);
-            //RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);             // fastest with 8-cores on 24-core CPU
-            RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(src + l, dst + l, (unsigned long)(r - l + 1));  // fastest with 4-cores on  6-core CPU
+            RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);             // fastest with 8-cores on 48-core CPU
+            //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(src + l, dst + l, (unsigned long)(r - l + 1));  // fastest with 4-cores on  6-core CPU
             //RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(src + l, dst + l, r - l + 1);
             //if (srcToDst)
             //    for (int i = l; i <= r; i++)    dst[i] = src[i];
@@ -352,7 +353,7 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
         if (r <= l) {
             return;
         }
-#if 1
+#if 0
         if ((r - l) <= parallelThreshold) {             // Faster than Insertion Sort for use in parallel in-place merge sort
             if (!stable)
                 std::sort(src + l, src + r + 1);
@@ -368,7 +369,7 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
             return;
         }
 #endif
-#if 0
+#if 1
         if ((r - l) <= 48) {     // 32 or 64 or larger seem to perform well. Don't want users to be able to set threshold too large, as O(N^2)
             insertionSortSimilarToSTLnoSelfAssignment(src + l, r - l + 1);
             return;
@@ -410,7 +411,8 @@ inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t 
             return;
         }
         if ((r - l) <= parallelThreshold) {
-            hybrid_inplace_msd_radix_sort(src + l, r - l + 1);     // truly In-Place MSD Radix Sort
+            //hybrid_inplace_msd_radix_sort(src + l, r - l + 1);     // truly In-Place MSD Radix Sort
+            parallel_hybrid_inplace_msd_radix_sort(src + l, r - l + 1);
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
@@ -537,54 +539,40 @@ inline void parallel_preventative_adaptive_inplace_merge_sort_2(_Type* src, size
     inline void parallel_inplace_merge_sort_radix_hybrid(_Type* src, size_t l, size_t r, size_t parallelThreshold = 24 * 1024)
     {
         // may return 0 when not able to detect
-        const auto processor_count = std::thread::hardware_concurrency();
+        //const auto processor_count = std::thread::hardware_concurrency();
         //printf("Number of cores = %u \n", processor_count);
 
-        if ((parallelThreshold * processor_count) < (r - l + 1))
-            parallelThreshold = (r - l + 1) / processor_count;
+        //if ((parallelThreshold * processor_count) < (r - l + 1))
+        //    parallelThreshold = (r - l + 1) / processor_count;
 
         parallel_inplace_merge_sort_radix_hybrid_inner(src, l, r, parallelThreshold);
     }
 
-    inline void parallel_linear_in_place_preventative_adaptive_sort(unsigned long* src, unsigned long a_size, bool stable = false, double physical_memory_threshold = 0.75, size_t parallelThreshold = 24 * 1024)
-    {
-        double physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
-        //printf("p_merge_in_place_preventative_adaptive: physical memory used = %llu   physical memory total = %llu\n",
-        //	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
+inline void parallel_linear_in_place_preventative_adaptive_sort(unsigned long* src, size_t src_size, bool stable = true, double physical_memory_threshold_post = 0.75, size_t parallelThreshold = 24 * 1024)
+{
+    size_t anticipated_memory_usage = sizeof(unsigned long) * src_size / (size_t)(1024 * 1024) + physical_memory_used_in_megabytes();
+    double physical_memory_fraction = (double)anticipated_memory_usage / (double)physical_memory_total_in_megabytes();
+    //printf("p_merge_in_place_preventative_adaptive: physical memory used = %llu   physical memory total = %llu\n",
+    //	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
 
-        if (physical_memory_fraction > physical_memory_threshold)
-        {
-            if (!stable)
-            {
-                parallel_hybrid_inplace_msd_radix_sort(src, a_size);    // truly in-place, unstable
-            }
-            else
-            {
-                //parallel_preventative_adaptive_inplace_merge_sort(src, 0, a_size - 1, stable, physical_memory_threshold);   // many times slower, stable
-                parallel_inplace_merge_sort_radix_hybrid(src, 0, a_size - 1, parallelThreshold); // faster, but unstable which is ok to use for array of keys
-            }
-        }
+    if (physical_memory_fraction > physical_memory_threshold_post)
+    {
+        // In-Place and Stable => no known linear-time sort
+        parallel_inplace_merge_sort_hybrid_inner(src, 0, src_size - 1, stable, parallelThreshold);  // not-linear
+    }
+    else
+    {
+        unsigned long* work_buff = new(std::nothrow) unsigned long[src_size];
+
+        if (!work_buff)
+            parallel_inplace_merge_sort_hybrid_inner(src, 0, src_size - 1, stable, parallelThreshold);  // not-linear
         else
         {
-            unsigned long* tmp_buffer = new(std::nothrow) unsigned long[a_size];
-
-            if (!tmp_buffer)
-            {
-                if (!stable)
-                    parallel_hybrid_inplace_msd_radix_sort(src, a_size);
-                else
-                {
-                    parallel_preventative_adaptive_inplace_merge_sort(src, 0, a_size - 1, stable, physical_memory_threshold);   // many times slower, stable
-                    //parallel_inplace_merge_sort_radix_hybrid(src, 0, a_size - 1, parallelThreshold); // faster, but unstable which is ok to use for array of keys
-                }
-            }
-            else
-            {
-                parallel_merge_sort_hybrid_radix(src, 0, a_size - 1, tmp_buffer, false, parallelThreshold);
-                delete[] tmp_buffer;
-            }
+            parallel_merge_sort_hybrid_radix(src, 0, src_size - 1, work_buff, false, parallelThreshold);  // linear
+            delete[] work_buff;
         }
     }
+}
 
     template< class _Type >
     inline void merge_sort_inplace(_Type* src, size_t l, size_t r)
