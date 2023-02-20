@@ -1,4 +1,5 @@
 // TODO: Try DeRandomized version, but without using Parallel Histogram
+// TODO: For Parallel Hybrid Radix Sort, such as LSD Radix Sort, replace Insertion Sort with Parallel Merge Sort
 #ifndef _RadixSortLsdParallel_h
 #define _RadixSortLsdParallel_h
 
@@ -565,7 +566,7 @@ inline void SortRadixPar(unsigned long* a, size_t a_size, size_t parallelThresho
 }
 
 // Faster implementation, when the user is willing to provide a pre-alocated temporary/working buffer, which makes it a bit more cumbersome to use
-inline void SortRadixPar(unsigned long* a, unsigned long* tmp_work_buff, size_t a_size, size_t parallelThreshold = 64 * 1024)
+inline void SortRadixPar(unsigned long* a, unsigned long* tmp_work_buff, size_t a_size, size_t parallelThreshold = 512 * 1024)
 {
 	const size_t Threshold = 100;	// Threshold of when to switch to using Insertion Sort
 	const unsigned long PowerOfTwoRadix = 256;
@@ -584,7 +585,7 @@ inline void SortRadixPar(unsigned long* a, unsigned long* tmp_work_buff, size_t 
 	if (a_size >= Threshold)
 		SortRadixInnerPar< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(a, tmp_work_buff, a_size, parallelThreshold);
 	else
-		insertionSortSimilarToSTLnoSelfAssignment(a, a_size);
+		insertionSortSimilarToSTLnoSelfAssignment(a, a_size);	// TODO: Replace with Parallel Merge Sort to use a bigger Threshold, such at parallelThreshold
 }
 
 template< class _CountType >
