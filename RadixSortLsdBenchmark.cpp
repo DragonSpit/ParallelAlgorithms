@@ -104,8 +104,8 @@ int ParallelRadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 		const auto startTime = high_resolution_clock::now();
 		//RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(ulongsCopy, tmp_working, (unsigned long)ulongs.size());
 		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(ulongsCopy, tmp_working, (unsigned long)ulongs.size());
-		SortRadixPar(ulongsCopy, tmp_working, ulongs.size(), ulongs.size() / 6);
-		//SortRadixPar(ulongsCopy, tmp_working, ulongs.size());
+		//SortRadixPar(ulongsCopy, tmp_working, ulongs.size(), ulongs.size() / 24);		// slower than using all cores
+		SortRadixPar(ulongsCopy, tmp_working, ulongs.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Radix Sort LSD", tmp_working, ulongs.size(), startTime, endTime);
 		if (std::equal(sorted_reference.begin(), sorted_reference.end(), ulongsCopy))
