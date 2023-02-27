@@ -179,42 +179,42 @@ namespace ParallelAlgorithms
         else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
     }
 
-template< class _Type >
-inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
-{
-    if (r < l)  return;
-    if (r == l) {   // termination/base case of sorting a single element
-        if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
-        return;
-    }
-    if ((r - l) <= parallelThreshold) {
-        merge_sort_hybrid(src, l, r, dst, srcToDst);
-        return;
-    }
-    size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
+    template< class _Type >
+    inline void parallel_merge_merge_sort_hybrid_inner(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
+    {
+        if (r < l)  return;
+        if (r == l) {   // termination/base case of sorting a single element
+            if (srcToDst)  dst[l] = src[l];    // copy the single element from src to dst
+            return;
+        }
+        if ((r - l) <= parallelThreshold) {
+            merge_sort_hybrid(src, l, r, dst, srcToDst);
+            return;
+        }
+        size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-    Concurrency::parallel_invoke(
+        Concurrency::parallel_invoke(
 #else
-    tbb::parallel_invoke(
+        tbb::parallel_invoke(
 #endif
-        [&] { parallel_merge_merge_sort_hybrid_inner(src, l,     m, dst, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
-        [&] { parallel_merge_merge_sort_hybrid_inner(src, m + 1, r, dst, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
-    );
-    if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
-    else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
-}
+            [&] { parallel_merge_merge_sort_hybrid_inner(src, l,     m, dst, !srcToDst); },      // reverse direction of srcToDst for the next level of recursion
+            [&] { parallel_merge_merge_sort_hybrid_inner(src, m + 1, r, dst, !srcToDst); }       // reverse direction of srcToDst for the next level of recursion
+        );
+        if (srcToDst) merge_parallel_L5(src, l, m, m + 1, r, dst, l);
+        else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
+    }
 
     template< class _Type >
     inline void parallel_merge_merge_sort_hybrid(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
     {
         // may return 0 when not able to detect
-        //const auto processor_count = std::thread::hardware_concurrency();
+        const auto processor_count = std::thread::hardware_concurrency();
         //printf("Number of cores = %u \n", processor_count);
 
-        //if ((int)(parallelThreshold * processor_count) < (r - l + 1))
-        //    parallelThreshold = (r - l + 1) / processor_count;
+        if ((int)(parallelThreshold * processor_count) < (r - l + 1))
+            parallelThreshold = (r - l + 1) / processor_count;
 
-        parallel_merge_merge_sort_hybrid_inner(src, l, r, dst, false, srcToDst, parallelThreshold);
+        parallel_merge_merge_sort_hybrid_inner(src, l, r, dst, srcToDst, parallelThreshold);
     }
 
     template< class _Type >
