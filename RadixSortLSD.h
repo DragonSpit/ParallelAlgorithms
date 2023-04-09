@@ -367,8 +367,8 @@ inline void sort_radix_in_place_stable_adaptive(unsigned long* src, size_t src_s
 	size_t memory_to_be_allocated_in_megabytes = src_size * sizeof(unsigned long) / ((size_t)1024 * 1024);
 	double physical_memory_fraction = (double)(physical_memory_used_in_megabytes() + memory_to_be_allocated_in_megabytes)
 		                             / (double)physical_memory_total_in_megabytes();
-	printf("sort_radix_in_place_adaptive: physical memory used = %llu   physical memory total = %llu   to be allocated = %llu\n",
-		physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes(), memory_to_be_allocated_in_megabytes);
+	//printf("sort_radix_in_place_adaptive: physical memory used = %llu   physical memory total = %llu   to be allocated = %llu\n",
+	//	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes(), memory_to_be_allocated_in_megabytes);
 
 	if (physical_memory_fraction > physical_memory_threshold_post)
 	{
