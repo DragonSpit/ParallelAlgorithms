@@ -65,6 +65,7 @@ namespace ParallelAlgorithms
 		//	printf("Memory alignment is not on 8-byte boundary\n");
 		if ((r - l) <= parallelThreshold)
 			return Sum( in_array, l, r );
+			//return std::accumulate(in_array + l, in_array + r, 0ULL);
 
 		unsigned long long sum_left = 0, sum_right = 0;
 
@@ -118,7 +119,7 @@ namespace ParallelAlgorithms
 	}
 	// Non-recursive Sum
 	// left (l) boundary is inclusive and right (r) boundary is exclusive
-	inline unsigned long long SumNonRecursive(unsigned long long in_array[], size_t l, size_t r, size_t parallelThreshold = 16 * 1024)
+	inline unsigned long long SumNonRecursive(unsigned long long in_array[], size_t l, size_t r, size_t parallelThreshold = 128 * 1024)
 	{
 		size_t num_tasks = (r - l + (parallelThreshold - 1)) / parallelThreshold;
 		unsigned long long* sum_array = new unsigned long long[num_tasks] {};

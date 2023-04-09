@@ -23,7 +23,7 @@ using std::random_device;
 using std::sort;
 using std::vector;
 
-const int iterationCount = 100;
+const int iterationCount = 20;
 
 extern void print_results(const char* const tag, const unsigned long long sum, size_t sum_array_length,
 	high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime);
@@ -46,22 +46,22 @@ int SumBenchmarkChar(vector<unsigned long>& ulongs)
 
 		const auto startTimeRef = high_resolution_clock::now();
 		long long sum_ref = 0;
-		for (size_t i = 0; i < ulongs.size(); i++)
-			sum_ref += u8Copy[i];
-		//sum_ref = std::accumulate(u8Copy.begin(), u8Copy.end(), 0);
+		//for (size_t i = 0; i < ulongs.size(); i++)
+		//	sum_ref += u8Copy[i];
+		sum_ref = std::accumulate(u8Copy.begin(), u8Copy.end(), 0);
 		const auto endTimeRef = high_resolution_clock::now();
 		print_results("std::accumulate", sum_ref, u8Copy.size(), startTimeRef, endTimeRef);
 
 		long long sum = 0;
-		for (size_t k = 0; k < 100; k++)
-		{
+		//for (size_t k = 0; k < 100; k++)
+		//{
 			const auto startTime = high_resolution_clock::now();
 			//long long sum = ParallelAlgorithms::SumParallel(u8Array, 0, ulongs.size());
 			//sum = ParallelAlgorithms::SumParallel(u8Array, 0, ulongs.size(), ulongs.size() / 24);	// Running on 24-core is fastest, however with 2.7X run-to-run variation
 			sum = ParallelAlgorithms::SumParallel(u8Array, 0, ulongs.size());
 			const auto endTime = high_resolution_clock::now();
 			print_results("Parallel Sum", sum, ulongs.size(), startTime, endTime);
-		}
+		//}
 		if (sum == sum_ref)
 			printf("Sums are equal\n");
 		else
@@ -89,9 +89,9 @@ int SumBenchmark(vector<unsigned long>& ulongs)
 
 		const auto startTimeRef = high_resolution_clock::now();
 		unsigned long long sum_ref = 0;
-		for (size_t i = 0; i < ulongs.size(); i++)
-			sum_ref += u64Copy[i];
-		//sum_ref = std::accumulate(u64Copy.begin(), u64Copy.end(), 0);
+		//for (size_t i = 0; i < ulongs.size(); i++)
+		//	sum_ref += u64Copy[i];
+		sum_ref = std::accumulate(u64Copy.begin(), u64Copy.end(), 0ULL);
 		//std::fill(oneapi::dpl::execution::par_unseq, u64Copy.begin(), u64Copy.end(), 42);
 		//std::fill(u64Copy.begin(), u64Copy.end(), 42);
 		const auto endTimeRef = high_resolution_clock::now();
@@ -103,13 +103,15 @@ int SumBenchmark(vector<unsigned long>& ulongs)
 		//unsigned long long sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, ulongs.size());
 		//unsigned long long sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, ulongs.size(), ulongs.size() / 8);
 		unsigned long long sum = 0;
-		for (int j = 0; j < 100; ++j)
-		{
-			//sum = ParallelAlgorithms::SumParallelNonRecursiveNoHyperthreading(u64Array, 0, ulongs.size(), ulongs.size() / 16);
+		//for (int j = 0; j < 100; ++j)
+		//{
+			//sum = ParallelAlgorithms::SumParallelNonRecursiveNoHyperthreading(u64Array, 0, ulongs.size(), ulongs.size() / 14);
 			//sum = ParallelAlgorithms::SumNonRecursive(u64Array, 0, ulongs.size());
-			//sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, ulongs.size(), ulongs.size() / 32);
-			sum = ParallelAlgorithms::SumParallel(u64Array, 0, ulongs.size(), ulongs.size() / 16);	// highest performance with /15 and /17 at half the performance
-		}
+			sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, ulongs.size(), ulongs.size() / 14);
+			//sum = ParallelAlgorithms::SumParallel(u64Array, 0, ulongs.size());
+			//sum = ParallelAlgorithms::SumParallel(u64Array, 0, ulongs.size(), ulongs.size() / 20);
+			//sum = ParallelAlgorithms::SumParallel(u64Array, 0, ulongs.size(), ulongs.size() / 16);	// highest performance with /15 and /17 at half the performance
+		//}
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Sum", sum, ulongs.size(), startTime, endTime);
 		if (sum == sum_ref)
