@@ -1,3 +1,14 @@
+TODO: Explore parallelism at small work load, such as small arrays. For example, sum of an array I was exploring in the book didn't improve in performance when I tried to reduce the overhead of small tasks in the body
+      of the recursive tree. The mistake I made is using a large tree. Instead, this reduction should pay off big time for small trees, possibly with small parallel_threshold (cutoff) points. It may enable smaller parallel cutoff,
+      which would be a win for parallelism for smaller arrays.
+Idea: The whole "parallelism for the small" could be our value add. We could develop techniques and technologies that increase usefulness at the small array scale and enable use of parallelism and higher performance for more use cases,
+      expanding the market for parallelism. It would benefit not only C++, but also C#, both of which would enjoy the benefit of parallelism performance gains in more cases - i.e. not just the very large cases. This would blow the doors
+      off the parallel performance market.
+      One tool is to reduce the overhead of the "recursive body nodes" by eliminating them as I did in the book by replacing recursion with a single
+      level of recursion. This should work for small arrays well, to reduce the overhead of these due to their inefficiency. Allocation of the single
+      array for the single recursion level can also be done on the stack for small arrays, reduring overhead of allocation. This needs to be benchmarked
+      for small arrays to show how much benefit can be harvested for small arrays. Hopefully, it's enough to increase parallelism usefulness to smallest
+      of arrays, extending usefulness of parallelism to all arrays.
 TODO: C++ added support for new without throwing exception to improve performance. This needs to be used everywhere, especially in Adaptive algorithms.
         _Type* sorted = new(std::nothrow) _Type[src_size];
       Benchmarking for comparison would be a great one too, to see how much time exception throwing takes
