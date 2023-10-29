@@ -125,8 +125,8 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs, const size_t& test
 	    //ParallelAlgorithms::parallel_merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
-		ParallelAlgorithms::parallel_merge_merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, sorted, false, ulongs.size() / 8);
-		//ParallelAlgorithms::parallel_merge_sort_hybrid_radix(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted, false, ulongs.size() / 8);	// ParallelMergeSort modifies the source array (using 8-cores get highest performance on 24-core CPU)
+		//ParallelAlgorithms::parallel_merge_merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, sorted, false, ulongs.size() / 8);
+		ParallelAlgorithms::parallel_merge_sort_hybrid_radix(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted, false, ulongs.size() / 8);	// ParallelMergeSort modifies the source array (using 8-cores get highest performance on 24-core CPU)
 		//ParallelAlgorithms::parallel_inplace_merge_sort_radix_hybrid(ulongsCopy, 0, ulongs.size() - 1, ulongs.size() / 4);	// using 4 cores best performance on 6-core AWS node
 		//ParallelAlgorithms::parallel_inplace_merge_sort_radix_hybrid(ulongsCopy, 0, ulongs.size() - 1, ulongs.size() / 18);	// using 18 cores best performance on 48-core AWS node
 		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(ulongsCopy, sorted, ulongs.size());
