@@ -45,6 +45,15 @@ void print_results(const char* const tag, const unsigned long long sum, size_t s
 	printf("%s: Sum: %llu   Array Length: %llu    Time: %fms\n", tag, sum, sum_array_length,
 		duration_cast<duration<double, milli>>(endTime - startTime).count());
 }
+void print_results(const char* const tag, const unsigned long long sum, size_t sum_array_length,
+	high_resolution_clock::time_point startTime,
+	high_resolution_clock::time_point endTime,
+	double thruput_average, double thruput_std_dev
+	)
+{
+	printf("%s: Sum: %llu   Array Length: %llu    Time: %fms  Throughput Average: %.lf million   Standard Deviation: %.lf\n", tag, sum, sum_array_length,
+		duration_cast<duration<double, milli>>(endTime - startTime).count(), thruput_average, thruput_std_dev);
+}
 
 namespace ParallelAlgorithms
 {
@@ -159,6 +168,29 @@ namespace ParallelAlgorithms
 			sum += sum_array[i];
 
 		delete[] sum_array;
+		return sum;
+	}
+
+	// Non-recursive Parallel Sum
+	// left (l) boundary is inclusive and right (r) boundary is exclusive
+	inline unsigned long long SumParallelNonRecursive(unsigned long long in_array[], size_t l, size_t r, unsigned long long* sum_array, size_t parallelThreshold = 16 * 1024)
+	{
+		size_t num_tasks = (r - l + (parallelThreshold - 1)) / parallelThreshold;
+		//unsigned long long* sum_array = new unsigned long long[num_tasks] {};
+		tbb::task_group g;
+
+		size_t i = 0;
+		for (; i < (num_tasks - 1); i++)
+			g.run([=] {sum_array[i] = Sum(in_array, l + parallelThreshold * i, l + parallelThreshold * (i + 1)); });	// process full parallelThreshold chunks
+
+		g.run([=] {sum_array[num_tasks - 1] = Sum(in_array, l + parallelThreshold * i, r); });	// process the last partial parallelThreshold chunk
+
+		g.wait();	// wait for all tasks to complete
+
+		unsigned long long sum = 0;
+		for (size_t i = 0; i < num_tasks; i++)
+			sum += sum_array[i];
+
 		return sum;
 	}
 
