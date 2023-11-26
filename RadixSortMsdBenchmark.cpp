@@ -26,8 +26,6 @@ extern void print_results(const char* const tag, const unsigned long* sorted, si
 
 int RadixSortMsdBenchmark(vector<unsigned long>& ulongs)
 {
-	random_device rd;
-
 	// generate some random ulongs:
 	unsigned long* ulongsCopy = new unsigned long[ulongs.size()];
 	//unsigned long* ulongsCopy = (unsigned long*) operator new[](sizeof(unsigned long) * ulongs.size(), (std::align_val_t)(128));

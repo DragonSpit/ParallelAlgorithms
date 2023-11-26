@@ -23,9 +23,9 @@ unsigned long long physical_memory_used_in_megabytes()
 	MEMORYSTATUSEX memInfo;
 	memInfo.dwLength = sizeof(MEMORYSTATUSEX);
 	GlobalMemoryStatusEx(&memInfo);
-	DWORDLONG totalVirtualMem = memInfo.ullTotalPageFile;
-	DWORDLONG virtualMemUsed = memInfo.ullTotalPageFile - memInfo.ullAvailPageFile;
-	DWORDLONG totalPhysMem = memInfo.ullTotalPhys;
+	//DWORDLONG totalVirtualMem = memInfo.ullTotalPageFile;
+	//DWORDLONG virtualMemUsed = memInfo.ullTotalPageFile - memInfo.ullAvailPageFile;
+	//DWORDLONG totalPhysMem = memInfo.ullTotalPhys;
 	DWORDLONG physMemUsed = memInfo.ullTotalPhys - memInfo.ullAvailPhys;	// physical memory used by the system
 	//SIZE_T physMemUsedByMe = pmc.WorkingSetSize;	// by current process
 	return (physMemUsed / (1024ULL * 1024));
@@ -57,10 +57,10 @@ unsigned long long physical_memory_total_in_megabytes()
 	MEMORYSTATUSEX memInfo;
 	memInfo.dwLength = sizeof(MEMORYSTATUSEX);
 	GlobalMemoryStatusEx(&memInfo);
-	DWORDLONG totalVirtualMem = memInfo.ullTotalPageFile;
-	DWORDLONG virtualMemUsed = memInfo.ullTotalPageFile - memInfo.ullAvailPageFile;
+	//DWORDLONG totalVirtualMem = memInfo.ullTotalPageFile;
+	//DWORDLONG virtualMemUsed = memInfo.ullTotalPageFile - memInfo.ullAvailPageFile;
 	DWORDLONG totalPhysMem = memInfo.ullTotalPhys;
-	DWORDLONG physMemUsed = memInfo.ullTotalPhys - memInfo.ullAvailPhys;	// physical memory used by the system
+	//DWORDLONG physMemUsed = memInfo.ullTotalPhys - memInfo.ullAvailPhys;	// physical memory used by the system
 	//SIZE_T physMemUsedByMe = pmc.WorkingSetSize;	// by current process
 	return (totalPhysMem / (1024ULL * 1024));
 #else
@@ -122,7 +122,7 @@ void print_current_memory_space()
 void test_lazy_memory_allocation()
 {
 	const size_t SIZE_OF_ARRAY = 10'000'000'000;
-	size_t sum = 0;
+	//size_t sum = 0;
 
 	print_current_memory_space();
 

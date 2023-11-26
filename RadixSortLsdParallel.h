@@ -3,13 +3,14 @@
 #ifndef _RadixSortLsdParallel_h
 #define _RadixSortLsdParallel_h
 
+// TBB-only implementation
+#include "tbb/tbb.h"
+#include <tbb/parallel_invoke.h>
+
 #include "InsertionSort.h"
 #include "BinarySearch.h"
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include "tbb/tbb.h"
-#include <thread>
-#include <ppl.h>
-#else
+#include "Configuration.h"
+
 #include <iostream>
 #include <algorithm>
 #include <chrono>
@@ -19,14 +20,11 @@
 #include <vector>
 #include <execution>
 #include <thread>
-#include <tbb/task_group.h>
-#include <tbb/parallel_invoke.h>
-#include <string.h>
-#endif
 
 #include "RadixSortLSD.h"
 
 using namespace tbb;
+
 
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline unsigned long** HistogramByteComponentsParallel(unsigned long inArray[], int l, int r, int parallelThreshold = 64 * 1024)

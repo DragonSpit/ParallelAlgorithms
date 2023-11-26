@@ -2,11 +2,8 @@
 // TODO: Benchmark how much better algorithm does where dst/working buffer is provided, versus one that is provided and paged in
 #pragma once
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <thread>
-#include <execution>
-#include <ppl.h>
-#else
+#include "Configuration.h"
+
 #include <iostream>
 #include <algorithm>
 #include <chrono>
@@ -15,7 +12,6 @@
 #include <vector>
 #include <thread>
 #include <execution>
-#endif
 
 #include "ParallelMergeSort.h"
 

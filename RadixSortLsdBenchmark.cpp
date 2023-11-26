@@ -26,8 +26,6 @@ extern void print_results(const char* const tag, const unsigned long* sorted, si
 
 int RadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 {
-	random_device rd;
-
 	// generate some random ulongs:
 	unsigned long* ulongsCopy = new unsigned long[ulongs.size()];
 	//unsigned long* ulongsCopy = (unsigned long*) operator new[](sizeof(unsigned long) * ulongs.size(), (std::align_val_t)(128));
@@ -74,8 +72,6 @@ int RadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 
 int ParallelRadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 {
-	random_device rd;
-
 	// generate some random ulongs:
 	//unsigned long* ulongsCopy = new unsigned long[ulongs.size()];
 	unsigned long* ulongsCopy = static_cast<unsigned long*>(operator new[](sizeof(unsigned long) * ulongs.size(), (std::align_val_t)(128)));
@@ -96,7 +92,7 @@ int ParallelRadixSortLsdBenchmark(vector<unsigned long>& ulongs)
 		// Paging-in source and destination arrays leads to a 50% speed-up on Linux, and 15% on Windows
 
 		vector<unsigned long> sorted_reference(ulongs);
-		sort(sorted_reference.begin(), sorted_reference.end());
+		stable_sort(std::execution::par_unseq, sorted_reference.begin(), sorted_reference.end());
 
 		//printf("ulongsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", ulongsCopy, tmp_working, tmp_working[static_cast<unsigned>(rd()) % ulongs.size()], ulongsCopy[static_cast<unsigned>(rd()) % ulongs.size()]);
 		const auto startTime = high_resolution_clock::now();

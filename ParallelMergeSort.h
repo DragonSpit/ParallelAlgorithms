@@ -11,11 +11,8 @@
 #ifndef _ParallelMergeSort_h
 #define _ParallelMergeSort_h
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <thread>
-#include <execution>
-#include <ppl.h>
-#else
+#include "Configuration.h"
+
 #include <iostream>
 #include <algorithm>
 #include <chrono>
@@ -24,7 +21,6 @@
 #include <vector>
 #include <thread>
 #include <execution>
-#endif
 
 #include "InsertionSort.h"
 #include "BinarySearch.h"
@@ -62,7 +58,7 @@ namespace ParallelAlgorithms
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
         Concurrency::parallel_invoke(
 #else
         tbb::parallel_invoke(
@@ -110,7 +106,7 @@ namespace ParallelAlgorithms
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
         Concurrency::parallel_invoke(
 #else
         tbb::parallel_invoke(
@@ -136,7 +132,7 @@ namespace ParallelAlgorithms
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
         Concurrency::parallel_invoke(
 #else
         tbb::parallel_invoke(
@@ -167,7 +163,7 @@ namespace ParallelAlgorithms
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
         Concurrency::parallel_invoke(
 #else
         tbb::parallel_invoke(
@@ -192,7 +188,7 @@ namespace ParallelAlgorithms
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
         Concurrency::parallel_invoke(
 #else
         tbb::parallel_invoke(
@@ -249,7 +245,7 @@ namespace ParallelAlgorithms
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
         Concurrency::parallel_invoke(
 #else
         tbb::parallel_invoke(
@@ -376,7 +372,7 @@ namespace ParallelAlgorithms
         }
 #endif
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
         Concurrency::parallel_invoke(
 #else
         tbb::parallel_invoke(
@@ -416,7 +412,7 @@ namespace ParallelAlgorithms
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
         Concurrency::parallel_invoke(
 #else
         tbb::parallel_invoke(
@@ -460,7 +456,7 @@ namespace ParallelAlgorithms
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
         Concurrency::parallel_invoke(
 #else
         tbb::parallel_invoke(
@@ -485,7 +481,7 @@ namespace ParallelAlgorithms
             return;
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
         Concurrency::parallel_invoke(
 #else
         tbb::parallel_invoke(

@@ -18,13 +18,17 @@
     <ClInclude Include="..\..\RadixSortCommon.h" />
     <ClInclude Include="..\..\RadixSortLSD.h" />
     <ClInclude Include="..\..\RadixSortLsdParallel.h" />
+    <ClInclude Include="..\..\SortParallel.h" />
+    <ClInclude Include="..\..\SumParallel.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\MemoryUsage.cpp" />
     <ClCompile Include="..\..\ParallelAlgorithms.cpp" />
     <ClCompile Include="..\..\ParallelMergeSortBenchmark.cpp" />
     <ClCompile Include="..\..\ParallelQuickSort.cpp" />
     <ClCompile Include="..\..\ParallelStdCppExample.cpp" />
     <ClCompile Include="..\..\RadixSortLsdBenchmark.cpp" />
+    <ClCompile Include="..\..\SumBenchmark.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -36,13 +40,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>Intel C++ Compiler 2022</PlatformToolset>
+    <PlatformToolset>Intel C++ Compiler 2023</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>Intel C++ Compiler 2022</PlatformToolset>
+    <PlatformToolset>Intel C++ Compiler 2023</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseInteloneTBB>true</UseInteloneTBB>

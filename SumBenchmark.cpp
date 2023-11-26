@@ -89,7 +89,7 @@ int SumBenchmark(vector<unsigned long>& ulongs)
 {
 	vector<unsigned long long> u64Copy(ulongs.size());
 	unsigned long long* u64Array = new unsigned long long[ulongs.size()];
-	size_t num_times = 10000;
+	size_t num_times = 10;
 	double thruput_sum;
 	std::vector<double> thruputs(num_times);
 
@@ -113,7 +113,7 @@ int SumBenchmark(vector<unsigned long>& ulongs)
 		//std::fill(u64Copy.begin(), u64Copy.end(), 42);
 		const auto endTimeRef = high_resolution_clock::now();
 		print_results("std::accumulate", sum_ref, u64Copy.size(), startTimeRef, endTimeRef);
-		unsigned long long sum_array[1000] = { 0 };
+		//unsigned long long sum_array[1000] = { 0 };
 
 		auto startTime = high_resolution_clock::now();
 		auto endTime   = high_resolution_clock::now();
@@ -133,6 +133,7 @@ int SumBenchmark(vector<unsigned long>& ulongs)
 			//sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, ulongs.size(), ulongs.size() / 4);
 			//sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, ulongs.size(), sum_array);
 			//sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, ulongs.size());
+			//sum = ParallelAlgorithms::SumParallelNonRecursiveBuffered(u64Array, 0, ulongs.size());
 			sum = ParallelAlgorithms::SumParallel(u64Array, 0, ulongs.size());
 			//sum = ParallelAlgorithms::SumParallel(u64Array, 0, ulongs.size(), ulongs.size() / 4);
 			//sum = ParallelAlgorithms::SumParallel(u64Array, 0, ulongs.size(), ulongs.size() / 16);	// highest performance with /15 and /17 at half the performance

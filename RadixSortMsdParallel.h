@@ -3,13 +3,12 @@
 #ifndef _RadixSortMsdParallel_h
 #define _RadixSortMsdParallel_h
 
+// TBB-only implementation
+#include "tbb/tbb.h"
+#include <tbb/parallel_invoke.h>
+
 #include "InsertionSort.h"
 #include "BinarySearch.h"
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include "tbb/tbb.h"
-#include <thread>
-#include <ppl.h>
-#else
 #include <iostream>
 #include <algorithm>
 #include <chrono>
@@ -19,10 +18,6 @@
 #include <vector>
 #include <execution>
 #include <thread>
-#include <tbb/task_group.h>
-#include <tbb/parallel_invoke.h>
-#include <string.h>
-#endif
 
 using namespace tbb;
 
@@ -82,7 +77,7 @@ inline size_t* HistogramOneByteComponentParallel_2(unsigned long inArray[], size
 
 	size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 	Concurrency::parallel_invoke(
 #else
 	tbb::parallel_invoke(
@@ -124,7 +119,7 @@ inline size_t* HistogramOneByteComponentParallel(unsigned long inArray[], size_t
 
 	size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 	Concurrency::parallel_invoke(
 #else
 	tbb::parallel_invoke(
@@ -190,7 +185,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Par_L1(_Type* a, size_t a_size, _T
 		}
 #else
 		// Multi-core version of the algorithm
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::task_group g;
 #else
 		tbb::task_group g;
@@ -381,7 +376,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Derandomized_Par_L1(unsigned long*
 		}
 #else
 		// Multi-core version of the algorithm
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::task_group g;
 #else
 		tbb::task_group g;

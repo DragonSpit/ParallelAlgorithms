@@ -56,8 +56,6 @@ void print_results(const char* const tag, const unsigned char* sorted, size_t so
 
 int ParallelMergeSortBenchmark(vector<double>& doubles)
 {
-	random_device rd;
-
 	// generate some random uints:
 	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu doubles...\n", doubles.size());
 	double * doublesCopy  = new double [doubles.size()];
@@ -88,8 +86,6 @@ int ParallelMergeSortBenchmark(vector<double>& doubles)
 
 int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs, const size_t& testSize)
 {
-	random_device rd;
-
 	// generate some random uints:
 	//printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned longs (each of %lu bytes)...\n", ulongs.size(), (unsigned long)sizeof(unsigned long));
 	//const size_t testSize = 1'000'000'000;
@@ -126,9 +122,11 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs, const size_t& test
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
 		//ParallelAlgorithms::parallel_merge_merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, sorted, false, ulongs.size() / 8);
-		ParallelAlgorithms::parallel_merge_sort_hybrid_radix(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted, false, ulongs.size() / 8);	// ParallelMergeSort modifies the source array (using 8-cores get highest performance on 24-core CPU)
+		//ParallelAlgorithms::parallel_merge_merge_sort_hybrid(ulongsCopy, 0, ulongs.size() - 1, sorted, false);
+		//ParallelAlgorithms::parallel_merge_sort_hybrid_radix(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted, false, ulongs.size() / 8);	// ParallelMergeSort modifies the source array (using 8-cores get highest performance on 48-core CPU C5i)
+		ParallelAlgorithms::parallel_merge_sort_hybrid_radix(ulongsCopy, 0, (int)(ulongs.size() - 1), sorted, false);
 		//ParallelAlgorithms::parallel_inplace_merge_sort_radix_hybrid(ulongsCopy, 0, ulongs.size() - 1, ulongs.size() / 4);	// using 4 cores best performance on 6-core AWS node
-		//ParallelAlgorithms::parallel_inplace_merge_sort_radix_hybrid(ulongsCopy, 0, ulongs.size() - 1, ulongs.size() / 18);	// using 18 cores best performance on 48-core AWS node
+		//ParallelAlgorithms::parallel_inplace_merge_sort_radix_hybrid(ulongsCopy, 0, ulongs.size() - 1, ulongs.size() / 18);	// using 18 cores best performance on C5.24xlarge 48-core AWS node
 		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(ulongsCopy, sorted, ulongs.size());
 		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(ulongsCopy, sorted, ulongs.size())
 
@@ -154,8 +152,6 @@ int ParallelMergeSortBenchmark(vector<unsigned long>& ulongs, const size_t& test
 
 int ParallelInPlaceMergeSortBenchmark(vector<unsigned long>& ulongs)
 {
-	random_device rd;
-
 	// generate some random uints:
 	printf("\nBenchmarking InPlace Parallel Merge Sort Hybrid with %zu unsigned longs (each of %lu bytes)...\n", ulongs.size(), (unsigned long)sizeof(unsigned long));
 	unsigned long* ulongsCopy  = new unsigned long[ulongs.size()];
@@ -209,8 +205,6 @@ int ParallelInPlaceMergeSortBenchmark(vector<unsigned long>& ulongs)
 
 int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 {
-	random_device rd;
-
 	// generate some random uints:
 	printf("\nBenchmarking Parallel Merge Sort Hybrid with %zu unsigned integers (each of %lu bytes)...\n", uints.size(), (unsigned long)sizeof(unsigned));
 	unsigned* uintsCopy = new unsigned[uints.size()];

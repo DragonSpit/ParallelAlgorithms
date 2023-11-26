@@ -23,3 +23,6 @@ TODO: For interfaces that use size_t left and right boundary, support for zero e
       For C++ it seems like this should be handled in a C++ fashion to make algorithms have a familiar interface for C++ developers.
       It's possible to add a wrapper that does inclusive-left and exclusive-right in C++, checks for zero length and returns. This handles size_t left and right
       boundary condition. This may be the solution at the moment.
+TODO: Add output and possibly input buffering to merge where C++ copy is used to bring inputs and outputs in and out by using SSE/SIMD instructions. (Using Microsoft's version of copy to buffer did not help.
+      Need to use Intel's unseq version.)
+TODO: Implement adaptive algorithms that provide a way to save and restore settings for tuning of algorithms - i.e. provide persistence.

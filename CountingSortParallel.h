@@ -8,16 +8,8 @@
 #ifndef _ParallelCountingSort_h
 #define _ParallelCountingSort_h
 
-//#include <oneapi/dpl/execution>
-//#include <oneapi/dpl/algorithm>
+#include "Configuration.h"
 
-//#include <cstddef>
-
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <thread>
-#include <execution>
-#include <ppl.h>
-#else
 #include <iostream>
 #include <algorithm>
 #include <chrono>
@@ -26,7 +18,6 @@
 #include <vector>
 #include <thread>
 #include <execution>
-#endif
 
 #include "RadixSortMsdParallel.h"
 #include "FillParallel.h"
@@ -70,7 +61,7 @@ namespace ParallelAlgorithms
 
 		size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;  // average without overflow
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(
@@ -128,7 +119,7 @@ namespace ParallelAlgorithms
 
 		size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;  // average without overflow
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(
@@ -196,7 +187,7 @@ namespace ParallelAlgorithms
 
 		size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;  // average without overflow
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(
@@ -257,7 +248,7 @@ namespace ParallelAlgorithms
 
 		size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;  // average without overflow
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(

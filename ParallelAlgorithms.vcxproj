@@ -164,6 +164,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BinarySearch.h" />
+    <ClInclude Include="Configuration.h" />
     <ClInclude Include="CountingSort.h" />
     <ClInclude Include="CountingSortParallel.h" />
     <ClInclude Include="InplaceMerge.h" />

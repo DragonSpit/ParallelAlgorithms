@@ -7,11 +7,11 @@
 #ifndef _ParallelMerge_h
 #define _ParallelMerge_h
 
+#include "Configuration.h"
+
 #include "InsertionSort.h"
 #include "BinarySearch.h"
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <ppl.h>
-#else
+
 #include <iostream>
 #include <algorithm>
 #include <chrono>
@@ -21,8 +21,6 @@
 #include <vector>
 #include <execution>
 #include <thread>
-#include <tbb/parallel_invoke.h>
-#endif
 
 extern unsigned long long physical_memory_used_in_megabytes();
 extern unsigned long long physical_memory_total_in_megabytes();
@@ -239,7 +237,7 @@ inline void merge_parallel_L3(_Type* t, int p1, int r1, int p2, int r2, _Type* a
 	int q2 = my_binary_search(t[q1], t, p2, r2);
 	int q3 = p3 + (q1 - p1) + (q2 - p2);
 	a[q3] = t[q1];
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 	Concurrency::parallel_invoke(
 #else
 	tbb::parallel_invoke(
@@ -297,7 +295,7 @@ inline void merge_parallel_L5(_Type* t, size_t p1, size_t r1, size_t p2, size_t 
 		size_t q2 = my_binary_search(t[q1], t, p2, r2);
 		size_t q3 = p3 + (q1 - p1) + (q2 - p2);
 		a[q3] = t[q1];
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(
@@ -329,7 +327,7 @@ inline void merge_parallel_quad(_Type* t, size_t p1, size_t r1, size_t p2, size_
 		size_t q2 = my_binary_search(t[q1], t, p2, r2);
 		size_t q3 = p3 + (q1 - p1) + (q2 - p2);
 		a[q3] = t[q1];
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(
@@ -376,7 +374,7 @@ inline void block_exchange_mirror_par(_Type* a, size_t l, size_t m, size_t r, si
 		block_exchange_mirror_1(a, l, m, r);
 	else
 	{
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(
@@ -513,7 +511,7 @@ inline void p_merge_in_place_2(_Type* t, size_t l, size_t m, size_t r)
 		block_exchange_mirror_par(t, q1, m, q2 - 1);
 //		block_exchange_juggling_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
 //		block_swap_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(
@@ -539,7 +537,7 @@ inline void p_merge_in_place_2(_Type* t, size_t l, size_t m, size_t r)
 		block_exchange_mirror_par(t, q2, m, q1);
 //		block_exchange_juggling_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
 //		block_swap_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(
@@ -606,7 +604,7 @@ inline void p_merge_truly_in_place(_Type* t, size_t l, size_t m, size_t r)
 		block_exchange_mirror_par(t, q1, m, q2 - 1);
 		//		block_exchange_juggling_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
 		//		block_swap_Bentley( &t[ q1 ], q1 - q1, m - q1, q2 - 1 - q1 );
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(
@@ -633,7 +631,7 @@ inline void p_merge_truly_in_place(_Type* t, size_t l, size_t m, size_t r)
 		block_exchange_mirror_par(t, q2, m, q1);
 		//		block_exchange_juggling_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
 		//		block_swap_Bentley( &t[ q2 ], q2 - q2, m - q2, q1 - q2 );
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(USE_PPL)
 		Concurrency::parallel_invoke(
 #else
 		tbb::parallel_invoke(
