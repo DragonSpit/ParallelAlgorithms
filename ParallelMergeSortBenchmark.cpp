@@ -66,7 +66,7 @@ int ParallelMergeSortBenchmark(vector<double>& doubles)
 			sorted[        j] = j;				// page in the destination array into system memory
 		}
 		const auto startTime = high_resolution_clock::now();
-		ParallelAlgorithms::sort_par(doublesCopy, doubles.size(), sorted, doubles.size(), false);			//     in-place interface
+		ParallelAlgorithms::sort_par(doublesCopy, doubles.size(), sorted, doubles.size(), false);			//     not-in-place interface
 		//ParallelAlgorithms::sort_par(doublesCopy, doubles.size());										//     in-place adaptive interface
 		//ParallelAlgorithms::sort_par(doublesCopyVec);														//     in-place adaptive interface (vector)
 		const auto endTime = high_resolution_clock::now();
@@ -228,7 +228,8 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 		}
 		const auto startTime = high_resolution_clock::now();
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
-		ParallelAlgorithms::parallel_merge_sort_hybrid(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array
+		ParallelAlgorithms::parallel_merge_sort_hybrid(uintsCopy, (size_t)0, uints.size() - 1, sorted, false);	// ParallelMergeSort modifies the source array
+		//ParallelAlgorithms::parallel_merge_merge_sort_hybrid(uintsCopy, (size_t)0, uints.size() - 1, sorted, false);	// ParallelMergeSort modifies the source array
 		const auto endTime = high_resolution_clock::now();
 
 		std::sort(std::execution::par_unseq, uintsCopy2, uintsCopy2 + uints.size());

@@ -119,10 +119,12 @@ int main()
 	//SumBenchmark(uints);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	//ParallelMergeSortBenchmark(uints);
+	ParallelMergeSortBenchmark(uints);
 
 	// Benchmark Radix Sort LSD algorithm
 	ParallelRadixSortLsdBenchmark(uints);
+
+	//ParallelMergeBenchmark();
 
 	// generate some nearly pre-sorted unsigned integers:
 	printf("\nTesting with %zu nearly pre-sorted unsigned integers...\n\n", testSize);
@@ -148,12 +150,10 @@ int main()
 	//SumBenchmark(uints);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	//ParallelMergeSortBenchmark(uints);
+	ParallelMergeSortBenchmark(uints);
 
 	// Benchmark Radix Sort LSD algorithm
 	ParallelRadixSortLsdBenchmark(uints);
-
-	//ParallelMergeBenchmark();
 
 	printf("\nTesting with %zu constant unsigned integers...\n\n", testSize);
 	for (size_t i = 0; i < uints.size(); i++) {
@@ -172,7 +172,7 @@ int main()
 	//SumBenchmark(uints);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	//ParallelMergeSortBenchmark(uints);
+	ParallelMergeSortBenchmark(uints);
 
 	// Benchmark Radix Sort LSD algorithm
 	ParallelRadixSortLsdBenchmark(uints);

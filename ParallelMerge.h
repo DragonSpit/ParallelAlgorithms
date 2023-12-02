@@ -53,11 +53,17 @@ inline void merge_ptr_1(const _Type* a_start, const _Type* a_end, const _Type* b
 	if (a_start < a_end && b_start < b_end) {
 		while (true) {
 			if (*a_start <= *b_start) {
-				*dst++ = *a_start++;
+				*dst = *a_start;
+				++dst;
+				++a_start;
+				//*dst++ = *a_start++;
 				if (a_start >= a_end)	break;
 			}
 			else {
-				*dst++ = *b_start++;
+				*dst = *b_start;
+				++dst;
+				++b_start;
+				//*dst++ = *b_start++;
 				if (b_start >= b_end)	break;
 			}
 		}

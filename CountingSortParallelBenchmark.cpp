@@ -35,6 +35,7 @@ int CountingSortBenchmark(vector<unsigned>& uints)
 	unsigned char* sorted    = new unsigned char[uints.size()];
 	unsigned long long* u64array = new unsigned long long[uints.size()];
 
+	printf("\n");
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{

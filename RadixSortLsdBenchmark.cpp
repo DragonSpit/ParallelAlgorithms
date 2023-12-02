@@ -86,6 +86,7 @@ int ParallelRadixSortLsdBenchmark(vector<unsigned>& uints)
 	//unsigned long* tmp_working = new unsigned long[uints.size()];
 	unsigned* tmp_working = static_cast<unsigned*>(operator new[](sizeof(unsigned) * uints.size(), (std::align_val_t)(128)));
 
+	printf("\n");
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
