@@ -72,7 +72,7 @@ namespace ParallelAlgorithms
     template< class _Type >
     inline void sort_par(_Type* src, size_t src_size, _Type* dst, size_t dst_size, bool srcToDst = false)
     {
-        ParallelAlgorithms::sort_par(src, 0, src_size, dst, dst_size, srcToDst);
+        ParallelAlgorithms::sort_par(src, 0, src_size - 1, dst, dst_size, srcToDst);
     }
 
     // Array bounds includes l/left, but does not include r/right

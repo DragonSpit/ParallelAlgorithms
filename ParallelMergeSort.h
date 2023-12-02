@@ -32,7 +32,7 @@
 
 // TODO: This extern should not be needed and root-cause needs to be found
 extern void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned long* a, unsigned long* b, size_t a_size);
-extern void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned long* a, unsigned long* b, size_t a_size);
+extern void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned* a, unsigned* b, size_t a_size);
 
 namespace ParallelAlgorithms
 {
@@ -227,7 +227,7 @@ namespace ParallelAlgorithms
         //parallel_merge_sort_hybrid_rh_1(src, l, r, dst, srcToDst);
     }
 
-    inline void parallel_merge_sort_hybrid_radix_inner(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
+    inline void parallel_merge_sort_hybrid_radix_inner(unsigned* src, size_t l, size_t r, unsigned* dst, bool srcToDst = true, size_t parallelThreshold = 32 * 1024)
     {
         //printf("l = %zd   r = %zd   parallelThreshold = %zd\n", l, r, parallelThreshold);
         if (r < l)  return;
@@ -257,7 +257,7 @@ namespace ParallelAlgorithms
         else          merge_parallel_L5(dst, l, m, m + 1, r, src, l);
     }
 
-    inline void parallel_merge_sort_hybrid_radix(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 24 * 1024)
+    inline void parallel_merge_sort_hybrid_radix(unsigned* src, size_t l, size_t r, unsigned* dst, bool srcToDst = true, size_t parallelThreshold = 24 * 1024)
     {
         // may return 0 when not able to detect
         //const auto processor_count = std::thread::hardware_concurrency();
@@ -269,7 +269,7 @@ namespace ParallelAlgorithms
         parallel_merge_sort_hybrid_radix_inner(src, l, r, dst, srcToDst, parallelThreshold);
     }
 
-    inline void parallel_merge_sort_hybrid_radix_single_buffer(unsigned long* src, size_t l, size_t r, unsigned long* dst, bool srcToDst = true, size_t parallelThreshold = 24 * 1024)
+    inline void parallel_merge_sort_hybrid_radix_single_buffer(unsigned* src, size_t l, size_t r, unsigned* dst, bool srcToDst = true, size_t parallelThreshold = 24 * 1024)
     {
         // may return 0 when not able to detect
         const auto processor_count = std::thread::hardware_concurrency();
@@ -544,9 +544,9 @@ inline void parallel_preventative_adaptive_inplace_merge_sort_2(_Type* src, size
         parallel_inplace_merge_sort_radix_hybrid_inner(src, l, r, parallelThreshold);
     }
 
-inline void parallel_linear_in_place_preventative_adaptive_sort(unsigned long* src, size_t src_size, bool stable = true, double physical_memory_threshold_post = 0.75, size_t parallelThreshold = 24 * 1024)
+inline void parallel_linear_in_place_preventative_adaptive_sort(unsigned* src, size_t src_size, bool stable = true, double physical_memory_threshold_post = 0.75, size_t parallelThreshold = 24 * 1024)
 {
-    size_t anticipated_memory_usage = sizeof(unsigned long) * src_size / (size_t)(1024 * 1024) + physical_memory_used_in_megabytes();
+    size_t anticipated_memory_usage = sizeof(unsigned) * src_size / (size_t)(1024 * 1024) + physical_memory_used_in_megabytes();
     double physical_memory_fraction = (double)anticipated_memory_usage / (double)physical_memory_total_in_megabytes();
     //printf("p_merge_in_place_preventative_adaptive: physical memory used = %llu   physical memory total = %llu\n",
     //	physical_memory_used_in_megabytes(), physical_memory_total_in_megabytes());
@@ -558,7 +558,7 @@ inline void parallel_linear_in_place_preventative_adaptive_sort(unsigned long* s
     }
     else
     {
-        unsigned long* work_buff = new(std::nothrow) unsigned long[src_size];
+        unsigned* work_buff = new(std::nothrow) unsigned[src_size];
 
         if (!work_buff)
             parallel_inplace_merge_sort_hybrid_inner(src, 0, src_size - 1, stable, parallelThreshold);  // not-linear
@@ -591,8 +591,8 @@ inline void parallel_linear_in_place_preventative_adaptive_sort(unsigned long* s
         size_t r = l + length - 1;      // l and r are inclusive
         for (size_t m = 1; m <= r - l; m = m + m)
             for (size_t i = l; i <= r - m; i += m + m)
-                std::inplace_merge(src + i, src + i + m, src + __min(i + m + m, r + 1));
-                //merge_in_place(src, i, i + m - 1, __min(i + m + m - 1, r));     // slower than C++ standard inplace_merge
+                std::inplace_merge(src + i, src + i + m, src + (std::min)(i + m + m, r + 1));
+                //merge_in_place(src, i, i + m - 1, min(i + m + m - 1, r));     // slower than C++ standard inplace_merge
     }
 
     template< class _Type >
@@ -625,11 +625,11 @@ inline void parallel_linear_in_place_preventative_adaptive_sort(unsigned long* s
         }
         size_t m = 32;
         for (size_t i = l; i <= r; i += m)
-            insertionSortSimilarToSTLnoSelfAssignment(src + i, __min(m, r - m + 1));
+            insertionSortSimilarToSTLnoSelfAssignment(src + i, (std::min)(m, r - m + 1));
         for (; m <= r - l; m = m + m)
             for (size_t i = l; i <= r - m; i += m + m)
-                std::inplace_merge(src + i, src + i + m, src + __min(i + m + m, r + 1));
-                    //merge_in_place(src, i, i + m - 1, __min(i + m + m - 1, r));     // slower than using C++ standard inplace_merge, because standard one is adaptive. I could make mine adaptive too. Performance order is definitely noticable for 100M element array
+                std::inplace_merge(src + i, src + i + m, src + (std::min)(i + m + m, r + 1));
+                    //merge_in_place(src, i, i + m - 1, min(i + m + m - 1, r));     // slower than using C++ standard inplace_merge, because standard one is adaptive. I could make mine adaptive too. Performance order is definitely noticable for 100M element array
                     // TODO: Create an adaptive version of my own in-place merge and see if it's faster
             // TODO: This leads to a terrific idea of implementing an adaptive in-place merge sort, which performs not-in-place parallel merge sort when there is sufficient memory, and falls back to the truly in-place merge sort when it has to,
             //       and even then the parallel in-place merge sort is faster than C++ parallel sort.

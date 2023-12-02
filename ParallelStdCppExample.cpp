@@ -38,6 +38,7 @@ void print_results(const char* const tag, const vector<unsigned long>& sorted,
 {
 	printf("%s: Lowest: %lu Highest: %lu Time: %fms\n", tag, sorted.front(), sorted.back(),
 		duration_cast<duration<double, milli>>(endTime - startTime).count());
+	std::cout << tag << ": Lowest: " << sorted.front() << " " << sizeof(sorted.front()) << std::endl;
 }
 
 void print_results(const char* const tag, const vector<unsigned>& sorted,
@@ -95,12 +96,12 @@ int ParallelStdCppExample(vector<double>& doubles)
 	return 0;
 }
 
-int ParallelStdCppExample(vector<unsigned long>& ulongs, bool stable = false)
+int ParallelStdCppExample(vector<unsigned>& uints, bool stable = false)
 {
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
-		vector<unsigned long> sorted(ulongs);
+		vector<unsigned> sorted(uints);
 		const auto startTime = high_resolution_clock::now();
 		if (!stable)
 			sort(sorted.begin(), sorted.end());
@@ -112,7 +113,7 @@ int ParallelStdCppExample(vector<unsigned long>& ulongs, bool stable = false)
 
 	for (int i = 0; i < iterationCount; ++i)
 	{
-		vector<unsigned long> sorted(ulongs);
+		vector<unsigned> sorted(uints);
 		const auto startTime = high_resolution_clock::now();
 		// same sort call as above, but with par_unseq:
 		if (!stable)
@@ -126,63 +127,22 @@ int ParallelStdCppExample(vector<unsigned long>& ulongs, bool stable = false)
 
 	for (int i = 0; i < iterationCount; ++i)
 	{
-		unsigned long* s = new unsigned long[ulongs.size()];
-		for (unsigned int j = 0; j < ulongs.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
-			s[j] = ulongs[j];
+		unsigned* s = new unsigned[uints.size()];
+		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+			s[j] = uints[j];
 		}
 		const auto startTime = high_resolution_clock::now();
 		if (!stable)
-			sort(std::execution::par_unseq, s, s + ulongs.size());
+			sort(std::execution::par_unseq, s, s + uints.size());
 		else
-			std::stable_sort(std::execution::par_unseq, s, s + ulongs.size());
+			std::stable_sort(std::execution::par_unseq, s, s + uints.size());
 		const auto endTime = high_resolution_clock::now();
-		print_results("Parallel Array", s[0], s[ulongs.size() - 1], startTime, endTime);
+		print_results("Parallel Array", s[0], s[uints.size() - 1], startTime, endTime);
 		delete[] s;
 	}
 
 	return 0;
 }
-
-#if 0
-int ParallelTbbCppExample(vector<unsigned long>& ulongs)
-{
-	// time how long it takes to sort them:
-	for (int i = 0; i < iterationCount; ++i)
-	{
-		vector<unsigned long> sorted(ulongs);
-		const auto startTime = high_resolution_clock::now();
-		sort(sorted.begin(), sorted.end());
-		const auto endTime = high_resolution_clock::now();
-		print_results("Serial", sorted, startTime, endTime);
-	}
-
-	for (int i = 0; i < iterationCount; ++i)
-	{
-		vector<unsigned long> sorted(ulongs);
-		const auto startTime = high_resolution_clock::now();
-		// same sort call as above, but with par_unseq:
-		sort(pstl::execution::par_unseq, sorted.begin(), sorted.end());
-		const auto endTime = high_resolution_clock::now();
-		// in our output, note that these are the parallel results:
-		print_results("Parallel", sorted, startTime, endTime);
-	}
-
-	for (int i = 0; i < iterationCount; ++i)
-	{
-		unsigned long* s = new unsigned long[ulongs.size()];
-		for (unsigned int j = 0; j < ulongs.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
-			s[j] = ulongs[j];
-		}
-		const auto startTime = high_resolution_clock::now();
-		sort(pstl::execution::par_unseq, s, s + ulongs.size());
-		const auto endTime = high_resolution_clock::now();
-		print_results("Parallel Array", s[0], s[ulongs.size() - 1], startTime, endTime);
-		delete[] s;
-	}
-
-	return 0;
-}
-#endif
 
 int ParallelStdCppExample(vector<unsigned>& uints)
 {

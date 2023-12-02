@@ -35,7 +35,7 @@ using std::vector;
 void print_results(const char* const tag, const unsigned long long sum, size_t sum_array_length,
 	high_resolution_clock::time_point startTime,
 	high_resolution_clock::time_point endTime) {
-	printf("%s: Sum: %llu   Array Length: %llu    Time: %fms\n", tag, sum, sum_array_length,
+	printf("%s: Sum: %llu   Array Length: %zu    Time: %fms\n", tag, sum, sum_array_length,
 		duration_cast<duration<double, milli>>(endTime - startTime).count());
 }
 void print_results(const char* const tag, const unsigned long long sum, size_t sum_array_length,
@@ -44,7 +44,7 @@ void print_results(const char* const tag, const unsigned long long sum, size_t s
 	double thruput_average, double thruput_std_dev
 	)
 {
-	printf("%s: Sum: %llu   Array Length: %llu    Time: %fms  Throughput Average: %.lf million   Standard Deviation: %.lf\n", tag, sum, sum_array_length,
+	printf("%s: Sum: %llu   Array Length: %zu    Time: %fms  Throughput Average: %.lf million   Standard Deviation: %.lf\n", tag, sum, sum_array_length,
 		duration_cast<duration<double, milli>>(endTime - startTime).count(), thruput_average, thruput_std_dev);
 }
 
@@ -232,6 +232,7 @@ namespace ParallelAlgorithms
 		return sum;
 	}
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 	// Non-recursive Parallel Sum without Hyperthreading
 	// left (l) boundary is inclusive and right (r) boundary is exclusive
 	inline unsigned long long SumParallelNonRecursiveNoHyperthreading(unsigned long long in_array[], size_t l, size_t r, size_t parallelThreshold = 16 * 1024)
@@ -261,6 +262,7 @@ namespace ParallelAlgorithms
 		delete[] sum_array;
 		return sum;
 	}
+#endif
 }
 
 #endif

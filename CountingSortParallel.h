@@ -138,7 +138,7 @@ namespace ParallelAlgorithms
 
 
 	// left (l) boundary is inclusive and right (r) boundary is exclusive
-	template< unsigned long numberOfBins >
+	template< unsigned long NumberOfBins >
 	inline size_t* HistogramOneByteComponentParallel_2(unsigned char inArray[], size_t l, size_t r, size_t parallelThreshold = 64 * 1024)
 	{
 		size_t* countLeft_0 = NULL;
@@ -172,7 +172,7 @@ namespace ParallelAlgorithms
 				countLeft_0[inArray[current]]++;
 
 			// Combine the two count arrays into a single arrray to return
-			for (size_t count_index = 0; count_index < numberOfBins; count_index++)
+			for (size_t count_index = 0; count_index < NumberOfBins; count_index++)
 			{
 				countLeft_0[count_index] += countLeft_1[count_index];
 				countLeft_0[count_index] += countLeft_2[count_index];
@@ -219,9 +219,15 @@ namespace ParallelAlgorithms
 		if ((r - l) <= parallelThreshold)
 		{
 			countLeft_0 = new size_t[NumberOfBins]{};
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 			__declspec(align(64)) size_t countLeft_1[NumberOfBins] = { 0 };
 			__declspec(align(64)) size_t countLeft_2[NumberOfBins] = { 0 };
 			__declspec(align(64)) size_t countLeft_3[NumberOfBins] = { 0 };
+#else
+			size_t countLeft_1[NumberOfBins] __attribute__((aligned(64))) = { 0 };
+			size_t countLeft_2[NumberOfBins] __attribute__((aligned(64))) = { 0 };
+			size_t countLeft_3[NumberOfBins] __attribute__((aligned(64))) = { 0 };
+#endif
 
 			size_t last_by_four = l + ((r - l) / 4) * 4;
 			size_t current = l;
@@ -300,10 +306,15 @@ namespace ParallelAlgorithms
 		for (size_t count_index = 1; count_index < NumberOfBins; count_index++)
 			start_indexes[count_index] = start_indexes[count_index - 1] + counts[count_index - 1];
 
-		Concurrency::parallel_for(size_t(0), size_t(NumberOfBins), [&](size_t count_index) {
+#if defined(USE_PPL)
+		Concurrency::parallel_for(size_t(0), size_t(NumberOfBins), [&](size_t count_index)
+#else
+		tbb::parallel_for(size_t(0), size_t(NumberOfBins), [&](size_t count_index)
+#endif
+		{
 			parallel_fill(array_to_sort, (unsigned char)count_index, start_indexes[count_index], start_indexes[count_index] + counts[count_index], threshold_fill);
 			//std::fill(oneapi::dpl::execution::par_unseq, array_to_sort + start_indexes[count_index], array_to_sort + start_indexes[count_index] + counts[count_index], count_index);
-			});
+		});
 #endif
 		//const auto endTimeFill = high_resolution_clock::now();
 		//print_results_par("Parallel Fill inside byte array Counting Sort", startTimeFill, endTimeFill);

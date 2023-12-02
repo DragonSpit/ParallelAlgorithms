@@ -49,9 +49,9 @@ inline unsigned __int64 logicalRightShift_ru( __int64 a, unsigned long shiftAmou
 }
 #endif
 template< class _Type >
-inline unsigned long extractDigit( _Type a, _Type bitMask, unsigned long shiftRightAmount )
+inline unsigned extractDigit( _Type a, _Type bitMask, unsigned shiftRightAmount )
 {
-	unsigned long digit = (unsigned long)(( a & bitMask ) >> shiftRightAmount );	// extract the digit we are sorting based on
+	unsigned digit = (unsigned)(( a & bitMask ) >> shiftRightAmount );	// extract the digit we are sorting based on
 	return digit;
 }
 template< class _Type >

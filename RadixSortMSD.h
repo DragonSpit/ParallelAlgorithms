@@ -22,7 +22,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_L1(_Type* a, size_t a_size, _Type 
 	size_t count[PowerOfTwoRadix];
 	for (unsigned long i = 0; i < PowerOfTwoRadix; i++)     count[i] = 0;
 	for (size_t _current = 0; _current <= last; _current++)	    // Scan the array and count the number of times each value appears
-		count[(unsigned long)((a[_current] & bitMask) >> shiftRightAmount)]++;
+		count[(unsigned)((a[_current] & bitMask) >> shiftRightAmount)]++;
 
 	size_t startOfBin[PowerOfTwoRadix + 1], endOfBin[PowerOfTwoRadix], nextBin = 1;
 	startOfBin[0] = endOfBin[0] = 0;    startOfBin[PowerOfTwoRadix] = 0;			// sentinal
@@ -31,9 +31,9 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_L1(_Type* a, size_t a_size, _Type 
 
 	for (size_t _current = 0; _current <= last; )
 	{
-		unsigned long digit;
+		unsigned digit;
 		_Type _current_element = a[_current];	// get the compiler to recognize that a register can be used for the loop instead of a[_current] memory location
-		while (endOfBin[digit = (unsigned long)((_current_element & bitMask) >> shiftRightAmount)] != _current)  _swap(_current_element, a[endOfBin[digit]++]);
+		while (endOfBin[digit = (unsigned)((_current_element & bitMask) >> shiftRightAmount)] != _current)  _swap(_current_element, a[endOfBin[digit]++]);
 		a[_current] = _current_element;
 
 		endOfBin[digit]++;
@@ -57,7 +57,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_L1(_Type* a, size_t a_size, _Type 
 	}
 }
 
-inline void hybrid_inplace_msd_radix_sort(unsigned long* a, size_t a_size)
+inline void hybrid_inplace_msd_radix_sort(unsigned* a, size_t a_size)
 {
 	if (a_size < 2)	return;
 
@@ -65,7 +65,7 @@ inline void hybrid_inplace_msd_radix_sort(unsigned long* a, size_t a_size)
 	const long Log2ofPowerOfTwoRadix = 8;
 	const long Threshold = 48;
 
-	unsigned long bitMask = 0x80000000;	// bitMask controls how many bits we process at a time
+	unsigned bitMask = 0x80000000;	// bitMask controls how many bits we process at a time
 	unsigned long shiftRightAmount = 31;
 
 	for (unsigned long i = 2; i < PowerOfTwoRadix; )	// if not power-of-two value then it will do up to the largest power-of-two value
@@ -76,7 +76,7 @@ inline void hybrid_inplace_msd_radix_sort(unsigned long* a, size_t a_size)
 	}
 
 	if (a_size >= Threshold)
-		_RadixSort_Unsigned_PowerOf2Radix_L1< unsigned long, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, a_size, bitMask, shiftRightAmount);
+		_RadixSort_Unsigned_PowerOf2Radix_L1< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, a_size, bitMask, shiftRightAmount);
 	else
 		insertionSortSimilarToSTLnoSelfAssignment( a, a_size );
 		//insertionSortHybrid(a, a_size);
@@ -85,17 +85,17 @@ inline void hybrid_inplace_msd_radix_sort(unsigned long* a, size_t a_size)
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold, class _Type >
 inline void _RadixSort_StableUnsigned_PowerOf2Radix_2(_Type* a, _Type* b, long last, _Type bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
 {
-	const unsigned long numberOfBins = PowerOfTwoRadix;
-	unsigned long count[numberOfBins];
+	const unsigned long NumberOfBins = PowerOfTwoRadix;
+	unsigned long count[NumberOfBins];
 
-	for (unsigned long i = 0; i < numberOfBins; i++)
+	for (unsigned long i = 0; i < NumberOfBins; i++)
 		count[i] = 0;
 	for (long _current = 0; _current <= last; _current++)	// Scan the array and count the number of times each value appears
 		count[extractDigit(a[_current], bitMask, shiftRightAmount)]++;
 
-	long startOfBin[numberOfBins], endOfBin[numberOfBins];
+	long startOfBin[NumberOfBins], endOfBin[NumberOfBins];
 	startOfBin[0] = endOfBin[0] = 0;
-	for (unsigned long i = 1; i < numberOfBins; i++)
+	for (unsigned long i = 1; i < NumberOfBins; i++)
 		startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
 	for (long _current = 0; _current <= last; _current++)		// permutation of array elements
@@ -107,7 +107,7 @@ inline void _RadixSort_StableUnsigned_PowerOf2Radix_2(_Type* a, _Type* b, long l
 		if (shiftRightAmount >= Log2ofPowerOfTwoRadix)	shiftRightAmount -= Log2ofPowerOfTwoRadix;
 		else												shiftRightAmount = 0;
 		inputArrayIsDestination = !inputArrayIsDestination;
-		for (unsigned long i = 0; i < numberOfBins; i++)
+		for (unsigned long i = 0; i < NumberOfBins; i++)
 		{
 			long numOfElements = endOfBin[i] - startOfBin[i];
 			if (numOfElements >= Threshold)

@@ -34,7 +34,7 @@ template< class _Type >
 inline size_t my_binary_search( _Type value, const _Type* a, size_t left, size_t right )
 {
 	size_t low  = left;
-	size_t high = std::max( left, right + 1 );
+	size_t high = (std::max)( left, right + 1 );
 	while( low < high )
 	{
 		size_t mid = low + ((high - low) / 2);		// overflow-free average calculation, since high > low is the condition for entering while-loop body

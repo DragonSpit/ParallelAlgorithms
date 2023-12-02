@@ -29,7 +29,7 @@ using namespace tbb;
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline size_t* HistogramOneByteComponentParallel_2(unsigned long inArray[], size_t l, size_t r, unsigned long shiftRight, size_t parallelThreshold = 64 * 1024)
 {
-	const unsigned long numberOfBins = PowerOfTwoRadix;
+	const unsigned long NumberOfBins = PowerOfTwoRadix;
 
 	size_t* countLeft_0 = NULL;
 	size_t* countLeft_1 = NULL;
@@ -39,15 +39,15 @@ inline size_t* HistogramOneByteComponentParallel_2(unsigned long inArray[], size
 
 	if (l > r)      // zero elements to compare
 	{
-		countLeft_0 = new size_t[numberOfBins]{};
+		countLeft_0 = new size_t[NumberOfBins]{};
 		return countLeft_0;
 	}
 	if ((r - l + 1) <= parallelThreshold)
 	{
-		countLeft_0 = new size_t[numberOfBins]{};
-		countLeft_1 = new size_t[numberOfBins]{};
-		countLeft_2 = new size_t[numberOfBins]{};
-		countLeft_3 = new size_t[numberOfBins]{};
+		countLeft_0 = new size_t[NumberOfBins]{};
+		countLeft_1 = new size_t[NumberOfBins]{};
+		countLeft_2 = new size_t[NumberOfBins]{};
+		countLeft_3 = new size_t[NumberOfBins]{};
 
 		size_t last_by_four = l + ((r - l) / 4) * 4;
 		size_t current = l;
@@ -62,7 +62,7 @@ inline size_t* HistogramOneByteComponentParallel_2(unsigned long inArray[], size
 			countLeft_0[(inArray[current] >> shiftRight) & 0xff]++;
 
 		// Combine the two count arrays into a single arrray to return
-		for (size_t count_index = 0; count_index < numberOfBins; count_index++)
+		for (size_t count_index = 0; count_index < NumberOfBins; count_index++)
 		{
 			countLeft_0[count_index] += countLeft_1[count_index];
 			countLeft_0[count_index] += countLeft_2[count_index];
@@ -86,7 +86,7 @@ inline size_t* HistogramOneByteComponentParallel_2(unsigned long inArray[], size
 		[&] { countRight  = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, shiftRight, parallelThreshold); }
 	);
 	// Combine left and right results
-	for (size_t j = 0; j < numberOfBins; j++)
+	for (size_t j = 0; j < NumberOfBins; j++)
 		countLeft_0[j] += countRight[j];
 
 	delete[] countRight;
@@ -97,19 +97,19 @@ inline size_t* HistogramOneByteComponentParallel_2(unsigned long inArray[], size
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline size_t* HistogramOneByteComponentParallel(unsigned long inArray[], size_t l, size_t r, unsigned long shiftRight, size_t parallelThreshold = 64 * 1024)
 {
-	const unsigned long numberOfBins = PowerOfTwoRadix;
+	const unsigned long NumberOfBins = PowerOfTwoRadix;
 
 	size_t* countLeft  = NULL;
 	size_t* countRight = NULL;
 
 	if (l > r)      // zero elements to compare
 	{
-		countLeft = new size_t[numberOfBins]{};
+		countLeft = new size_t[NumberOfBins]{};
 		return countLeft;
 	}
 	if ((r - l + 1) <= parallelThreshold)
 	{
-		countLeft = new size_t[numberOfBins]{};
+		countLeft = new size_t[NumberOfBins]{};
 
 		for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 			countLeft[(inArray[current] >> shiftRight) & 0xff]++;
@@ -128,7 +128,7 @@ inline size_t* HistogramOneByteComponentParallel(unsigned long inArray[], size_t
 		[&] { countRight = HistogramOneByteComponentParallel <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, shiftRight, parallelThreshold); }
 	);
 	// Combine left and right results
-	for (size_t j = 0; j < numberOfBins; j++)
+	for (size_t j = 0; j < NumberOfBins; j++)
 		countLeft[j] += countRight[j];
 
 	delete[] countRight;
@@ -218,9 +218,9 @@ inline void _RadixSortMSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized_1(uns
 	// TODO: This version is broken and needs to be fixed!!
 
 	//printf("Permute Derandomized #1: startIndex = %zu   endIndex = %zu   bitMask = %lx   shiftRight = %lu \n", startIndex, endIndex, bitMask, shiftRightAmount);
-	const unsigned long numberOfBins = PowerOfTwoRadix;
-	size_t writeEndOfBin[numberOfBins];									// write pointers to each bin
-	std::copy(endOfBin + 0, endOfBin + numberOfBins, writeEndOfBin);	// copy read pointers (endOfBin) to write pointers
+	const unsigned long NumberOfBins = PowerOfTwoRadix;
+	size_t writeEndOfBin[NumberOfBins];									// write pointers to each bin
+	std::copy(endOfBin + 0, endOfBin + NumberOfBins, writeEndOfBin);	// copy read pointers (endOfBin) to write pointers
 
 	size_t nextBin = 1;
 	for (size_t _current = startIndex; _current <= endIndex;)
@@ -263,7 +263,7 @@ inline void _RadixSortMSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized_1(uns
 		_current = endOfBin[nextBin - 1];
 	}
 	// Flush all the derandomization buffers
-	for (unsigned long whichBuff = 0; whichBuff < numberOfBins; whichBuff++)
+	for (unsigned long whichBuff = 0; whichBuff < NumberOfBins; whichBuff++)
 	{
 		unsigned long numOfElementsInBuff = bufferIndex[whichBuff];
 		for (size_t i = 0; i < numOfElementsInBuff; i++)
@@ -279,7 +279,7 @@ inline void _RadixSortMSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsig
 	size_t* endOfBin, unsigned long bufferIndex[], unsigned long bufferDerandomize[][BufferDepth])
 {
 	printf("Permute Derandomized: startIndex = %zu   endIndex = %zu   bitMask = %lx   shiftRight = %lu \n", startIndex, endIndex, bitMask, shiftRightAmount);
-	const unsigned long numberOfBins = PowerOfTwoRadix;
+	const unsigned long NumberOfBins = PowerOfTwoRadix;
 
 	for (size_t _current = startIndex; _current <= endIndex; _current++)
 	{
@@ -305,7 +305,7 @@ inline void _RadixSortMSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsig
 		}
 	}
 	// Flush all the derandomization buffers
-	for (unsigned long whichBuff = 0; whichBuff < numberOfBins; whichBuff++)
+	for (unsigned long whichBuff = 0; whichBuff < NumberOfBins; whichBuff++)
 	{
 		unsigned long numOfElementsInBuff = bufferIndex[whichBuff];
 		for (size_t i = 0; i < numOfElementsInBuff; i++)
@@ -349,10 +349,10 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Derandomized_Par_L1(unsigned long*
 	}
 #else
 	// TODO: This version is broken and needs to be fixed!!
-	const unsigned long numberOfBins = PowerOfTwoRadix;
+	const unsigned long NumberOfBins = PowerOfTwoRadix;
 	static const unsigned long bufferDepth = 128;
-	__declspec(align(64)) unsigned long bufferDerandomize[numberOfBins][bufferDepth];
-	__declspec(align(64)) unsigned long bufferIndex[numberOfBins] = { 0 };
+	__declspec(align(64)) unsigned long bufferDerandomize[NumberOfBins][bufferDepth];
+	__declspec(align(64)) unsigned long bufferIndex[NumberOfBins] = { 0 };
 
 	//printf("Before Permute Derandomized \n");
 	_RadixSortMSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized_1< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold, bufferDepth>(

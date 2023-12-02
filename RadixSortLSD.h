@@ -19,14 +19,14 @@ template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline unsigned long** HistogramByteComponents(unsigned long inArray[], int l, int r)
 {
 	const unsigned numberOfDigits = Log2ofPowerOfTwoRadix;
-	const unsigned numberOfBins = PowerOfTwoRadix;
+	const unsigned NumberOfBins = PowerOfTwoRadix;
 
 	unsigned long** count = new unsigned long* [numberOfDigits];
 
 	for (unsigned i = 0; i < numberOfDigits; i++)
 	{
-		count[i] = new unsigned long[numberOfBins];
-		for (unsigned j = 0; j < numberOfBins; j++)
+		count[i] = new unsigned long[NumberOfBins];
+		for (unsigned j = 0; j < NumberOfBins; j++)
 			count[i][j] = 0;
 	}
 
@@ -48,24 +48,24 @@ inline unsigned long** HistogramByteComponents(unsigned long inArray[], int l, i
 }
 
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
-inline unsigned long* HistogramByteComponents_1(unsigned long inArray[], size_t l, size_t r)
+inline unsigned long* HistogramByteComponents_1(unsigned inArray[], size_t l, size_t r)
 {
 	const unsigned numberOfDigits = Log2ofPowerOfTwoRadix;
-	const unsigned numberOfBins   = PowerOfTwoRadix;
+	const unsigned NumberOfBins   = PowerOfTwoRadix;
 	
-	unsigned long* count = new unsigned long [numberOfDigits * numberOfBins];
+	unsigned long* count = new unsigned long [numberOfDigits * NumberOfBins];
 
-	for (unsigned i = 0; i < numberOfDigits * numberOfBins; i++)
+	for (unsigned i = 0; i < numberOfDigits * NumberOfBins; i++)
 		count[i] = 0;
 
-	unsigned long* count0 = count + (0 * numberOfBins);
-	unsigned long* count1 = count + (1 * numberOfBins);
-	unsigned long* count2 = count + (2 * numberOfBins);
-	unsigned long* count3 = count + (3 * numberOfBins);
+	unsigned long* count0 = count + (0 * NumberOfBins);
+	unsigned long* count1 = count + (1 * NumberOfBins);
+	unsigned long* count2 = count + (2 * NumberOfBins);
+	unsigned long* count3 = count + (3 * NumberOfBins);
 
 	for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 	{
-		unsigned long value = inArray[current];
+		unsigned value = inArray[current];
 		count0[ value        & 0xff]++;
 		count1[(value >>  8) & 0xff]++;
 		count2[(value >> 16) & 0xff]++;
@@ -78,7 +78,7 @@ inline unsigned long* HistogramByteComponents_1(unsigned long inArray[], size_t 
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
 inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned long* input_array, unsigned long* output_array, long last, unsigned long bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
 {
-	const unsigned long numberOfBins = PowerOfTwoRadix;
+	const unsigned long NumberOfBins = PowerOfTwoRadix;
 	unsigned long* _input_array = input_array;
 	unsigned long* _output_array = output_array;
 	bool _output_array_has_result = false;
@@ -90,12 +90,12 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned l
 	{
 		unsigned long* count = count2D[currentDigit];
 
-		long startOfBin[numberOfBins];
-		//long endOfBin[numberOfBins];
-		alignas(64) long endOfBin[numberOfBins];
+		long startOfBin[NumberOfBins];
+		//long endOfBin[NumberOfBins];
+		alignas(64) long endOfBin[NumberOfBins];
 		//printf("endOfBin address = %p\n", endOfBin);
 		startOfBin[0] = endOfBin[0] = 0;
-		for (unsigned long i = 1; i < numberOfBins; i++)
+		for (unsigned long i = 1; i < NumberOfBins; i++)
 			startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
 		for (long _current = 0; _current <= last; _current++)	// permutation phase
@@ -123,26 +123,26 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned l
 
 // Serial LSD Radix Sort, with Counting separated into its own phase, followed by a permutation phase, as is done in HPCsharp in C#
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
-inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_1(unsigned long* input_array, unsigned long* output_array, size_t last, unsigned long bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
+inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_1(unsigned* input_array, unsigned* output_array, size_t last, unsigned bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
 {
-	const unsigned long numberOfBins = PowerOfTwoRadix;
-	unsigned long* _input_array = input_array;
-	unsigned long* _output_array = output_array;
+	const unsigned long NumberOfBins = PowerOfTwoRadix;
+	unsigned* _input_array = input_array;
+	unsigned* _output_array = output_array;
 	bool _output_array_has_result = false;
-	unsigned long currentDigit = 0;
-	unsigned long maxDigit = sizeof(unsigned long);
+	unsigned currentDigit = 0;
+	unsigned maxDigit = sizeof(unsigned);
 	const unsigned long BitMask = 0xff;
 
 	unsigned long* count2D = HistogramByteComponents_1 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
 
 	while (currentDigit <= maxDigit)						// end processing digits when all the mask bits have been processes and shift out, leaving none
 	{
-		unsigned long* count = count2D + (currentDigit * numberOfBins);
+		unsigned long* count = count2D + (currentDigit * NumberOfBins);
 
-		alignas(64) unsigned long endOfBin[numberOfBins];
+		alignas(64) unsigned long endOfBin[NumberOfBins];
 		//printf("endOfBin address = %p\n", endOfBin);
 		endOfBin[0] = 0;
-		for (unsigned long i = 1; i < numberOfBins; i++)
+		for (unsigned long i = 1; i < NumberOfBins; i++)
 			endOfBin[i] = endOfBin[i - 1] + count[i - 1];
 
 		// permutation phase
@@ -167,14 +167,14 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_1(unsigned
 }
 
 // LSD Radix Sort - stable (LSD has to be, and this may preclude LSD Radix from being able to be in-place)
-inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned long* a, unsigned long* b, size_t a_size)
+inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned* a, unsigned* b, size_t a_size)
 {
 	const unsigned long Threshold = 100;	// Threshold of when to switch to using Insertion Sort
 	const unsigned long PowerOfTwoRadix = 256;
 	const unsigned long Log2ofPowerOfTwoRadix = 8;
 	// Create bit-mask and shift right amount
 	unsigned long shiftRightAmount = 0;
-	unsigned long bitMask = (unsigned long)(((unsigned long)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
+	unsigned bitMask = (unsigned)(((unsigned)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
 
 	// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
 	// they are not pushed on the stack and are treated as constants, but local.
@@ -192,14 +192,14 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned long* a, unsign
 // Permute phase of LSD Radix Sort with de-randomized write memory accesses
 // Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold, unsigned long BufferDepth>
-inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsigned long* input_array, unsigned long* output_array, size_t startIndex, size_t endIndex, unsigned long bitMask, unsigned long shiftRightAmount,
-	long* endOfBin, unsigned long bufferIndex[], unsigned long bufferDerandomize[][BufferDepth])
+inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsigned* input_array, unsigned* output_array, size_t startIndex, size_t endIndex, unsigned bitMask, unsigned long shiftRightAmount,
+	long* endOfBin, unsigned long bufferIndex[], unsigned bufferDerandomize[][BufferDepth])
 {
-	const unsigned long numberOfBins = PowerOfTwoRadix;
+	const unsigned long NumberOfBins = PowerOfTwoRadix;
 
 	for (size_t _current = startIndex; _current <= endIndex; _current++)
 	{
-		unsigned long digit = extractDigit(input_array[_current], bitMask, shiftRightAmount);
+		unsigned digit = extractDigit(input_array[_current], bitMask, shiftRightAmount);
 		if (bufferIndex[digit] < BufferDepth)
 		{
 			bufferDerandomize[digit][bufferIndex[digit]++] = input_array[_current];
@@ -207,11 +207,11 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsig
 		else
 		{
 			unsigned long outIndex = endOfBin[digit];
-			unsigned long* buff = &(bufferDerandomize[digit][0]);
+			unsigned*         buff = &(bufferDerandomize[digit][0]);
 #if 1
-			memcpy(&(output_array[outIndex]), buff, BufferDepth * sizeof(unsigned long));	// significantly faster than a for loop
+			memcpy(&(output_array[outIndex]), buff, BufferDepth * sizeof(unsigned));	// significantly faster than a for loop
 #else
-			unsigned long* outBuff = &(output_array[outIndex]);
+			unsigned* outBuff = &(output_array[outIndex]);
 			for (unsigned long i = 0; i < BufferDepth; i++)
 				*outBuff++ = *buff++;
 #endif
@@ -221,7 +221,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsig
 		}
 	}
 	// Flush all the derandomization buffers
-	for (unsigned long whichBuff = 0; whichBuff < numberOfBins; whichBuff++)
+	for (unsigned long whichBuff = 0; whichBuff < NumberOfBins; whichBuff++)
 	{
 		unsigned long numOfElementsInBuff = bufferIndex[whichBuff];
 		for (unsigned long i = 0; i < numOfElementsInBuff; i++)
@@ -233,31 +233,31 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsig
 // Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
 // Parallel LSD Radix Sort, with Counting separated into its own parallel phase, followed by a serial permutation phase, as is done in HPCsharp in C#
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
-void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned long* input_array, unsigned long* output_array, size_t last, unsigned long bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
+void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned* input_array, unsigned* output_array, size_t last, unsigned bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
 {
-	const unsigned long numberOfBins = PowerOfTwoRadix;
-	unsigned long* _input_array = input_array;
-	unsigned long* _output_array = output_array;
+	const unsigned long NumberOfBins = PowerOfTwoRadix;
+	unsigned* _input_array = input_array;
+	unsigned* _output_array = output_array;
 	bool _output_array_has_result = false;
-	unsigned long currentDigit = 0;
+	unsigned currentDigit = 0;
 	static const unsigned long bufferDepth = 128;
 #if 0
-	__declspec(align(64)) unsigned long bufferDerandomize[numberOfBins][bufferDepth];
-	__declspec(align(64)) unsigned long bufferIndex[numberOfBins] = { 0 };
+	__declspec(align(64)) unsigned      bufferDerandomize[NumberOfBins][bufferDepth];
+	__declspec(align(64)) unsigned long bufferIndex[NumberOfBins] = { 0 };
 #else
-	auto bufferDerandomize = new unsigned long[numberOfBins][bufferDepth];
-	auto bufferIndex       = new unsigned long[numberOfBins] { 0 };
+	auto bufferDerandomize = new unsigned[NumberOfBins][bufferDepth];
+	auto bufferIndex       = new unsigned long[NumberOfBins] { 0 };
 #endif
 
 	unsigned long* count2D = HistogramByteComponents_1 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
 
 	while (bitMask != 0)						// end processing digits when all the mask bits have been processes and shift out, leaving none
 	{
-		unsigned long* count = count2D + (currentDigit * numberOfBins);
+		unsigned long* count = count2D + (currentDigit * NumberOfBins);
 
-		long startOfBin[numberOfBins], endOfBin[numberOfBins];
+		long startOfBin[NumberOfBins], endOfBin[NumberOfBins];
 		startOfBin[0] = endOfBin[0] = 0;
-		for (unsigned long i = 1; i < numberOfBins; i++)
+		for (unsigned long i = 1; i < NumberOfBins; i++)
 			startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
 		_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold, bufferDepth>(
@@ -283,14 +283,14 @@ void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned lo
 }
 
 // LSD Radix Sort - stable (LSD has to be, and this may preclude LSD Radix from being able to be in-place)
-inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned long* a, unsigned long* b, size_t a_size)
+inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned* a, unsigned* b, size_t a_size)
 {
 	const unsigned long Threshold = 100;	// Threshold of when to switch to using Insertion Sort
 	const unsigned long PowerOfTwoRadix = 256;
 	const unsigned long Log2ofPowerOfTwoRadix = 8;
 	// Create bit-mask and shift right amount
 	unsigned long shiftRightAmount = 0;
-	unsigned long bitMask = (unsigned long)(((unsigned long)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
+	unsigned bitMask = (unsigned)(((unsigned)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
 
 	// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
 	// they are not pushed on the stack and are treated as constants, but local.
@@ -307,7 +307,7 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned lon
 
 // Stability is not needed when sorting an array of integers
 // Post-allocation adaptivity, since the size of allocation is known in advance
-inline void sort_radix_in_place_adaptive(unsigned long* src, size_t src_size, double physical_memory_threshold_post = 0.75)
+inline void sort_radix_in_place_adaptive(unsigned* src, size_t src_size, double physical_memory_threshold_post = 0.75)
 {
 	size_t anticipated_memory_usage = sizeof(unsigned long) * src_size + physical_memory_used_in_megabytes();
 	double physical_memory_fraction = (double)anticipated_memory_usage / (double)physical_memory_total_in_megabytes();
@@ -321,7 +321,7 @@ inline void sort_radix_in_place_adaptive(unsigned long* src, size_t src_size, do
 	}
 	else
 	{
-		unsigned long* working_array = new(std::nothrow) unsigned long[src_size];
+		unsigned* working_array = new(std::nothrow) unsigned[src_size];
 
 		if (!working_array)
 		{
@@ -331,7 +331,7 @@ inline void sort_radix_in_place_adaptive(unsigned long* src, size_t src_size, do
 		else
 		{
 			//for (size_t i = 0; i < src_size; i++)		// page in allocated array. Only then it shows up in memory usage measurements
-			//	working_array[i] = (unsigned long)i;
+			//	working_array[i] = (unsigned)i;
 
 			//physical_memory_fraction = (double)physical_memory_used_in_megabytes() / (double)physical_memory_total_in_megabytes();
 			//printf("sort_radix_in_place_adaptive #2: physical memory used = %llu   physical memory total = %llu\n",
@@ -362,9 +362,9 @@ inline void merge_sort_inplace_hybrid_with_insertion(_Type* src, size_t l, size_
 	std::inplace_merge(src + l, src + m, src + r);
 }
 
-inline void sort_radix_in_place_stable_adaptive(unsigned long* src, size_t src_size, double physical_memory_threshold_post = 0.75)
+inline void sort_radix_in_place_stable_adaptive(unsigned* src, size_t src_size, double physical_memory_threshold_post = 0.75)
 {
-	size_t memory_to_be_allocated_in_megabytes = src_size * sizeof(unsigned long) / ((size_t)1024 * 1024);
+	size_t memory_to_be_allocated_in_megabytes = src_size * sizeof(unsigned) / ((size_t)1024 * 1024);
 	double physical_memory_fraction = (double)(physical_memory_used_in_megabytes() + memory_to_be_allocated_in_megabytes)
 		                             / (double)physical_memory_total_in_megabytes();
 	//printf("sort_radix_in_place_adaptive: physical memory used = %llu   physical memory total = %llu   to be allocated = %llu\n",
@@ -378,7 +378,7 @@ inline void sort_radix_in_place_stable_adaptive(unsigned long* src, size_t src_s
 	}
 	else
 	{
-		unsigned long* working_array = new(std::nothrow) unsigned long[src_size];
+		unsigned* working_array = new(std::nothrow) unsigned[src_size];
 
 		if (!working_array)
 		{
