@@ -2,12 +2,17 @@
 
 High Performance C++ Algorithms: parallel and sequential.
 
-Working VisualStudio 2022 solution is included with all supporting code and usage examples.
-Works on Linux using g++. Works on Windows using VisualStudio 2022 Microsoft compiler and Intel's OneAPI compiler. Works in WSL - Ubuntu 20.04.
-Uses C++17 and Intel's Threading Building Block (TBB) or Microsoft's Parallel Patterns Library (PPL) on Windows.
-Uses C++20 and Intel's TBB on Linux.
+Windows support:
+- VisualStudio 2022 Microsoft compiler and Intel's OneAPI compiler. Solution is included.
+- WSL - Ubuntu 20.04.
+- Intel's Threading Building Blocks (TBB) and Microsoft's Parallel Patterns Library (PPL)
+- C++17
 
-[Benchmarks of C++ Standard Parallel Algorithms (STL)](https://duvanenko.tech.blog/2023/05/21/c-parallel-stl-benchmark/) are provided, with benchmark code in [ParallelSTL](https://github.com/DragonSpit/ParallelSTL) repository. It builds and runs on Linix and Windows.
+Linux support:
+- g++ using Intel's Threading Building Blocks (TBB)
+- C++20
+
+[Benchmarks of C++ Standard Parallel Algorithms (STL)](https://duvanenko.tech.blog/2023/05/21/c-parallel-stl-benchmark/) are provided, with benchmark code in [ParallelSTL](https://github.com/DragonSpit/ParallelSTL) repository, which builds and runs on Linix and Windows.
 
 Sorting algorithms provided in this repository:
 - Single-core LSD Radix Sort: Two Phase
