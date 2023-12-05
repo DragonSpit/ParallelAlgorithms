@@ -65,16 +65,6 @@ namespace ParallelAlgorithms
         }
     }
 
-    // dst buffer must be the same or larger in size than the src
-    // Two use cases:
-    //   -     in-place interface, where the dst buffer is a temporary work buffer
-    //   - not-in-place interface, where the dst buffer is the destination memory buffer
-    template< class _Type >
-    inline void sort_par(_Type* src, size_t src_size, _Type* dst, size_t dst_size, bool srcToDst = false)
-    {
-        ParallelAlgorithms::sort_par(src, 0, src_size - 1, dst, dst_size, srcToDst);
-    }
-
     // Array bounds includes l/left, but does not include r/right
     // dst buffer must be large enough to provide elements dst[0 to r-1], as the result is placed in dst[l to r-1]
     // Two use cases:
@@ -91,4 +81,15 @@ namespace ParallelAlgorithms
 
         ParallelAlgorithms::parallel_merge_sort_hybrid_rh_2(src, l, r - 1, dst, srcToDst);    // r - 1 because this algorithm wants inclusive bounds
     }
+
+    // dst buffer must be the same or larger in size than the src
+    // Two use cases:
+    //   -     in-place interface, where the dst buffer is a temporary work buffer
+    //   - not-in-place interface, where the dst buffer is the destination memory buffer
+    template< class _Type >
+    inline void sort_par(_Type* src, size_t src_size, _Type* dst, size_t dst_size, bool srcToDst = false)
+    {
+        ParallelAlgorithms::sort_par(src, (size_t)0, src_size - 1, dst, dst_size, srcToDst);
+    }
+
 }

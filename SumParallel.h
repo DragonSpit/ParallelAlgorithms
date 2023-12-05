@@ -17,8 +17,10 @@
 #include <ratio>
 #include <vector>
 
-#define __TBB_PREVIEW_TASK_ARENA_CONSTRAINTS_EXTENSION_PRESENT 1
-#include <oneapi/tbb/task_arena.h>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+  #define __TBB_PREVIEW_TASK_ARENA_CONSTRAINTS_EXTENSION_PRESENT 1
+  #include <oneapi/tbb/task_arena.h>
+#endif
 
 #include "RadixSortMsdParallel.h"
 #include "FillParallel.h"

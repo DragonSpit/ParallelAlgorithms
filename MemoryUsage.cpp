@@ -88,6 +88,7 @@ unsigned long long physical_memory_total_in_megabytes()
 // Test memory allocation
 int TestMemoryAllocation()
 {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 	const size_t NUM_TIMES = 1000;
 	const size_t SIZE_OF_ARRAY = 100'000'000;
 	unsigned char* array_of_pointers[NUM_TIMES]{};
@@ -109,7 +110,7 @@ int TestMemoryAllocation()
 	{
 		delete[] array_of_pointers[i];
 	}
-
+#endif
 	return 0;
 }
 
