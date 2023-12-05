@@ -2,29 +2,20 @@
 
 High Performance C++ Algorithms: parallel and sequential.
 
-Working VisualStudio 2019 solution is included with all supporting code and usage examples.
-Works with g++ on Linux. Works with VisualStudio 2019 MSVC compiler, and Intel's DPCPP OneAPI compiler on Windows. Works in WSL - Ubuntu 20.04.
-Uses C++17 and Intel's Threading Building Block (TBB) or Microsoft's Parallel Patterns Library (PPL)
+Working VisualStudio 2022 solution is included with all supporting code and usage examples.
+Works on Linux using g++. Works on Windows using VisualStudio 2022 Microsoft compiler and Intel's OneAPI compiler. Works in WSL - Ubuntu 20.04.
+Uses C++17 and Intel's Threading Building Block (TBB) or Microsoft's Parallel Patterns Library (PPL) on Windows.
+Uses C++20 and Intel's TBB on Linux.
 
-Benchmark Results of the following C++17 algorithms on Ubuntu 20.04 using g++, sorting an array of 10 Million unsigned 32-bit integers:
-- single core: ```sort(sorted.begin(), sorted.end())```
-- multi-core: ```sort(std::execution::par_unseq, sorted.begin(), sorted.end())```
+[Benchmarks of C++ Standard Parallel Algorithms (STL)](https://duvanenko.tech.blog/2023/05/21/c-parallel-stl-benchmark/) are provided, with benchmark code in [ParallelSTL](https://github.com/DragonSpit/ParallelSTL) repository. It builds and runs on Linix and Windows.
 
-*Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
---- | --- | --- | --- | ---
-sort single core |11|35|1667| 6-core Intel i7-9750H
-sort multi-core |62|152|1639| 6-core Intel i7-9750H
-sort single core |11|32|1492| 24-core Intel Xeon 8275CL
-sort multi-core |93|250|1492| 24-core Intel Xeon 8275CL
-
-the units in the table above are Millions of unsigned longs per second. Pre-sorted array is actually nearly pre-sorted, with every 100-th element being a random value.
-
-Additional sorting algorithms provided are:
-- Single-core LSD Radix Sort (Two Phase)
-- Multi-core Parallel LSD Radix Sort
-- Multi-core Parallel Merge Sort, with simple interfaces (see ParallelAlgorithms namespace)
+Sorting algorithms provided in this repository:
+- Single-core LSD Radix Sort: Two Phase
+- Multi-core Parallel LSD Radix Sort: over 2 GigaElements/second
+- Multi-core Parallel Merge Sort
 - Single-core In-Place Merge Sort
 - Multi-core Parallel In-Place Merge Sort
+- Single-core MSD Radix Sort (in-place)
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
@@ -62,11 +53,18 @@ sudo apt update
 sudo apt install libtbb-dev
 ```
 
-To build, use g++ command and not gcc. The order of the following arguments matters!
+To build on WSL Ubuntu, use g++ command and not gcc. The order of the following arguments matters!
 ```
-g++ ParallelAlgorithms.cpp ParallelStdCppExample.cpp RadixSortLsdBenchmark.cpp MemoryUsage.cpp CountingSortParallelBenchmark.cpp SumBenchmark.cpp RadixSortMsdBenchmark.cpp -ltbb -std=c++20 -O3 -o ParallelAlgorithms
+g++ ParallelAlgorithms.cpp ParallelStdCppExample.cpp RadixSortLsdBenchmark.cpp MemoryUsage.cpp CountingSortParallelBenchmark.cpp SumBenchmark.cpp RadixSortMsdBenchmark.cpp ParallelMergeSortBenchmark.cpp -ltbb -std=c++20 -O3 -o ParallelAlgorithms
 ```
-
+To build on AWS Ubuntu, use g++ command and not gcc. The order of the following arguments matters!
+```
+g++ ParallelAlgorithms.cpp ParallelStdCppExample.cpp RadixSortLsdBenchmark.cpp MemoryUsage.cpp CountingSortParallelBenchmark.cpp SumBenchmark.cpp RadixSortMsdBenchmark.cpp ParallelMergeSortBenchmark.cpp -ltbb -std=c++2a -O3 -o ParallelAlgorithms
+```
+To run it:
+```
+./ParallelAlgorithms
+```
 ## Building on Windows Using Intel's OneAPI Compiler
 In IntelOneAPI directory, open ParallelAlgorithms.sln VisualStudio 2019 Solution, and build it. This solution is setup to use the Intel Compiler.
 Intel Compiler produces higher performance Parallel Merge Sort and LSD Radix Sort, as shown in the following table:
