@@ -1,10 +1,9 @@
 # ParallelAlgorithms
 
-High Performance C++ Algorithms: parallel and sequential.
+High Performance Parallel (and Sequential) C++ Algorithms.
 
 Windows support:
 - VisualStudio 2022 Microsoft compiler and Intel's OneAPI compiler. Solution is included.
-- WSL - Ubuntu 20.04.
 - Intel's Threading Building Blocks (TBB) and Microsoft's Parallel Patterns Library (PPL)
 - C++17
 
@@ -24,16 +23,19 @@ Sorting algorithms provided in this repository:
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
-LSD Radix Sort single core (two phase) |145|125|104| 6-core Intel i7-9750H
-LSD Radix Sort multi-core |325|294|322| 6-core Intel i7-9750H
-LSD Radix Sort single core |68|76|108| 24-core Intel Xeon 8275CL
-LSD Radix Sort multi-core |434|476|714| 24-core Intel Xeon 8275CL
-Merge Sort single-core |19|93|114| 6-core Intel i7-9750H
-Merge Sort multi-core |105|222|243| 6-core Intel i7-9750H
-Merge Sort multi-core |626|1010|1136| 24-core Intel Xeon 8275CL
-In-Place Merge Sort multi-core |58|139|313| 6-core Intel i7-9750H
-In-Place Merge Sort multi-core |179|286|333| 24-core Intel Xeon 8275CL
+LSD Radix Sort multi-core |2338|2297|2255| 48-core AWS C7i.24xlarge
+LSD Radix Sort multi-core |952|831|846| 14-core Intel i7-12700H
+LSD Radix Sort single core |||| 14-core Intel i7-12700H
+LSD Radix Sort single core (two phase) |||| 14-core Intel i7-12700H
+Merge Sort multi-core |695|946|1954| 48-core AWS C7i.24xlarge
+Merge Sort multi-core |174|275|617| 14-core Intel i7-12700H
+Merge Sort single-core |||| 14-core Intel i7-12700H
+Merge Sort multi-core (in-place) |||| 48-core AWS C7i.24xlarge
+Merge Sort multi-core (in-place) |||| 14-core Intel i7-12700H
+MSD Radix Sort single core (in-place) |||| 14-core Intel i7-12700H 
 
+The above performance is in millions of unsigned 32-bit integers/second when sorting an array of 100 million elements.
+Benchmarks ran on Linux.
 Parallel Merge Sort is over 6X faster than C++ standard sort, on a 48-core machine, showing better scaling
 with more cores. It is also 70% faster on 6-core machine. It is also 4X faster for nearly pre-sorted arrays.
 
