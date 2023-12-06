@@ -36,8 +36,6 @@ MSD Radix Sort single core (in-place) |||| 14-core Intel i7-12700H
 
 The above performance is in millions of unsigned 32-bit integers/second when sorting an array of 100 million elements.
 Benchmarks ran on Linux.
-Parallel Merge Sort is over 6X faster than C++ standard sort, on a 48-core machine, showing better scaling
-with more cores. It is also 70% faster on 6-core machine. It is also 4X faster for nearly pre-sorted arrays.
 
 ## Scaling of Parallel Radix Sort
 
