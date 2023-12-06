@@ -41,10 +41,10 @@ Benchmarks ran on Linux.
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
-LSD Radix Sort single core |143|128|110| 6-core Intel i7-9750H
-LSD Radix Sort multi-core |325|294|322| 6-core Intel i7-9750H
-LSD Radix Sort single core |68|76|108| 24-core Intel Xeon 8275CL
-LSD Radix Sort multi-core |434|476|714| 24-core Intel Xeon 8275CL
+LSD Radix Sort single core |||| 48-core AWS C7i.24xlarge
+LSD Radix Sort multi-core |||| 48-core AWS C7i.24xlarge
+LSD Radix Sort single core |||| 14-core Intel i7-12700H
+LSD Radix Sort multi-core |||| 14-core Intel i7-12700H
 
 ## Building on Ubuntu 20.04 Linux
 To install g++ which supports C++17:
