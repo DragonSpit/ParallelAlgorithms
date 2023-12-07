@@ -20,10 +20,10 @@ Benchmarks ran on Linux.
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
-LSD Radix Sort (two phase) |153|139|159| 14-core Intel i7-12700H
-Merge Sort                 | 12|136|177| 14-core Intel i7-12700H
-Merge Sort (in-place)      | 12| 97|296| 14-core Intel i7-12700H
-MSD Radix Sort (in-place)  |||| 14-core Intel i7-12700H
+LSD Radix Sort (two phase) |153|139|159| 1-core of Intel i7-12700H
+Merge Sort                 | 12|136|177| 1-core of Intel i7-12700H
+Merge Sort (in-place)      | 12| 97|296| 1-core of Intel i7-12700H
+MSD Radix Sort (in-place)  |||| 1-core of Intel i7-12700H
 
 LSD Radix Sort single-core with two additional tools:
 - novel two-phase implementation reduces passes over the array to (1 + D), where D is the number of digits
