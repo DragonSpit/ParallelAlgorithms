@@ -2,7 +2,7 @@
 
 High Performance Parallel (and Sequential) C++ Algorithms.
 
-### Multi-Core Sorting Algorithms:
+### Multi-Core Parallel Sorting Algorithms:
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
@@ -16,7 +16,7 @@ Merge Sort (in-place) |    |    |    | 14-core Intel i7-12700H
 The above performance is in millions of unsigned 32-bit integers/second when sorting an array of 100 million elements.
 Benchmarks ran on Linux.
 
-### High Performance Single-Core Algorithms
+### High Performance Single-Core Sequential Algorithms
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
