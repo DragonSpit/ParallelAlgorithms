@@ -54,9 +54,9 @@ int RadixSortLsdBenchmark(vector<unsigned>& uints)
 		const auto startTime = high_resolution_clock::now();
 		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(uintsCopy, sorted, (unsigned long)uints.size());
 		//sort_radix_in_place_adaptive(uintsCopy, (unsigned long)uints.size(), 0.1);
-		sort_radix_in_place_stable_adaptive(uintsCopy, uints.size(), 0.9);
+		//sort_radix_in_place_stable_adaptive(uintsCopy, uints.size(), 0.9);
 
-		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(uintsCopy, sorted, (unsigned long)uints.size());
+		RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(uintsCopy, sorted, (unsigned long)uints.size());
 		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(uintsCopy, sorted, (unsigned long)uints.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Radix Sort LSD", sorted, uints.size(), startTime, endTime);
