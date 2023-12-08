@@ -95,9 +95,9 @@ inline size_t* HistogramOneByteComponentParallel_2(unsigned long inArray[], size
 }
 
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
-inline size_t* HistogramOneByteComponentParallel(unsigned long inArray[], size_t l, size_t r, unsigned long shiftRight, size_t parallelThreshold = 64 * 1024)
+inline size_t* HistogramOneByteComponentParallel(unsigned inArray[], size_t l, size_t r, unsigned long shiftRight, size_t parallelThreshold = 64 * 1024)
 {
-	const unsigned long NumberOfBins = PowerOfTwoRadix;
+	const size_t NumberOfBins = PowerOfTwoRadix;
 
 	size_t* countLeft  = NULL;
 	size_t* countRight = NULL;
@@ -158,9 +158,9 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Par_L1(_Type* a, size_t a_size, _T
 
 	for (size_t _current = 0; _current <= last; )
 	{
-		unsigned long digit;
+		unsigned digit;
 		_Type _current_element = a[_current];	// get the compiler to recognize that a register can be used for the loop instead of a[_current] memory location
-		while (endOfBin[digit = (unsigned long)((_current_element & bitMask) >> shiftRightAmount)] != _current)  _swap(_current_element, a[endOfBin[digit]++]);
+		while (endOfBin[digit = (unsigned)((_current_element & bitMask) >> shiftRightAmount)] != _current)  _swap(_current_element, a[endOfBin[digit]++]);
 		a[_current] = _current_element;
 
 		endOfBin[digit]++;
@@ -174,7 +174,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Par_L1(_Type* a, size_t a_size, _T
 		if (shiftRightAmount >= Log2ofPowerOfTwoRadix)	shiftRightAmount -= Log2ofPowerOfTwoRadix;
 		else											shiftRightAmount = 0;
 
-#if 1
+#if 0
 		for (unsigned long i = 0; i < PowerOfTwoRadix; i++)
 		{
 			size_t numberOfElements = endOfBin[i] - startOfBin[i];		// endOfBin actually points to one beyond the bin
@@ -396,7 +396,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Derandomized_Par_L1(unsigned long*
 	}
 }
 
-inline void parallel_hybrid_inplace_msd_radix_sort(unsigned long* a, size_t a_size)
+inline void parallel_hybrid_inplace_msd_radix_sort(unsigned* a, size_t a_size)
 {
 	if (a_size < 2)	return;
 
@@ -404,10 +404,10 @@ inline void parallel_hybrid_inplace_msd_radix_sort(unsigned long* a, size_t a_si
 	const long Log2ofPowerOfTwoRadix = 8;
 	const long Threshold = 100;
 
-	unsigned long bitMask = 0x80000000;	// bitMask controls how many bits we process at a time
-	unsigned long shiftRightAmount = 31;
+	unsigned bitMask = 0x80000000;	// bitMask controls how many bits we process at a time
+	unsigned shiftRightAmount = 31;
 
-	for (unsigned long i = 2; i < PowerOfTwoRadix; )	// if not power-of-two value then it will do up to the largest power-of-two value
+	for (size_t i = 2; i < PowerOfTwoRadix; )	// if not power-of-two value then it will do up to the largest power-of-two value
 	{													// that's smaller than the value provided (e.g. radix-10 will do radix-8)
 		bitMask |= (bitMask >> 1);
 		shiftRightAmount -= 1;
@@ -416,7 +416,7 @@ inline void parallel_hybrid_inplace_msd_radix_sort(unsigned long* a, size_t a_si
 
 	if (a_size >= Threshold)
 	{
-		_RadixSort_Unsigned_PowerOf2Radix_Par_L1< unsigned long, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, a_size, bitMask, shiftRightAmount);	// same speed as de-randomization on 6-core
+		_RadixSort_Unsigned_PowerOf2Radix_Par_L1< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, a_size, bitMask, shiftRightAmount);	// same speed as de-randomization on 6-core
 		//_RadixSort_Unsigned_PowerOf2Radix_Derandomized_Par_L1< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, a_size, bitMask, shiftRightAmount);
 	}
 	else
