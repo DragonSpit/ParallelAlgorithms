@@ -18,7 +18,7 @@ extern int ParallelStdCppExample(vector<unsigned>&      uints);
 extern int RadixSortLsdBenchmark(vector<unsigned>&      uints);
 extern int ParallelMergeSortBenchmark(       vector<double>&        doubles);
 extern int ParallelMergeSortBenchmark(       vector<unsigned>& ulongs, const size_t& testSize);
-extern int ParallelInPlaceMergeSortBenchmark(vector<unsigned long>& ulongs);
+extern int ParallelInPlaceMergeSortBenchmark(vector<unsigned>& uints);
 extern int ParallelMergeSortBenchmark(       vector<unsigned>&      uints);
 extern int main_quicksort();
 extern int ParallelMergeBenchmark();
@@ -112,19 +112,23 @@ int main()
 
 	RadixSortMsdBenchmark(uints);
 
-	CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
+	//CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
 
-	SumBenchmarkChar(uints);
+	//SumBenchmarkChar(uints);
 
 	//SumBenchmark(uints);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	ParallelMergeSortBenchmark(uints);
+	ParallelMergeSortBenchmark(uints, testSize);
+
+	ParallelInPlaceMergeSortBenchmark(uints);
 
 	// Benchmark Radix Sort LSD algorithm
 	ParallelRadixSortLsdBenchmark(uints);
 
 	//ParallelMergeBenchmark();
+
+	RadixSortLsdBenchmark(uints);
 
 	// generate some nearly pre-sorted unsigned integers:
 	printf("\nTesting with %zu nearly pre-sorted unsigned integers...\n\n", testSize);
@@ -143,17 +147,21 @@ int main()
 
 	RadixSortMsdBenchmark(uints);
 
-	CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
+	//CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
 
-	SumBenchmarkChar(uints);
+	//SumBenchmarkChar(uints);
 
 	//SumBenchmark(uints);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	ParallelMergeSortBenchmark(uints);
+	ParallelMergeSortBenchmark(uints, testSize);
+
+	ParallelInPlaceMergeSortBenchmark(uints);
 
 	// Benchmark Radix Sort LSD algorithm
 	ParallelRadixSortLsdBenchmark(uints);
+
+	RadixSortLsdBenchmark(uints);
 
 	printf("\nTesting with %zu constant unsigned integers...\n\n", testSize);
 	for (size_t i = 0; i < uints.size(); i++) {
@@ -165,17 +173,21 @@ int main()
 
 	RadixSortMsdBenchmark(uints);
 
-	CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
+	//CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
 
-	SumBenchmarkChar(uints);
+	//SumBenchmarkChar(uints);
 
 	//SumBenchmark(uints);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	ParallelMergeSortBenchmark(uints);
+	ParallelMergeSortBenchmark(uints, testSize);
+
+	ParallelInPlaceMergeSortBenchmark(uints);
 
 	// Benchmark Radix Sort LSD algorithm
 	ParallelRadixSortLsdBenchmark(uints);
+
+	RadixSortLsdBenchmark(uints);
 
 #if 0
 	// generate some random unsigned longs:
