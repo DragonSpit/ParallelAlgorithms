@@ -10,7 +10,7 @@ LSD Radix Sort        |2338|2297|2255| 48-core AWS C7i.24xlarge
 LSD Radix Sort        | 952| 831| 846| 14-core Intel i7-12700H
 Merge Sort            | 695| 946|1954| 48-core AWS C7i.24xlarge
 Merge Sort            | 174| 275| 617| 14-core Intel i7-12700H
-Merge Sort (in-place) |    |    |    | 48-core AWS C7i.24xlarge
+Merge Sort (in-place) | 272| 502| 549| 48-core AWS C7i.24xlarge
 Merge Sort (in-place) |  90| 234| 339| 14-core Intel i7-12700H
 
 The above performance is in millions of unsigned 32-bit integers/second when sorting an array of 100 million elements.
