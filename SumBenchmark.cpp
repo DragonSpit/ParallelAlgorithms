@@ -87,8 +87,8 @@ int SumBenchmarkChar(vector<unsigned>& uints)
 }
 int SumBenchmark(vector<unsigned>& uints)
 {
-	vector<unsigned long long> u64Copy(uints.size());
-	unsigned long long* u64Array = new unsigned long long[uints.size()];
+	vector<unsigned long long> u64Copy( uints.size());
+	vector<unsigned long long> u64Array(uints.size());
 	size_t num_times = 10;
 	double thruput_sum;
 	std::vector<double> thruputs(num_times);
@@ -132,14 +132,14 @@ int SumBenchmark(vector<unsigned>& uints)
 			//sum = ParallelAlgorithms::SumNonRecursive(u64Array, 0, uints.size(), uints.size() / 2);
 			//sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, uints.size(), uints.size() / 4);
 			//sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, uints.size(), sum_array);
-			//sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array, 0, uints.size());
+			//sum = ParallelAlgorithms::SumParallelNonRecursive(u64Array.data(), 0, uints.size());
 			//sum = ParallelAlgorithms::SumParallelNonRecursiveBuffered(u64Array, 0, uints.size());
-			sum = ParallelAlgorithms::SumParallel(u64Array, 0, uints.size());
+			sum = ParallelAlgorithms::SumParallel(u64Array.data(), 0, uints.size());
 			//sum = ParallelAlgorithms::SumParallel(u64Array, 0, uints.size(), uints.size() / 4);
 			//sum = ParallelAlgorithms::SumParallel(u64Array, 0, uints.size(), uints.size() / 16);	// highest performance with /15 and /17 at half the performance
 
 			endTime = high_resolution_clock::now();
-			thruputs[i]  = (double)uints.size() / (duration_cast<duration<double, milli>>(endTime - startTime).count() / 1000.0) / 1000000.0;
+			thruputs[j]  = (double)uints.size() / (duration_cast<duration<double, milli>>(endTime - startTime).count() / 1000.0) / 1000000.0;
 			thruput_sum += (double)uints.size() / (duration_cast<duration<double, milli>>(endTime - startTime).count() / 1000.0) / 1000000.0;
 			if (sum != sum_ref)
 			{
