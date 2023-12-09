@@ -25,8 +25,25 @@ using std::vector;
 
 const int iterationCount = 20;
 
-extern void print_results(const char* const tag, const unsigned long long sum, size_t sum_array_length,
-	high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime);
+//extern void print_results(const char* const tag, const unsigned long long sum, size_t sum_array_length,
+//	high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime);
+
+void print_results(const char* const tag, const unsigned long long sum, size_t sum_array_length,
+	high_resolution_clock::time_point startTime,
+	high_resolution_clock::time_point endTime)
+{
+	printf("%s: Sum: %llu   Array Length: %zu    Time: %fms   Throughput: %llu millions/second\n", tag, sum, sum_array_length,
+		duration_cast<duration<double, milli>>(endTime - startTime).count(), (unsigned long long)(sum_array_length / duration_cast<duration<double, milli>>(endTime - startTime).count() * 1000.0 / 1000000.0));
+}
+void print_results(const char* const tag, const unsigned long long sum, size_t sum_array_length,
+	high_resolution_clock::time_point startTime,
+	high_resolution_clock::time_point endTime,
+	double thruput_average, double thruput_std_dev
+)
+{
+	printf("%s: Sum: %llu   Array Length: %zu    Time: %fms  Throughput Average: %.lf million   Standard Deviation: %.lf\n", tag, sum, sum_array_length,
+		duration_cast<duration<double, milli>>(endTime - startTime).count(), thruput_average, thruput_std_dev);
+}
 
 // From: https://stackoverflow.com/questions/7616511/calculate-mean-and-standard-deviation-from-a-vector-of-samples-in-c-using-boos
 double std_deviation(vector<double>& v)
@@ -45,7 +62,7 @@ double std_deviation(vector<double>& v)
 int SumBenchmarkChar(vector<unsigned>& uints)
 {
 	vector<unsigned char> u8Copy(uints.size());
-	unsigned char *u8Array = new unsigned char[uints.size()];
+	vector<unsigned char> u8Array(uints.size());
 
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
@@ -58,10 +75,10 @@ int SumBenchmarkChar(vector<unsigned>& uints)
 		// Paging-in source and destination arrays leads to a 50% speed-up on Linux, and 15% on Windows
 
 		const auto startTimeRef = high_resolution_clock::now();
-		long long sum_ref = 0;
+		unsigned long long sum_ref = 0;
 		//for (size_t i = 0; i < uints.size(); i++)
 		//	sum_ref += u8Copy[i];
-		sum_ref = std::accumulate(u8Copy.begin(), u8Copy.end(), 0LL);
+		sum_ref = std::accumulate(u8Copy.begin(), u8Copy.end(), 0ULL);
 		const auto endTimeRef = high_resolution_clock::now();
 		print_results("std::accumulate", sum_ref, u8Copy.size(), startTimeRef, endTimeRef);
 
@@ -71,9 +88,9 @@ int SumBenchmarkChar(vector<unsigned>& uints)
 			const auto startTime = high_resolution_clock::now();
 			//long long sum = ParallelAlgorithms::SumParallel(u8Array, 0, uints.size());
 			//sum = ParallelAlgorithms::SumParallel(u8Array, 0, uints.size(), uints.size() / 24);	// Running on 24-core is fastest, however with 2.7X run-to-run variation
-			sum = ParallelAlgorithms::SumParallel(u8Array, 0, uints.size());
+			sum = ParallelAlgorithms::SumParallel(u8Array.data(), 0, uints.size());
 			const auto endTime = high_resolution_clock::now();
-			print_results("Parallel Sum", sum, uints.size(), startTime, endTime);
+			print_results("Parallel Sum of uchars", sum, uints.size(), startTime, endTime);
 		//}
 		if (sum == sum_ref)
 			printf("Sums are equal\n");
@@ -85,7 +102,52 @@ int SumBenchmarkChar(vector<unsigned>& uints)
 	}
 	return 0;
 }
+
 int SumBenchmark(vector<unsigned>& uints)
+{
+	vector<unsigned> u32Copy( uints.size());
+	vector<unsigned> u32Array(uints.size());
+
+	// time how long it takes to sort them:
+	for (int i = 0; i < iterationCount; ++i)
+	{
+		for (size_t j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+			u32Array[j] = (unsigned)uints[j];
+			u32Copy[ j] = (unsigned)uints[j];
+		}
+		// Eliminate compiler ability to optimize paging-in of the input and output arrays
+		// Paging-in source and destination arrays leads to a 50% speed-up on Linux, and 15% on Windows
+
+		const auto startTimeRef = high_resolution_clock::now();
+		long long sum_ref = 0;
+		//for (size_t i = 0; i < uints.size(); i++)
+		//	sum_ref += u8Copy[i];
+		sum_ref = std::accumulate(u32Copy.begin(), u32Copy.end(), 0LL);
+		const auto endTimeRef = high_resolution_clock::now();
+		print_results("std::accumulate", sum_ref, u32Copy.size(), startTimeRef, endTimeRef);
+
+		long long sum = 0;
+		//for (size_t k = 0; k < 100; k++)
+		//{
+		const auto startTime = high_resolution_clock::now();
+		//long long sum = ParallelAlgorithms::SumParallel(u8Array, 0, uints.size());
+		//sum = ParallelAlgorithms::SumParallel(u8Array, 0, uints.size(), uints.size() / 24);	// Running on 24-core is fastest, however with 2.7X run-to-run variation
+		sum = ParallelAlgorithms::SumParallel(u32Array.data(), 0, uints.size());
+		const auto endTime = high_resolution_clock::now();
+		print_results("Parallel Sum of unsigned", sum, uints.size(), startTime, endTime);
+		//}
+		if (sum == sum_ref)
+			printf("Sums are equal\n");
+		else
+		{
+			printf("Sums are not equal\n");
+			exit(1);
+		}
+	}
+	return 0;
+}
+
+int SumBenchmark64(vector<unsigned>& uints)
 {
 	vector<unsigned long long> u64Copy( uints.size());
 	vector<unsigned long long> u64Array(uints.size());
