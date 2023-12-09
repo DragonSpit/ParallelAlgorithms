@@ -34,22 +34,6 @@ using std::sort;
 using std::vector;
 
 
-void print_results(const char* const tag, const unsigned long long sum, size_t sum_array_length,
-	high_resolution_clock::time_point startTime,
-	high_resolution_clock::time_point endTime) {
-	printf("%s: Sum: %llu   Array Length: %zu    Time: %fms\n", tag, sum, sum_array_length,
-		duration_cast<duration<double, milli>>(endTime - startTime).count());
-}
-void print_results(const char* const tag, const unsigned long long sum, size_t sum_array_length,
-	high_resolution_clock::time_point startTime,
-	high_resolution_clock::time_point endTime,
-	double thruput_average, double thruput_std_dev
-	)
-{
-	printf("%s: Sum: %llu   Array Length: %zu    Time: %fms  Throughput Average: %.lf million   Standard Deviation: %.lf\n", tag, sum, sum_array_length,
-		duration_cast<duration<double, milli>>(endTime - startTime).count(), thruput_average, thruput_std_dev);
-}
-
 namespace ParallelAlgorithms
 {
 	// left (l) boundary is inclusive and right (r) boundary is exclusive
@@ -107,6 +91,24 @@ namespace ParallelAlgorithms
 
 		return sum_left;
 	}
+#if 0
+	inline unsigned long long SumParallel(unsigned long long in_array[], size_t l, size_t r, size_t parallelThreshold = 16 * 1024)
+	{
+		//may return 0 when not able to detect
+		auto processor_count = std::thread::hardware_concurrency();
+		if (processor_count < 1)
+		{
+			processor_count = 1;
+			//cout << "Warning: Fewer than 1 processor core detected. Using only a single core.";
+		}
+
+		size_t length = r - l + 1;
+
+		if ((parallelThreshold * processor_count) < length)
+			parallelThreshold = length / processor_count;
+		return SumParallel_inner(in_array, l, r, parallelThreshold);
+	}
+#endif
 	// Sum of an arbitrary numerical type to a 64-bit sum
 	// left (l) boundary is inclusive and right (r) boundary is exclusive
 	template< class _Type >
