@@ -1,5 +1,6 @@
 // TODO: Try DeRandomized version, but without using Parallel Histogram
 // TODO: For Parallel Hybrid Radix Sort, such as LSD Radix Sort, replace Insertion Sort with Parallel Merge Sort
+// TODO: Fix memory leak in Parallel LSD Radix Sort (Linux only), which shows up when array being sorted is 1 billion elements, running on WSL kills the executable (on laptop with 64GB of memory), but on Windows it works fine.
 #ifndef _RadixSortLsdParallel_h
 #define _RadixSortLsdParallel_h
 
@@ -378,7 +379,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 {
 	size_t* startOfBinLoc = startOfBin[q];
 #if 1
-	const unsigned long NumberOfBins = PowerOfTwoRadix;
+	const size_t NumberOfBins = PowerOfTwoRadix;
 
 	size_t* bufferIndexLoc = bufferIndex[q];
 	unsigned* bufferDerandomizeLoc = bufferDerandomize[q];
@@ -393,7 +394,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 		else
 		{
 			size_t outIndex = startOfBinLoc[currDigit];
-			size_t buffIndex = currDigit * BufferDepth;
+			size_t buffIndex = (size_t)currDigit * BufferDepth;
 			memcpy(&(outputArray[outIndex]), &(bufferDerandomizeLoc[buffIndex]), BufferDepth * sizeof(unsigned));	// significantly faster than a for loop
 			startOfBinLoc[currDigit] += BufferDepth;
 			bufferDerandomizeLoc[currDigit * BufferDepth] = inputArray[currIndex];
@@ -401,12 +402,12 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 		}
 	}
 	// Flush all the derandomization buffers
-	for (unsigned long whichBuff = 0; whichBuff < NumberOfBins; whichBuff++)
+	for (size_t whichBuff = 0; whichBuff < NumberOfBins; whichBuff++)
 	{
 		size_t outIndex       = startOfBinLoc[whichBuff];
 		size_t buffStartIndex = whichBuff * BufferDepth;
 		size_t buffEndIndex   = bufferIndexLoc[whichBuff];
-		size_t numItems = (size_t)buffEndIndex - buffStartIndex;
+		size_t numItems       = buffEndIndex - buffStartIndex;
 		memcpy(&(outputArray[outIndex]), &(bufferDerandomizeLoc[buffStartIndex]), numItems * sizeof(unsigned));
 		bufferIndexLoc[whichBuff] = whichBuff * BufferDepth;
 	}
