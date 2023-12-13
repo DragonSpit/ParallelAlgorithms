@@ -50,9 +50,12 @@ Sorting algorithms provided in this repository:
 - Multi-core Parallel In-Place Merge Sort
 - Single-core MSD Radix Sort (in-place)
 
-## Building on Ubuntu 20.04 Linux
+## Building on Ubuntu Linux
 To install g++ which supports C++17:
 ```
+sudo apt update
+sudo apt upgrade
+# reboot the machine
 sudo apt install build-essential
 ```
 
