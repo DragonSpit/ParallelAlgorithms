@@ -32,12 +32,26 @@ LSD Radix Sort single-core with two additional performance tools:
 
 ## Other Algorithms
 Sorting algorithms provided in this repository:
-- Single-core LSD Radix Sort: Two Phase
-- Multi-core Parallel LSD Radix Sort
+- Single-core LSD Radix Sort: Novel Two Phase
+- Multi-core Parallel LSD Radix Sort : linear time
 - Multi-core Parallel Merge Sort
 - Single-core In-Place Merge Sort
 - Multi-core Parallel In-Place Merge Sort
-- Single-core MSD Radix Sort (in-place)
+- Single-core In-Place MSD Radix Sort: linear time
+- Numerous hyrid sorting algorithms - e.g. Paralle Merge Insertion Sort
+- Merge Radix Sort hybrids: linear time
+- Improved adaptivity to memory resources, even with virtual memory
+- Count Sort
+- Parallel Histogram
+- Block Swap
+- Parallel Merge
+- Radix Sort to support non-integer data types
+- Safer Average calculations
+- Blazing Fast sort of byte array
+- De-Randomization of Radix Sort writes to bins
+- Recursive and non-recursive Parallel Sum
+- Bottom-up Non-Recursive In-Place Merge Sort
+
 
 Windows support:
 - VisualStudio 2022 Microsoft compiler and Intel's OneAPI compiler. Solution is included.
