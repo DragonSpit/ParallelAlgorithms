@@ -6,11 +6,12 @@ High Performance Parallel (and Sequential) C++ Algorithms, which accompany "[Pra
 
 *Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
 --- | --- | --- | --- | ---
-LSD Radix Sort        |2338|2297|2255| 48-core AWS C7i.24xlarge
+LSD Radix Sort        |2865|2907|4769| 48-core AWS C7a.24xlarge (AMD)
+LSD Radix Sort        |2338|2297|2255| 48-core AWS C7i.24xlarge (Intel)
 LSD Radix Sort        | 952| 831| 846| 14-core Intel i7-12700H
-Merge Sort            | 695| 946|1954| 48-core AWS C7i.24xlarge
+Merge Sort            | 695| 946|1954| 48-core AWS C7i.24xlarge (Intel)
 Merge Sort            | 174| 275| 617| 14-core Intel i7-12700H
-Merge Sort (in-place) | 272| 502| 549| 48-core AWS C7i.24xlarge
+Merge Sort (in-place) | 272| 502| 549| 48-core AWS C7i.24xlarge (Intel)
 Merge Sort (in-place) |  90| 234| 339| 14-core Intel i7-12700H
 
 The above performance is in millions of unsigned 32-bit integers/second when sorting an array of 100 million elements.
@@ -30,10 +31,9 @@ LSD Radix Sort single-core with two additional performance tools:
 - de-randomization of writes to bins
 
 ## Other Algorithms
-
 Sorting algorithms provided in this repository:
 - Single-core LSD Radix Sort: Two Phase
-- Multi-core Parallel LSD Radix Sort: over 2 GigaElements/second
+- Multi-core Parallel LSD Radix Sort
 - Multi-core Parallel Merge Sort
 - Single-core In-Place Merge Sort
 - Multi-core Parallel In-Place Merge Sort
@@ -48,8 +48,6 @@ Linux support:
 - g++ using Intel's Threading Building Blocks (TBB)
 - C++20
 
-[Benchmarks of C++ Standard Parallel Algorithms (STL)](https://duvanenko.tech.blog/2023/05/21/c-parallel-stl-benchmark/) are provided, with benchmark code in [ParallelSTL](https://github.com/DragonSpit/ParallelSTL) repository, which builds and runs on Linix and Windows.
-
 ## Building on Ubuntu Linux
 To install g++ which supports C++17:
 ```
@@ -62,6 +60,8 @@ sudo apt install build-essential
 To update gcc to support c++17 standard, Parallel STL and Intel's Threading Building Blocks (TBB):
 ```
 sudo apt install libtbb-dev
+git clone https://github.com/DragonSpit/ParallelAlgorithms.git
+cd ParallelAlgorithms
 ```
 
 To build on WSL Ubuntu, use g++ command and not gcc. The order of the following arguments matters!
@@ -81,6 +81,9 @@ Intel's OneAPI C++ compiler is supported by the ParallelAlgorithms.sln VisualStu
 Once Intel's OneAPI, which is free, has been installed, select Project/IntelCompiler/UseIntelOneAPICompiler. Some of the algorithms are faster when build with Intel's OneAPI compiler.
 
 ## Other Resources
+[Benchmarks of C++ Standard Parallel Algorithms (STL)](https://duvanenko.tech.blog/2023/05/21/c-parallel-stl-benchmark/) are provided, with benchmark code in [ParallelSTL](https://github.com/DragonSpit/ParallelSTL) repository, which builds and runs on Linix and Windows.
+
+Blogs:
 - [Parallel Merge](https://duvanenko.tech.blog/2018/01/14/parallel-merge/) for merging two arrays of any data type supporting comparison.
 - [Parallel Merge Sort](https://duvanenko.tech.blog/2018/01/13/parallel-merge-sort/) for sorting arrays of any data type supporting comparison.
 - [Novel LSD Radix Sort (two-phase)](https://duvanenko.tech.blog/2019/02/27/lsd-radix-sort-performance-improvements/).
