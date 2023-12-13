@@ -77,12 +77,8 @@ To run it:
 ./ParallelAlgorithms
 ```
 ## Building on Windows Using Intel's OneAPI Compiler
-In IntelOneAPI directory, open ParallelAlgorithms.sln VisualStudio 2019 Solution, and build it. This solution is setup to use the Intel Compiler.
-Intel Compiler produces higher performance Parallel Merge Sort and LSD Radix Sort, as shown in the following table:
-
-*Algorithm*|*Random*|*Presorted*|*Constant*|*Description*
---- | --- | --- | --- | ---
-LSD Radix Sort multi-core |248|240|288| 6-core Intel i7-9750H
+Intel's OneAPI C++ compiler is supported by the ParallelAlgorithms.sln VisualStudio 2022 Solution. By default, the solution/project uses Microsoft C++ compiler, which avoid requiring installation of Intel's OneAPI.
+Once Intel's OneAPI, which is free, has been installed, select Project/IntelCompiler/UseIntelOneAPICompiler. Some of the algorithms are faster when build with Intel's OneAPI compiler.
 
 ## Other Resources
 - [Parallel Merge](https://duvanenko.tech.blog/2018/01/14/parallel-merge/) for merging two arrays of any data type supporting comparison.
