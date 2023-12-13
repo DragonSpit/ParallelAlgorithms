@@ -186,7 +186,6 @@ inline size_t** HistogramByteComponentsAcrossWorkQuantasQC(unsigned inArray[], s
 	//cout << "HistogramQC: l = " << l << "  r = " << r << "  workQuanta = " << workQuanta << "  quanta = " << quanta << "  whichByte = " << whichByte << endl;
 
 	size_t** count = new size_t* [numberOfQuantas];
-
 	for (size_t i = 0; i < numberOfQuantas; i++)
 	{
 		count[i] = new size_t[NumberOfBins];
@@ -254,6 +253,7 @@ inline size_t** HistogramByteComponentsQCParInner(unsigned inArray[], size_t l, 
 
 	if (l > r)      // zero elements to compare
 	{
+		size_t** countLeft = new size_t * [numberOfQuantas];
 		for (size_t i = 0; i < numberOfQuantas; i++)
 		{
 			countLeft[i] = new size_t[NumberOfBins];
