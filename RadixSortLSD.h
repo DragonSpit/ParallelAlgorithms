@@ -236,7 +236,7 @@ template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, lo
 void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned* input_array, unsigned* output_array, size_t last, unsigned bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
 {
 	const unsigned long NumberOfBins = PowerOfTwoRadix;
-	unsigned* _input_array = input_array;
+	unsigned* _input_array  = input_array;
 	unsigned* _output_array = output_array;
 	bool _output_array_has_result = false;
 	unsigned currentDigit = 0;
@@ -271,10 +271,10 @@ void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned* i
 	}
 	// Done with processing, copy all of the bins
 	if (_output_array_has_result && inputArrayIsDestination)
-		for (long _current = 0; _current <= last; _current++)	// copy from output array into the input array
+		for (size_t _current = 0; _current <= last; _current++)	// copy from output array into the input array
 			_input_array[_current] = _output_array[_current];
 	if (!_output_array_has_result && !inputArrayIsDestination)
-		for (long _current = 0; _current <= last; _current++)	// copy from input array back into the output array
+		for (size_t _current = 0; _current <= last; _current++)	// copy from input array back into the output array
 			_output_array[_current] = _input_array[_current];
 #if 1
 	delete[] bufferIndex;

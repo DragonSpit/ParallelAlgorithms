@@ -82,7 +82,7 @@ int SumBenchmarkChar(vector<unsigned>& uints)
 		const auto endTimeRef = high_resolution_clock::now();
 		print_results("std::accumulate", sum_ref, u8Copy.size(), startTimeRef, endTimeRef);
 
-		long long sum = 0;
+		unsigned long long sum = 0;
 		//for (size_t k = 0; k < 100; k++)
 		//{
 			const auto startTime = high_resolution_clock::now();
@@ -181,7 +181,7 @@ int SumBenchmark64(vector<unsigned>& uints)
 		auto endTime   = high_resolution_clock::now();
 		unsigned long long sum = 0;
 		thruput_sum = 0.0;
-		for (int j = 0; j < num_times; ++j)
+		for (size_t j = 0; j < num_times; ++j)
 		{
 			startTime = high_resolution_clock::now();
 			sum = 0;

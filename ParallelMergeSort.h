@@ -244,7 +244,7 @@ namespace ParallelAlgorithms
         const auto processor_count = std::thread::hardware_concurrency();
         //printf("Number of cores = %u \n", processor_count);
 
-        if ((int)(parallelThreshold * processor_count) < (r - l + 1))
+        if ((parallelThreshold * processor_count) < (r - l + 1))
             parallelThreshold = (r - l + 1) / processor_count;
 
         parallel_merge_sort_hybrid_rh_2(src, l, r, dst, false, srcToDst, parallelThreshold);
