@@ -1,6 +1,6 @@
 # ParallelAlgorithms
 
-High Performance Parallel (and Sequential) C++ Algorithms.
+High Performance Parallel (and Sequential) C++ Algorithms, which accompany "[Practical Parallel Algorithms in C++ and C#](https://www.amazon.com/Practical-Parallel-Algorithms-Sorting-Multicore-ebook/dp/B0C3TZPRKZ/ref=sr_1_1?crid=3P7Q0RUP8OBXB&keywords=duvanenko&qid=1702488919&sprefix=duvanenko%2Caps%2C95&sr=8-1)" book.
 
 ### Multi-Core Parallel Sorting Algorithms:
 
@@ -59,9 +59,8 @@ sudo apt upgrade
 sudo apt install build-essential
 ```
 
-To update gcc to support c++17 standard:
+To update gcc to support c++17 standard, Parallel STL and Intel's Threading Building Blocks (TBB):
 ```
-sudo apt update
 sudo apt install libtbb-dev
 ```
 
