@@ -375,7 +375,7 @@ inline size_t** ComputeStartOfBinsPar(unsigned* inArray, size_t size, size_t wor
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix>
 inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 	unsigned* inputArray, unsigned* outputArray, size_t q, size_t** startOfBin, size_t startIndex, size_t endIndex,
-	unsigned bitMask, unsigned shiftRightAmount, size_t** bufferIndex, unsigned** bufferDerandomize, size_t* bufferIndexEnd, unsigned long BufferDepth)
+	unsigned bitMask, unsigned shiftRightAmount, size_t** bufferIndex, unsigned** bufferDerandomize, size_t* bufferIndexEnd, size_t BufferDepth)
 {
 	size_t* startOfBinLoc = startOfBin[q];
 #if 1
@@ -423,14 +423,14 @@ template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline void SortRadixInnerPar(unsigned* inputArray, unsigned* workArray, size_t inputSize, size_t ParallelWorkQuantum = 64 * 1024)
 {
 	//unsigned int numberOfCores = std::thread::hardware_concurrency();
-	const int NumberOfBins = PowerOfTwoRadix;
+	const size_t NumberOfBins = PowerOfTwoRadix;
 	bool outputArrayHasResult = false;
 	size_t quanta = (inputSize % ParallelWorkQuantum) == 0 ? inputSize / ParallelWorkQuantum
 		                                                   : inputSize / ParallelWorkQuantum + 1;
 	// Setup de-randomization buffers for writes during the permutation phase
-	const unsigned long BufferDepth = 64;
+	const size_t BufferDepth = 64;
 	unsigned** bufferDerandomize = static_cast<unsigned**>(operator new[](sizeof(unsigned *) * quanta, (std::align_val_t)(64)));
-	for (unsigned q = 0; q < quanta; q++)
+	for (size_t q = 0; q < quanta; q++)
 		bufferDerandomize[q] = static_cast<unsigned*>(operator new[](sizeof(unsigned) * NumberOfBins * BufferDepth, (std::align_val_t)(64)));
 
 	size_t** bufferIndex = static_cast<size_t**>(operator new[](sizeof(size_t*)* quanta, (std::align_val_t)(64)));
@@ -438,13 +438,13 @@ inline void SortRadixInnerPar(unsigned* inputArray, unsigned* workArray, size_t 
 	{
 		bufferIndex[q] = static_cast<size_t*>(operator new[](sizeof(size_t) * NumberOfBins, (std::align_val_t)(64)));
 		bufferIndex[q][0] = 0;
-		for (int b = 1; b < NumberOfBins; b++)
+		for (size_t b = 1; b < NumberOfBins; b++)
 			bufferIndex[q][b] = bufferIndex[q][b - 1] + BufferDepth;
 	}
 	//unsigned long* bufferIndexEnd = new(std::align_val_t{ 64 }) unsigned long[NumberOfBins];
 	size_t* bufferIndexEnd = static_cast<size_t*>(operator new[](sizeof(size_t) * NumberOfBins, (std::align_val_t)(64)));
 	bufferIndexEnd[0] = BufferDepth;									// non-inclusive
-	for (int b = 1; b < NumberOfBins; b++)
+	for (size_t b = 1; b < NumberOfBins; b++)
 		bufferIndexEnd[b] = bufferIndexEnd[b - 1] + BufferDepth;
 	// End of de-randomization buffers setup
 
