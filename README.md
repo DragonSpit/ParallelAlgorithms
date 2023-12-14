@@ -90,14 +90,18 @@ To run it:
 ```
 ./ParallelAlgorithms
 ```
-## Building on Windows Using Intel's OneAPI Compiler
-Intel's OneAPI C++ compiler is supported by the ParallelAlgorithms.sln VisualStudio 2022 Solution. By default, the solution/project uses Microsoft C++ compiler, which avoid requiring installation of Intel's OneAPI.
-Once Intel's OneAPI, which is free, has been installed, select Project/IntelCompiler/UseIntelOneAPICompiler. Some of the algorithms are faster when build with Intel's OneAPI compiler.
+## Building on Windows
+On Windows, [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/), free and paid versions are supported. To build the project use Visual Studio 2022 to open ParallelAlgorithms.sln file, then
+select Build/RebuildSolution. Once the project builds, select "Local Windows Debugger" to run it. Or, open the CommandPrompt application, go to the "x64\Release" directory, and run ParallelAlgorithms.exe.
+
+By default, the solution/project uses Microsoft C++ compiler, which avoid requiring installation of Intel's OneAPI. Intel's OneAPI C++ compiler is supported by the ParallelAlgorithms.sln VisualStudio 2022 Solution. 
+Once [Intel's OneAPI](https://www.intel.com/content/www/us/en/developer/tools/oneapi/base-toolkit-download.html), which is free, has been installed, select Project/IntelCompiler/UseIntelOneAPICompiler, followed by Build/RebuildSolution. Some of the algorithms are faster when build with Intel's OneAPI compiler.
 
 ## Other Resources
 [Benchmarks of C++ Standard Parallel Algorithms (STL)](https://duvanenko.tech.blog/2023/05/21/c-parallel-stl-benchmark/) are provided, with benchmark code in [ParallelSTL](https://github.com/DragonSpit/ParallelSTL) repository, which builds and runs on Linix and Windows.
 
 Blogs:
+- [Sorting 19X Faster than C++ Parallel Sort](https://duvanenko.tech.blog/2023/10/29/sorting-19x-faster-than-c-parallel-sort/)
 - [Parallel Merge](https://duvanenko.tech.blog/2018/01/14/parallel-merge/) for merging two arrays of any data type supporting comparison.
 - [Parallel Merge Sort](https://duvanenko.tech.blog/2018/01/13/parallel-merge-sort/) for sorting arrays of any data type supporting comparison.
 - [Novel LSD Radix Sort (two-phase)](https://duvanenko.tech.blog/2019/02/27/lsd-radix-sort-performance-improvements/).
