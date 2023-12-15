@@ -114,14 +114,14 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints, const size_t& testSize)
 		//ParallelAlgorithms::sort_par(ulongsCopyVec);													//     in-place adaptive interface (vector)
 		//sort(ulongsCopyVec.begin(), ulongsCopyVec.end());												//     in-place adaptive interface (vector)
 		//ParallelAlgorithms::merge_sort(uintsCopy, 0, uints.size() - 1, sorted, false);
-		ParallelAlgorithms::merge_sort_hybrid(uintsCopy, 0, uints.size() - 1, sorted, false);
+		//ParallelAlgorithms::merge_sort_hybrid(uintsCopy, 0, uints.size() - 1, sorted, false);
 	    //ParallelAlgorithms::parallel_merge_sort_hybrid(uintsCopy, 0, uints.size() - 1, sorted, false);
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh(uintsCopy, 0, uints.size() - 1, sorted, false);
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(uintsCopy, 0, uints.size() - 1, sorted, false);
 		//ParallelAlgorithms::parallel_merge_merge_sort_hybrid(uintsCopy, 0, uints.size() - 1, sorted, false, uints.size() / 8);
 		//ParallelAlgorithms::parallel_merge_merge_sort_hybrid(uintsCopy, 0, uints.size() - 1, sorted, false);
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_radix(uintsCopy, 0, (int)(uints.size() - 1), sorted, false, uints.size() / 8);	// ParallelMergeSort modifies the source array (using 8-cores get highest performance on 48-core CPU C5i)
-		//ParallelAlgorithms::parallel_merge_sort_hybrid_radix(uintsCopy, 0, uints.size() - 1, sorted, false);
+		ParallelAlgorithms::parallel_merge_sort_hybrid_radix(uintsCopy, 0, uints.size() - 1, sorted, false);
 		//ParallelAlgorithms::parallel_inplace_merge_sort_radix_hybrid(uintsCopy, 0, uints.size() - 1, uints.size() / 4);	// using 4 cores best performance on 6-core AWS node
 		//ParallelAlgorithms::parallel_inplace_merge_sort_radix_hybrid(uintsCopy, 0, uints.size() - 1, uints.size() / 18);	// using 18 cores best performance on C5.24xlarge 48-core AWS node
 		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(uintsCopy, sorted, uints.size());

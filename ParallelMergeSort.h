@@ -284,11 +284,11 @@ namespace ParallelAlgorithms
     inline void parallel_merge_sort_hybrid_radix(unsigned* src, size_t l, size_t r, unsigned* dst, bool srcToDst = true, size_t parallelThreshold = 24 * 1024)
     {
         // may return 0 when not able to detect
-        //const auto processor_count = std::thread::hardware_concurrency();
+        const auto processor_count = std::thread::hardware_concurrency();
         //printf("Number of cores = %u   parallelThreshold = %d\n", processor_count, parallelThreshold);
 
-        //if ((parallelThreshold * processor_count) < (r - l + 1))
-        //    parallelThreshold = (r - l + 1) / processor_count;
+        if ((parallelThreshold * processor_count) < (r - l + 1))
+            parallelThreshold = (r - l + 1) / processor_count;
 
         parallel_merge_sort_hybrid_radix_inner(src, l, r, dst, srcToDst, parallelThreshold);
     }
