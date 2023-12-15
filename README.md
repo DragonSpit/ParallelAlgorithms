@@ -62,7 +62,7 @@ Linux support:
 - g++ using Intel's Threading Building Blocks (TBB)
 - C++20
 
-## Building on Ubuntu Linux
+## Building on Ubuntu Linux (22.04 LTS)
 To install g++ which supports C++17:
 ```
 sudo apt update
