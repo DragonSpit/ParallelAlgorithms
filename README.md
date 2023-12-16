@@ -10,7 +10,7 @@ LSD Radix Sort        |2865|2907|4769| 48-core AWS C7a.24xlarge (AMD)
 LSD Radix Sort        |2338|2297|2255| 48-core AWS C7i.24xlarge (Intel)
 LSD Radix Sort        | 952| 831| 846| 14-core Intel i7-12700H
 Merge Radix Sort      | 877| 945| 971| 48-core AWS C7a.24xlarge (AMD)
-Merge Sort            |1176|1143|1143| 144-core Azure (AMD)
+Merge Sort            |1176|1143|1143| 144-core Azure HBV4 (AMD)
 Merge Sort            | 695| 946|1954| 48-core AWS C7i.24xlarge (Intel)
 Merge Sort            | 174| 275| 617| 14-core Intel i7-12700H
 Merge Sort (in-place) | 272| 502| 549| 48-core AWS C7i.24xlarge (Intel)
