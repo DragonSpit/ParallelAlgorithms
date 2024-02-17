@@ -22,9 +22,19 @@
 #include <execution>
 #include <thread>
 
+using std::chrono::duration;
+using std::chrono::duration_cast;
+using std::chrono::high_resolution_clock;
+using std::milli;
+
 #include "RadixSortLSD.h"
 
 using namespace tbb;
+
+static void print_results(const char* const tag, high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime)
+{
+	printf("%s: Time: %fms\n", tag, duration_cast<duration<double, milli>>(endTime - startTime).count());
+}
 
 
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
@@ -378,7 +388,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 	unsigned bitMask, unsigned shiftRightAmount, size_t** bufferIndex, unsigned** bufferDerandomize, size_t* bufferIndexEnd, size_t BufferDepth)
 {
 	size_t* startOfBinLoc = startOfBin[q];
-#if 1
+#if 0
 	const size_t NumberOfBins = PowerOfTwoRadix;
 
 	size_t* bufferIndexLoc = bufferIndex[q];
@@ -386,7 +396,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 
 	for (size_t currIndex = startIndex; currIndex < endIndex; currIndex++)
 	{
-		unsigned currDigit = extractDigit(inputArray[currIndex], bitMask, shiftRightAmount);
+		unsigned currDigit = extractDigit_1(inputArray[currIndex], bitMask, shiftRightAmount);
 		if (bufferIndexLoc[currDigit] < bufferIndexEnd[currDigit])
 		{
 			bufferDerandomizeLoc[bufferIndexLoc[currDigit]++] = inputArray[currIndex];
@@ -412,9 +422,8 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 		bufferIndexLoc[whichBuff] = whichBuff * BufferDepth;
 	}
 #else
-	// TODO: Figure out why this without-de-randomization version is not working correctly
-	for (size_t _current = startIndex; _current <= endIndex; _current++)
-		workArray[startOfBinLoc[extractDigit(inputArray[_current], bitMask, shiftRightAmount)]++] = inputArray[_current];
+	for (size_t _current = startIndex; _current < endIndex; _current++)
+		outputArray[startOfBinLoc[extractDigit_1(inputArray[_current], bitMask, shiftRightAmount)]++] = inputArray[_current];
 #endif
 }
 
@@ -453,13 +462,16 @@ inline void SortRadixInnerPar(unsigned* inputArray, unsigned* workArray, size_t 
 
 	// Use TPL ideas from https://docs.microsoft.com/en-us/dotnet/standard/parallel-programming/task-based-asynchronous-programming
 
-	unsigned bitMask = 255;
+	unsigned bitMask = PowerOfTwoRadix - 1;
 	int shiftRightAmount = 0;
 	unsigned digit = 0;
 
 	while (bitMask != 0)    // end processing digits when all the mask bits have been processed and shifted out, leaving no bits set in the bitMask
 	{
+		//const auto startTime_0 = high_resolution_clock::now();
 		size_t** startOfBin = ComputeStartOfBinsPar<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inputArray, inputSize, ParallelWorkQuantum, quanta, digit);
+		//const auto endTime_0 = high_resolution_clock::now();
+		//print_results("Parallel Radix Sort LSD/ComputeStartOfBinsPar: ", startTime_0, endTime_0);
 
 		size_t numberOfFullQuantas = inputSize / ParallelWorkQuantum;
 		size_t q;
@@ -488,13 +500,14 @@ inline void SortRadixInnerPar(unsigned* inputArray, unsigned* workArray, size_t 
 #else
 		tbb::task_group g;
 #endif
+		//const auto startTime_1 = high_resolution_clock::now();
 		for (q = 0; q < numberOfFullQuantas; q++)
 		{
 			size_t startIndex = q * ParallelWorkQuantum;
 			size_t   endIndex = startIndex + ParallelWorkQuantum;	// non-inclusive
 			g.run([=] {																// important to not pass by reference, as all tasks will then get the same/last value
-				_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<256, 8>(
-					inputArray, workArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd, BufferDepth);
+					_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(
+					inputArray, workArray, q, startOfBin, startIndex, endIndex, PowerOfTwoRadix - 1, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd, BufferDepth);
 				});
 		}
 		if (quanta > numberOfFullQuantas)      // last partially filled workQuantum
@@ -502,11 +515,13 @@ inline void SortRadixInnerPar(unsigned* inputArray, unsigned* workArray, size_t 
 			size_t startIndex = q * ParallelWorkQuantum;
 			size_t   endIndex = inputSize;									// non-inclusive
 			g.run([=] {
-				_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<256, 8>(
-					inputArray, workArray, q, startOfBin, startIndex, endIndex, bitMask, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd, BufferDepth);
+				_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(
+					inputArray, workArray, q, startOfBin, startIndex, endIndex, PowerOfTwoRadix - 1, shiftRightAmount, bufferIndex, bufferDerandomize, bufferIndexEnd, BufferDepth);
 				});
 		}
 		g.wait();
+		//const auto endTime_1 = high_resolution_clock::now();
+		//print_results("Parallel Radix Sort LSD/PermuteDerandomizeNew: ", startTime_1, endTime_1);
 #endif
 		bitMask <<= Log2ofPowerOfTwoRadix;
 		digit++;
