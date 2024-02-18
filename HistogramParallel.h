@@ -77,8 +77,8 @@ namespace ParallelAlgorithms
 			for (; current < last_by_eight; current += 8, inArrayCurr++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 			{
 				unsigned long long eight_bytes = *inArrayCurr;
-				countLeft[eight_bytes & 0xff]++;
-				countLeft[(eight_bytes >> 8) & 0xff]++;
+				countLeft[ eight_bytes        & 0xff]++;
+				countLeft[(eight_bytes >>  8) & 0xff]++;
 				countLeft[(eight_bytes >> 16) & 0xff]++;
 				countLeft[(eight_bytes >> 24) & 0xff]++;
 				countLeft[(eight_bytes >> 32) & 0xff]++;
@@ -184,7 +184,7 @@ namespace ParallelAlgorithms
 	inline size_t* HistogramOneByteComponentParallel_3(unsigned char inArray[], size_t l, size_t r, size_t parallelThreshold = 64 * 1024)
 	{
 		size_t* countLeft_0 = NULL;
-		size_t* countRight = NULL;
+		size_t* countRight  = NULL;
 
 		if (l >= r)      // zero elements to compare
 		{
@@ -235,7 +235,7 @@ namespace ParallelAlgorithms
 		tbb::parallel_invoke(
 #endif
 			[&] { countLeft_0 = HistogramOneByteComponentParallel_3 <NumberOfBins>(inArray, l, m, parallelThreshold); },
-			[&] { countRight = HistogramOneByteComponentParallel_3 <NumberOfBins>(inArray, m, r, parallelThreshold); }
+			[&] { countRight  = HistogramOneByteComponentParallel_3 <NumberOfBins>(inArray, m, r, parallelThreshold); }
 		);
 		// Combine left and right results
 		for (size_t j = 0; j < NumberOfBins; j++)
@@ -250,7 +250,7 @@ namespace ParallelAlgorithms
 	inline unsigned long** HistogramByteComponentsParallel(unsigned inArray[], int l, int r, int parallelThreshold = 64 * 1024)
 	{
 		const unsigned long numberOfDigits = Log2ofPowerOfTwoRadix;
-		const unsigned long NumberOfBins = PowerOfTwoRadix;
+		const unsigned long NumberOfBins   = PowerOfTwoRadix;
 
 		unsigned long** countLeft;
 		unsigned long** countRight;
@@ -286,8 +286,8 @@ namespace ParallelAlgorithms
 			for (int current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 			{
 				unsigned value = inArray[current];
-				count0[value & 0xff]++;
-				count1[(value >> 8) & 0xff]++;
+				count0[value         & 0xff]++;
+				count1[(value >>  8) & 0xff]++;
 				count2[(value >> 16) & 0xff]++;
 				count3[(value >> 24) & 0xff]++;
 			}
@@ -424,12 +424,12 @@ namespace ParallelAlgorithms
 #else
 		tbb::parallel_invoke(
 #endif
-			[&] { countLeft = HistogramByteComponentsQCParInner <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l, m, workQuanta, numberOfQuantas, whichByte, parallelThreshold); },
+			[&] { countLeft  = HistogramByteComponentsQCParInner <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l,     m, workQuanta, numberOfQuantas, whichByte, parallelThreshold); },
 			[&] { countRight = HistogramByteComponentsQCParInner <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, workQuanta, numberOfQuantas, whichByte, parallelThreshold); }
 		);
 		// Combine left and right results (reduce step), only for workQuantas for which the counts were computed
 		size_t startQuanta = l / workQuanta;
-		size_t endQuanta = r / workQuanta;
+		size_t endQuanta   = r / workQuanta;
 		for (size_t i = startQuanta; i <= endQuanta; i++)
 			for (unsigned long j = 0; j < NumberOfBins; j++)
 				countLeft[i][j] += countRight[i][j];
@@ -465,7 +465,7 @@ namespace ParallelAlgorithms
 
 	// This version did not seem to speed up over the single count array version. It proves that Histogram is not the bottleneck.
 	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
-	inline size_t* HistogramOneByteComponentParallel_2(unsigned long inArray[], size_t l, size_t r, unsigned long shiftRight, size_t parallelThreshold = 64 * 1024)
+	inline size_t* HistogramOneByteComponentParallel_2(unsigned inArray[], size_t l, size_t r, unsigned long shiftRight, size_t parallelThreshold = 64 * 1024)
 	{
 		const unsigned long NumberOfBins = PowerOfTwoRadix;
 
@@ -520,8 +520,8 @@ namespace ParallelAlgorithms
 #else
 		tbb::parallel_invoke(
 #endif
-			[&] { countLeft_0 = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l, m, shiftRight, parallelThreshold); },
-			[&] { countRight = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, shiftRight, parallelThreshold); }
+			[&] { countLeft_0 = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, l,     m, shiftRight, parallelThreshold); },
+			[&] { countRight  = HistogramOneByteComponentParallel_2 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, shiftRight, parallelThreshold); }
 		);
 		// Combine left and right results
 		for (size_t j = 0; j < NumberOfBins; j++)
@@ -536,8 +536,9 @@ namespace ParallelAlgorithms
 	inline size_t* HistogramOneByteComponentParallel(unsigned inArray[], size_t l, size_t r, unsigned long shiftRight, size_t parallelThreshold = 64 * 1024)
 	{
 		const size_t NumberOfBins = PowerOfTwoRadix;
+		const unsigned mask = NumberOfBins - 1;
 
-		size_t* countLeft = NULL;
+		size_t* countLeft  = NULL;
 		size_t* countRight = NULL;
 
 		if (l > r)      // zero elements to compare
@@ -550,7 +551,7 @@ namespace ParallelAlgorithms
 			countLeft = new size_t[NumberOfBins]{};
 
 			for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
-				countLeft[(inArray[current] >> shiftRight) & 0xff]++;
+				countLeft[(inArray[current] >> shiftRight) & mask]++;
 
 			return countLeft;
 		}

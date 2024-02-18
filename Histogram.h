@@ -1,0 +1,64 @@
+// TODO: Switch histogram calculation from mask/shift to union
+// TODO: Switch all implementations to shift followed by mask after shifting, which allows the mask to be a constant.
+
+#pragma once
+
+template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
+inline unsigned long** HistogramByteComponents(unsigned long inArray[], int l, int r)
+{
+	const unsigned numberOfDigits = Log2ofPowerOfTwoRadix;
+	const unsigned NumberOfBins = PowerOfTwoRadix;
+
+	unsigned long** count = new unsigned long* [numberOfDigits];
+
+	for (unsigned i = 0; i < numberOfDigits; i++)
+	{
+		count[i] = new unsigned long[NumberOfBins];
+		for (unsigned j = 0; j < NumberOfBins; j++)
+			count[i][j] = 0;
+	}
+
+	// Faster version, since it doesn't use a 2-D array, reducing one level of indirection
+	unsigned long* count0 = count[0];
+	unsigned long* count1 = count[1];
+	unsigned long* count2 = count[2];
+	unsigned long* count3 = count[3];
+
+	for (int current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+	{
+		unsigned long value = inArray[current];
+		count0[value & 0xff]++;
+		count1[(value >> 8) & 0xff]++;
+		count2[(value >> 16) & 0xff]++;
+		count3[(value >> 24) & 0xff]++;
+	}
+	return count;
+}
+
+template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
+inline size_t* HistogramByteComponents_1(unsigned inArray[], size_t l, size_t r)
+{
+	const unsigned numberOfDigits = Log2ofPowerOfTwoRadix;
+	const unsigned NumberOfBins   = PowerOfTwoRadix;
+
+	size_t* count = new size_t[numberOfDigits * NumberOfBins];
+
+	for (unsigned i = 0; i < numberOfDigits * NumberOfBins; i++)
+		count[i] = 0;
+
+	size_t* count0 = count + (0 * NumberOfBins);
+	size_t* count1 = count + (1 * NumberOfBins);
+	size_t* count2 = count + (2 * NumberOfBins);
+	size_t* count3 = count + (3 * NumberOfBins);
+
+	for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+	{
+		unsigned value = inArray[current];
+		count0[ value        & 0xff]++;
+		count1[(value >>  8) & 0xff]++;
+		count2[(value >> 16) & 0xff]++;
+		count3[(value >> 24) & 0xff]++;
+	}
+	return count;
+}
+

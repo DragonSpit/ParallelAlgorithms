@@ -391,19 +391,18 @@ namespace ParallelAlgorithms
 	{
 		unsigned* my_input_array;			// a local copy to the array being counted to provide a pointer to each parallel task
 	public:
-		static const unsigned long numberOfDigits = 4;
-		static const unsigned long NumberOfBins = 256;
+		static const size_t numberOfDigits = 4;
+		static const size_t NumberOfBins = 256;
 		alignas(64) _CountType my_count[numberOfDigits][NumberOfBins];		// the count for this task
 
 		HistogramByteComponentsParallelType(unsigned* a) : my_input_array(a)	// constructor, which copies the pointer to the array being counted
 		{
-			for (unsigned long i = 0; i < numberOfDigits; i++)	// initialized all counts to zero, since the array may not contain all values
-				for (unsigned long j = 0; j < NumberOfBins; j++)
+			for (size_t i = 0; i < numberOfDigits; i++)	// initialized all counts to zero, since the array may not contain all values
+				for (size_t j = 0; j < NumberOfBins; j++)
 					my_count[i][j] = 0;
 		}
 		// Method that performs the core work of counting
-		// TODO: Should the type of blocked_range be unsigned long or unsigned?
-		void operator()(const blocked_range< unsigned long >& r)
+		void operator()(const blocked_range< size_t >& r)
 		{
 			unsigned* a = my_input_array;		// these local variables are used to help the compiler optimize the code better
 			size_t         end = r.end();
@@ -415,8 +414,8 @@ namespace ParallelAlgorithms
 			for (size_t i = r.begin(); i != end; ++i)
 			{
 				unsigned value = a[i];
-				count0[value & 0xff]++;
-				count1[(value >> 8) & 0xff]++;
+				count0[value         & 0xff]++;
+				count1[(value >>  8) & 0xff]++;
 				count2[(value >> 16) & 0xff]++;
 				count3[(value >> 24) & 0xff]++;
 			}
@@ -425,16 +424,16 @@ namespace ParallelAlgorithms
 		// Takes a reference to the original object, and a dummy argument to distinguish this method from a copy constructor
 		HistogramByteComponentsParallelType(HistogramByteComponentsParallelType& x, split) : my_input_array(x.my_input_array)
 		{
-			for (unsigned long i = 0; i < numberOfDigits; i++)	// initialized all counts to zero, since the array may not contain all values
-				for (unsigned long j = 0; j < NumberOfBins; j++)
+			for (size_t i = 0; i < numberOfDigits; i++)	// initialized all counts to zero, since the array may not contain all values
+				for (size_t j = 0; j < NumberOfBins; j++)
 					my_count[i][j] = 0;
 		}
 		// Join method required by parallel_reduce
 		// Combines a result from another task into this result
 		void join(const HistogramByteComponentsParallelType& y)
 		{
-			for (unsigned long i = 0; i < numberOfDigits; i++)
-				for (unsigned long j = 0; j < NumberOfBins; j++)
+			for (size_t i = 0; i < numberOfDigits; i++)
+				for (size_t j = 0; j < NumberOfBins; j++)
 					my_count[i][j] += y.my_count[i][j];
 		}
 	};
@@ -442,7 +441,7 @@ namespace ParallelAlgorithms
 	// Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
 	// Parallel LSD Radix Sort, with Counting separated into its own parallel phase, followed by a serial permutation phase, as is done in HPCsharp in C#
 	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
-	void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase_DeRandomize(unsigned* input_array, unsigned* output_array, long last, unsigned bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
+	void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase_DeRandomize(unsigned* input_array, unsigned* output_array, size_t last, unsigned bitMask, unsigned shiftRightAmount, bool inputArrayIsDestination)
 	{
 		const unsigned long NumberOfBins = PowerOfTwoRadix;
 		unsigned* _input_array = input_array;
@@ -451,22 +450,21 @@ namespace ParallelAlgorithms
 		unsigned currentDigit = 0;
 		static const unsigned long bufferDepth = 128;
 		alignas(64) unsigned bufferDerandomize[NumberOfBins][bufferDepth];
-		alignas(64) unsigned long bufferIndex[NumberOfBins] = { 0 };
+		alignas(64) size_t   bufferIndex[      NumberOfBins] = { 0 };
 
 		//unsigned long** count2D = HistogramByteComponents <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inputArray, 0, endIndex);
 
-		// TODO: Figure out the type that should be used here and in the next statement: unsigned long or unsigned
-		HistogramByteComponentsParallelType<unsigned long> histogramParallel(input_array);	// contains the count array, which is initialized to all zeros
+		HistogramByteComponentsParallelType<size_t> histogramParallel(input_array);	// contains the count array, which is initialized to all zeros
 
-		parallel_reduce(blocked_range< unsigned long >(0, last + 1), histogramParallel);
+		parallel_reduce(blocked_range< size_t >(0, last + 1), histogramParallel);
 
 		while (bitMask != 0)						// end processing digits when all the mask bits have been processes and shift out, leaving none
 		{
-			unsigned long* count = histogramParallel.my_count[currentDigit];
+			size_t* count = histogramParallel.my_count[currentDigit];
 
-			long startOfBin[NumberOfBins], endOfBin[NumberOfBins];
+			size_t startOfBin[NumberOfBins], endOfBin[NumberOfBins];
 			startOfBin[0] = endOfBin[0] = 0;
-			for (unsigned long i = 1; i < NumberOfBins; i++)
+			for (size_t i = 1; i < NumberOfBins; i++)
 				startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
 			_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold, bufferDepth >(
@@ -488,13 +486,13 @@ namespace ParallelAlgorithms
 	}
 
 	// LSD Radix Sort - stable (LSD has to be, and this may preclude LSD Radix from being able to be in-place)
-	inline void RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(unsigned* a, unsigned* b, unsigned long a_size)
+	inline void RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(unsigned* a, unsigned* b, size_t a_size)
 	{
-		const unsigned long Threshold = 100;	// Threshold of when to switch to using Insertion Sort
-		const unsigned long PowerOfTwoRadix = 256;
-		const unsigned long Log2ofPowerOfTwoRadix = 8;
+		const size_t Threshold = 100;	// Threshold of when to switch to using Insertion Sort
+		const size_t PowerOfTwoRadix = 256;
+		const size_t Log2ofPowerOfTwoRadix = 8;
 		// Create bit-mask and shift right amount
-		unsigned long shiftRightAmount = 0;
+		unsigned shiftRightAmount = 0;
 		unsigned bitMask = (unsigned)(((unsigned)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
 
 		// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
