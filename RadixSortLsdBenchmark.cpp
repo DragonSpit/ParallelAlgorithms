@@ -107,7 +107,7 @@ int ParallelRadixSortLsdBenchmark(vector<unsigned>& uints)
 		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(uintsCopy, tmp_working, uints.size());
 		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(uintsCopy, tmp_working, (unsigned long)uints.size());
 		//SortRadixPar(uintsCopy, tmp_working, uints.size(), uints.size() / 24);		// slower than using all cores
-		SortRadixPar(uintsCopy.data(), tmp_working.data(), uints.size());		// fastest on 96-core Intel and AMD AWS c7 nodes
+		ParallelAlgorithms::SortRadixPar(uintsCopy.data(), tmp_working.data(), uints.size());		// fastest on 96-core Intel and AMD AWS c7 nodes
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Radix Sort LSD", uintsCopy.data(), uints.size(), startTime, endTime);
 		if (!std::equal(sorted_reference.begin(), sorted_reference.end(), uintsCopy.data()))
