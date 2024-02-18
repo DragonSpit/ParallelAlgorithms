@@ -16,7 +16,7 @@ namespace ParallelAlgorithms
 	template< unsigned NumberOfBins >
 	inline size_t* HistogramOneByteComponentParallel(unsigned char inArray[], size_t l, size_t r, size_t parallelThreshold = 64 * 1024)
 	{
-		size_t* countLeft = NULL;
+		size_t* countLeft  = NULL;
 		size_t* countRight = NULL;
 
 		if (l >= r)      // zero elements to compare
@@ -252,8 +252,8 @@ namespace ParallelAlgorithms
 		const unsigned numberOfDigits = Log2ofPowerOfTwoRadix;
 		const unsigned NumberOfBins   = PowerOfTwoRadix;
 
-		size_t** countLeft;
-		size_t** countRight;
+		size_t** countLeft  = NULL;
+		size_t** countRight = NULL;
 
 		if (l > r)      // zero elements to compare
 		{
@@ -349,7 +349,7 @@ namespace ParallelAlgorithms
 			return count;
 
 		size_t startQuanta = l / workQuanta;
-		size_t endQuanta = r / workQuanta;
+		size_t endQuanta   = r / workQuanta;
 		if (startQuanta == endQuanta)       // counting within a single workQuanta, either partial or full
 		{
 			size_t q = startQuanta;
@@ -400,7 +400,7 @@ namespace ParallelAlgorithms
 	inline size_t** HistogramByteComponentsQCParInner(unsigned inArray[], size_t l, size_t r, size_t workQuanta, size_t numberOfQuantas, int whichByte, size_t parallelThreshold = 16 * 1024)
 	{
 		const unsigned long NumberOfBins = PowerOfTwoRadix;
-		size_t** countLeft = NULL;
+		size_t** countLeft  = NULL;
 		size_t** countRight = NULL;
 
 		if (l > r)      // zero elements to compare
@@ -473,7 +473,7 @@ namespace ParallelAlgorithms
 		size_t* countLeft_1 = NULL;
 		size_t* countLeft_2 = NULL;
 		size_t* countLeft_3 = NULL;
-		size_t* countRight = NULL;
+		size_t* countRight  = NULL;
 
 		if (l > r)      // zero elements to compare
 		{
