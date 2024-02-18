@@ -17,29 +17,29 @@ extern unsigned long long physical_memory_total_in_megabytes();
 
 // Serial LSD Radix Sort, with Counting separated into its own phase, followed by a permutation phase, as is done in HPCsharp in C#
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
-inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned long* input_array, unsigned long* output_array, long last, unsigned long bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
+inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned long long* input_array, unsigned long long* output_array, size_t last, unsigned long long bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
 {
-	const unsigned long NumberOfBins = PowerOfTwoRadix;
-	unsigned long* _input_array = input_array;
-	unsigned long* _output_array = output_array;
+	const unsigned NumberOfBins = PowerOfTwoRadix;
+	unsigned long long* _input_array = input_array;
+	unsigned long long* _output_array = output_array;
 	bool _output_array_has_result = false;
-	unsigned long currentDigit = 0;
+	unsigned currentDigit = 0;
 
-	unsigned long** count2D = HistogramByteComponents <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
+	size_t** count2D = HistogramByteComponents <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
 
 	while (bitMask != 0)						// end processing digits when all the mask bits have been processes and shift out, leaving none
 	{
-		unsigned long* count = count2D[currentDigit];
+		size_t* count = count2D[currentDigit];
 
-		long startOfBin[NumberOfBins];
+		size_t startOfBin[NumberOfBins];
 		//long endOfBin[NumberOfBins];
-		alignas(64) long endOfBin[NumberOfBins];
+		alignas(64) size_t endOfBin[NumberOfBins];
 		//printf("endOfBin address = %p\n", endOfBin);
 		startOfBin[0] = endOfBin[0] = 0;
-		for (unsigned long i = 1; i < NumberOfBins; i++)
+		for (unsigned i = 1; i < NumberOfBins; i++)
 			startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
-		for (long _current = 0; _current <= last; _current++)	// permutation phase
+		for (size_t _current = 0; _current <= last; _current++)	// permutation phase
 			_output_array[endOfBin[extractDigit(_input_array[_current], bitMask, shiftRightAmount)]++] = _input_array[_current];
 
 		bitMask <<= Log2ofPowerOfTwoRadix;
@@ -56,7 +56,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned l
 		for (long _current = 0; _current <= last; _current++)	// copy from input array back into the output array
 			_output_array[_current] = _input_array[_current];
 
-	const unsigned long numberOfDigits = Log2ofPowerOfTwoRadix;	// deallocate 2D count array, which was allocated in Histogram
+	const unsigned numberOfDigits = Log2ofPowerOfTwoRadix;	// deallocate 2D count array, which was allocated in Histogram
 	for (unsigned i = 0; i < numberOfDigits; i++)
 		delete[] count2D[i];
 	delete[] count2D;

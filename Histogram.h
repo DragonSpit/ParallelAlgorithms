@@ -4,31 +4,31 @@
 #pragma once
 
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
-inline unsigned long** HistogramByteComponents(unsigned long inArray[], int l, int r)
+inline size_t** HistogramByteComponents(unsigned long long inArray[], int l, int r)
 {
 	const unsigned numberOfDigits = Log2ofPowerOfTwoRadix;
 	const unsigned NumberOfBins = PowerOfTwoRadix;
 
-	unsigned long** count = new unsigned long* [numberOfDigits];
+	size_t** count = new size_t* [numberOfDigits];
 
 	for (unsigned i = 0; i < numberOfDigits; i++)
 	{
-		count[i] = new unsigned long[NumberOfBins];
+		count[i] = new size_t[NumberOfBins];
 		for (unsigned j = 0; j < NumberOfBins; j++)
 			count[i][j] = 0;
 	}
 
 	// Faster version, since it doesn't use a 2-D array, reducing one level of indirection
-	unsigned long* count0 = count[0];
-	unsigned long* count1 = count[1];
-	unsigned long* count2 = count[2];
-	unsigned long* count3 = count[3];
+	size_t* count0 = count[0];
+	size_t* count1 = count[1];
+	size_t* count2 = count[2];
+	size_t* count3 = count[3];
 
 	for (int current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 	{
 		unsigned long value = inArray[current];
-		count0[value & 0xff]++;
-		count1[(value >> 8) & 0xff]++;
+		count0[value         & 0xff]++;
+		count1[(value >>  8) & 0xff]++;
 		count2[(value >> 16) & 0xff]++;
 		count3[(value >> 24) & 0xff]++;
 	}
