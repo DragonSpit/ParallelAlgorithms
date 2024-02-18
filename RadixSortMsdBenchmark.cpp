@@ -58,7 +58,7 @@ int RadixSortMsdBenchmark(vector<unsigned>& uints)
 		//RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(uintsCopy, sorted, (unsigned long)uints.size());
 		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(uintsCopy, sorted, (unsigned long)uints.size());
 		//hybrid_inplace_msd_radix_sort(uintsCopy, (unsigned long)uints.size());
-		parallel_hybrid_inplace_msd_radix_sort(uintsCopy, (unsigned long)uints.size());
+		ParallelAlgorithms::parallel_hybrid_inplace_msd_radix_sort(uintsCopy, (unsigned long)uints.size());
 		//RadixSortMSDStablePowerOf2Radix_unsigned(uintsCopy, tmp_working, (unsigned long)uints.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Radix Sort MSD", uintsCopy, uints.size(), startTime, endTime);
