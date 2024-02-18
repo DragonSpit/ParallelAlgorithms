@@ -41,27 +41,27 @@ namespace ParallelAlgorithms
 
 	// Serial LSD Radix Sort, with Counting separated into its own phase, followed by a permutation phase, as is done in HPCsharp in C#
 	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
-	inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase(unsigned* input_array, unsigned* output_array, long last, unsigned bitMask, unsigned shiftRightAmount, bool inputArrayIsDestination)
+	inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase(unsigned* input_array, unsigned* output_array, size_t last, unsigned bitMask, unsigned shiftRightAmount, bool inputArrayIsDestination)
 	{
-		const unsigned long NumberOfBins = PowerOfTwoRadix;
-		const unsigned long numberOfDigits = Log2ofPowerOfTwoRadix;
+		const unsigned NumberOfBins = PowerOfTwoRadix;
+		const unsigned numberOfDigits = Log2ofPowerOfTwoRadix;
 		unsigned* _input_array = input_array;
 		unsigned* _output_array = output_array;
 		bool _output_array_has_result = false;
-		unsigned long currentDigit = 0;
+		unsigned currentDigit = 0;
 
-		unsigned long** count2D = HistogramByteComponentsParallel <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
+		size_t** count2D = HistogramByteComponentsParallel <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
 
 		while (bitMask != 0)						// end processing digits when all the mask bits have been processes and shift out, leaving none
 		{
-			unsigned long* count = count2D[currentDigit];
+			size_t* count = count2D[currentDigit];
 
-			long startOfBin[NumberOfBins], endOfBin[NumberOfBins];
+			size_t startOfBin[NumberOfBins], endOfBin[NumberOfBins];
 			startOfBin[0] = endOfBin[0] = 0;
-			for (unsigned long i = 1; i < NumberOfBins; i++)
+			for (unsigned i = 1; i < NumberOfBins; i++)
 				startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
-			for (long _current = 0; _current <= last; _current++)	// permutation phase
+			for (size_t _current = 0; _current <= last; _current++)	// permutation phase
 				_output_array[endOfBin[extractDigit(_input_array[_current], bitMask, shiftRightAmount)]++] = _input_array[_current];
 
 			bitMask <<= Log2ofPowerOfTwoRadix;
@@ -70,7 +70,7 @@ namespace ParallelAlgorithms
 			std::swap(_input_array, _output_array);
 			currentDigit++;
 		}
-		for (unsigned long i = 0; i < numberOfDigits; i++)
+		for (unsigned i = 0; i < numberOfDigits; i++)
 			delete[] count2D[i];
 		delete[] count2D;
 		// Done with processing, copy all of the bins

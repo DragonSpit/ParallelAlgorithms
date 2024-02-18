@@ -13,7 +13,7 @@
 namespace ParallelAlgorithms
 {
 	// left (l) boundary is inclusive and right (r) boundary is exclusive
-	template< unsigned long NumberOfBins >
+	template< unsigned NumberOfBins >
 	inline size_t* HistogramOneByteComponentParallel(unsigned char inArray[], size_t l, size_t r, size_t parallelThreshold = 64 * 1024)
 	{
 		size_t* countLeft = NULL;
@@ -54,10 +54,10 @@ namespace ParallelAlgorithms
 	}
 
 	// left (l) boundary is inclusive and right (r) boundary is exclusive
-	template< unsigned long NumberOfBins >
+	template< unsigned NumberOfBins >
 	inline size_t* HistogramOneByteComponentParallel_4(unsigned char inArray[], size_t l, size_t r, size_t parallelThreshold = 64 * 1024)
 	{
-		size_t* countLeft = NULL;
+		size_t* countLeft  = NULL;
 		size_t* countRight = NULL;
 
 		if (l >= r)      // zero elements to compare
@@ -113,14 +113,14 @@ namespace ParallelAlgorithms
 
 
 	// left (l) boundary is inclusive and right (r) boundary is exclusive
-	template< unsigned long NumberOfBins >
+	template< unsigned NumberOfBins >
 	inline size_t* HistogramOneByteComponentParallel_2(unsigned char inArray[], size_t l, size_t r, size_t parallelThreshold = 64 * 1024)
 	{
 		size_t* countLeft_0 = NULL;
 		size_t* countLeft_1 = NULL;
 		size_t* countLeft_2 = NULL;
 		size_t* countLeft_3 = NULL;
-		size_t* countRight = NULL;
+		size_t* countRight  = NULL;
 
 		if (l >= r)      // zero elements to compare
 		{
@@ -180,7 +180,7 @@ namespace ParallelAlgorithms
 	}
 
 	// left (l) boundary is inclusive and right (r) boundary is exclusive
-	template< unsigned long NumberOfBins >
+	template< unsigned NumberOfBins >
 	inline size_t* HistogramOneByteComponentParallel_3(unsigned char inArray[], size_t l, size_t r, size_t parallelThreshold = 64 * 1024)
 	{
 		size_t* countLeft_0 = NULL;
@@ -246,44 +246,44 @@ namespace ParallelAlgorithms
 		return countLeft_0;
 	}
 
-	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
-	inline unsigned long** HistogramByteComponentsParallel(unsigned inArray[], int l, int r, int parallelThreshold = 64 * 1024)
+	template< unsigned PowerOfTwoRadix, unsigned Log2ofPowerOfTwoRadix >
+	inline size_t** HistogramByteComponentsParallel(unsigned inArray[], size_t l, size_t r, int parallelThreshold = 64 * 1024)
 	{
-		const unsigned long numberOfDigits = Log2ofPowerOfTwoRadix;
-		const unsigned long NumberOfBins   = PowerOfTwoRadix;
+		const unsigned numberOfDigits = Log2ofPowerOfTwoRadix;
+		const unsigned NumberOfBins   = PowerOfTwoRadix;
 
-		unsigned long** countLeft;
-		unsigned long** countRight;
+		size_t** countLeft;
+		size_t** countRight;
 
 		if (l > r)      // zero elements to compare
 		{
-			countLeft = new unsigned long* [numberOfDigits];
+			countLeft = new size_t* [numberOfDigits];
 
-			for (unsigned long i = 0; i < numberOfDigits; i++)
+			for (unsigned i = 0; i < numberOfDigits; i++)
 			{
-				countLeft[i] = new unsigned long[NumberOfBins];
-				for (unsigned long j = 0; j < NumberOfBins; j++)
+				countLeft[i] = new size_t[NumberOfBins];
+				for (unsigned j = 0; j < NumberOfBins; j++)
 					countLeft[i][j] = 0;
 			}
 			return countLeft;
 		}
 		if ((r - l + 1) <= parallelThreshold)
 		{
-			countLeft = new unsigned long* [numberOfDigits];
+			countLeft = new size_t* [numberOfDigits];
 
-			for (unsigned long i = 0; i < numberOfDigits; i++)
+			for (unsigned i = 0; i < numberOfDigits; i++)
 			{
-				countLeft[i] = new unsigned long[NumberOfBins];
-				for (unsigned long j = 0; j < NumberOfBins; j++)
+				countLeft[i] = new size_t[NumberOfBins];
+				for (unsigned j = 0; j < NumberOfBins; j++)
 					countLeft[i][j] = 0;
 			}
 			// Faster version, since it doesn't use a 2-D array, reducing one level of indirection
-			unsigned long* count0 = countLeft[0];
-			unsigned long* count1 = countLeft[1];
-			unsigned long* count2 = countLeft[2];
-			unsigned long* count3 = countLeft[3];
+			size_t* count0 = countLeft[0];
+			size_t* count1 = countLeft[1];
+			size_t* count2 = countLeft[2];
+			size_t* count3 = countLeft[3];
 #if 1
-			for (int current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+			for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 			{
 				unsigned value = inArray[current];
 				count0[value         & 0xff]++;
@@ -306,7 +306,7 @@ namespace ParallelAlgorithms
 			return countLeft;
 		}
 
-		int m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;   // average without overflow
+		size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;   // average without overflow
 
 #if defined(USE_PPL)
 		Concurrency::parallel_invoke(
@@ -317,11 +317,11 @@ namespace ParallelAlgorithms
 			[&] { countRight = HistogramByteComponentsParallel <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, m + 1, r, parallelThreshold); }
 		);
 		// Combine left and right results
-		for (unsigned long i = 0; i < numberOfDigits; i++)
-			for (unsigned long j = 0; j < NumberOfBins; j++)
+		for (unsigned i = 0; i < numberOfDigits; i++)
+			for (unsigned j = 0; j < NumberOfBins; j++)
 				countLeft[i][j] += countRight[i][j];
 
-		for (unsigned long i = 0; i < numberOfDigits; i++)
+		for (unsigned i = 0; i < numberOfDigits; i++)
 			delete[] countRight[i];
 		delete[] countRight;
 
