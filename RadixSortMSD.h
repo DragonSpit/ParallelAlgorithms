@@ -82,69 +82,65 @@ inline void hybrid_inplace_msd_radix_sort(unsigned* a, size_t a_size)
 		//insertionSortHybrid(a, a_size);
 }
 
-template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold, class _Type >
-inline void _RadixSort_StableUnsigned_PowerOf2Radix_2(_Type* a, _Type* b, long last, _Type bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
+template< unsigned PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, size_t Threshold, class _Type >
+inline void _RadixSort_StableUnsigned_PowerOf2Radix_2(_Type* a, _Type* b, size_t last, _Type bitMask, unsigned shiftRightAmount, bool inputArrayIsDestination)
 {
-	const unsigned long NumberOfBins = PowerOfTwoRadix;
-	unsigned long count[NumberOfBins];
+	const unsigned NumberOfBins = PowerOfTwoRadix;
+	size_t count[NumberOfBins] = {};
 
-	for (unsigned long i = 0; i < NumberOfBins; i++)
-		count[i] = 0;
-	for (long _current = 0; _current <= last; _current++)	// Scan the array and count the number of times each value appears
+	for (size_t _current = 0; _current <= last; _current++)				// Scan the array and count the number of times each value appears
 		count[extractDigit(a[_current], bitMask, shiftRightAmount)]++;
 
-	long startOfBin[NumberOfBins], endOfBin[NumberOfBins];
+	size_t startOfBin[NumberOfBins], endOfBin[NumberOfBins];
 	startOfBin[0] = endOfBin[0] = 0;
-	for (unsigned long i = 1; i < NumberOfBins; i++)
+	for (unsigned i = 1; i < NumberOfBins; i++)
 		startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
-	for (long _current = 0; _current <= last; _current++)		// permutation of array elements
+	for (size_t _current = 0; _current <= last; _current++)				// permute array elements
 		b[endOfBin[extractDigit(a[_current], bitMask, shiftRightAmount)]++] = a[_current];
 
 	bitMask >>= Log2ofPowerOfTwoRadix;
 	if (bitMask != 0)						// end recursion when all the bits have been processes
 	{
 		if (shiftRightAmount >= Log2ofPowerOfTwoRadix)	shiftRightAmount -= Log2ofPowerOfTwoRadix;
-		else												shiftRightAmount = 0;
+		else											shiftRightAmount = 0;
 		inputArrayIsDestination = !inputArrayIsDestination;
-		for (unsigned long i = 0; i < NumberOfBins; i++)
+		for (unsigned i = 0; i < NumberOfBins; i++)
 		{
-			long numOfElements = endOfBin[i] - startOfBin[i];
+			size_t numOfElements = endOfBin[i] - startOfBin[i];
 			if (numOfElements >= Threshold)
 				_RadixSort_StableUnsigned_PowerOf2Radix_2< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(&b[startOfBin[i]], &a[startOfBin[i]], numOfElements - 1, bitMask, shiftRightAmount, inputArrayIsDestination);
 			else {
 				insertionSortSimilarToSTLnoSelfAssignment(&b[startOfBin[i]], numOfElements);
 				if (inputArrayIsDestination)
-					for (long j = startOfBin[i]; j < endOfBin[i]; j++)	// copy from external array back into the input array
+					for (size_t j = startOfBin[i]; j < endOfBin[i]; j++)	// copy from external array back into the input array
 						a[j] = b[j];
 			}
 		}
 	}
 	else {	// Done with recursion copy all of the bins
 		if (!inputArrayIsDestination)
-			for (long _current = 0; _current <= last; _current++)	// copy from external array back into the input array
+			for (size_t _current = 0; _current <= last; _current++)	// copy from external array back into the input array
 				a[_current] = b[_current];
 	}
 }
 
 template< class _Type >
-inline void RadixSortMSDStablePowerOf2Radix_unsigned(_Type* a, _Type* b, unsigned long a_size)
+inline void RadixSortMSDStablePowerOf2Radix_unsigned(_Type* a, _Type* b, size_t a_size)
 {
-	const unsigned long Threshold = 100;	// Threshold of when to switch to using Insertion Sort
+	const size_t Threshold = 100;			// Threshold of when to switch to using Insertion Sort
 	const unsigned long PowerOfTwoRadix = 256;
 	const unsigned long Log2ofPowerOfTwoRadix = 8;
 	// Create bit-mask and shift right amount
-	unsigned long shiftRightAmount = sizeof(_Type) * 8 - Log2ofPowerOfTwoRadix;
+	unsigned shiftRightAmount = sizeof(_Type) * 8 - Log2ofPowerOfTwoRadix;
 	_Type bitMask = (_Type)(((_Type)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
 
 	// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
 	// they are not pushed on the stack and are treated as constants, but local.
-	if (a_size >= Threshold)	_RadixSort_StableUnsigned_PowerOf2Radix_2< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, b, a_size - 1, bitMask, shiftRightAmount, false);
-	else {
+	if (a_size >= Threshold)
+		_RadixSort_StableUnsigned_PowerOf2Radix_2< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, b, a_size - 1, bitMask, shiftRightAmount, false);
+	else
 		insertionSortSimilarToSTLnoSelfAssignment(a, a_size);
-		for (unsigned long j = 0; j < a_size; j++)	// copy from input array to the destination array
-			b[j] = a[j];
-	}
 }
 
 #endif
