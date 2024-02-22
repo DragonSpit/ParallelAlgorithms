@@ -82,7 +82,7 @@ inline void hybrid_inplace_msd_radix_sort(unsigned* a, size_t a_size)
 		//insertionSortHybrid(a, a_size);
 }
 
-template< unsigned PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, size_t Threshold, class _Type >
+template< unsigned PowerOfTwoRadix, unsigned Log2ofPowerOfTwoRadix, size_t Threshold, class _Type >
 inline void _RadixSort_StableUnsigned_PowerOf2Radix_2(_Type* a, _Type* b, size_t last, _Type bitMask, unsigned shiftRightAmount, bool inputArrayIsDestination)
 {
 	const unsigned NumberOfBins = PowerOfTwoRadix;
@@ -129,8 +129,8 @@ template< class _Type >
 inline void RadixSortMSDStablePowerOf2Radix_unsigned(_Type* a, _Type* b, size_t a_size)
 {
 	const size_t Threshold = 100;			// Threshold of when to switch to using Insertion Sort
-	const unsigned long PowerOfTwoRadix = 256;
-	const unsigned long Log2ofPowerOfTwoRadix = 8;
+	const unsigned PowerOfTwoRadix = 256;
+	const unsigned Log2ofPowerOfTwoRadix = 8;
 	// Create bit-mask and shift right amount
 	unsigned shiftRightAmount = sizeof(_Type) * 8 - Log2ofPowerOfTwoRadix;
 	_Type bitMask = (_Type)(((_Type)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time

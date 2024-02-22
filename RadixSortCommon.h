@@ -55,9 +55,9 @@ inline unsigned extractDigit( _Type a, _Type bitMask, unsigned shiftRightAmount 
 	return digit;
 }
 template< class _Type >
-inline unsigned long extractDigit_1(_Type a, _Type bitMask, unsigned long shiftRightAmount)
+inline unsigned extractDigit_1(_Type a, _Type bitMask, unsigned shiftRightAmount)
 {
-	unsigned long digit = (unsigned long)((a >> shiftRightAmount) & bitMask);	// extract the digit we are sorting based on
+	unsigned digit = (unsigned)((a >> shiftRightAmount) & bitMask);	// extract the digit we are sorting based on
 	return digit;
 }template< unsigned long PowerOfTwoRadix, class _Type >
 inline unsigned long extractDigitNegate( _Type a, _Type bitMask, unsigned long shiftRightAmount )

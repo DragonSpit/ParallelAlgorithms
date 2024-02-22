@@ -34,10 +34,10 @@ using namespace tbb;
 
 namespace ParallelAlgorithms
 {
-	static void print_results(const char* const tag, high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime)
-	{
-		printf("%s: Time: %fms\n", tag, duration_cast<duration<double, milli>>(endTime - startTime).count());
-	}
+	//static void print_results(const char* const tag, high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime)
+	//{
+	//	printf("%s: Time: %fms\n", tag, duration_cast<duration<double, milli>>(endTime - startTime).count());
+	//}
 
 	// Serial LSD Radix Sort, with Counting separated into its own phase, followed by a permutation phase, as is done in HPCsharp in C#
 	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
