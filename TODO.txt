@@ -1,3 +1,5 @@
+TODO: Consider switching interfaces of most functions to use std::vector instead of old-style C arrays/pointers. Returning vectors should be fine and less for users to think about for deallocation.
+TODO: Create functions for integer division with ceiling (round up) and division with round.
 TODO: Explore parallelism at small work load, such as small arrays. For example, sum of an array I was exploring in the book didn't improve in performance when I tried to reduce the overhead of small tasks in the body
       of the recursive tree. The mistake I made is using a large tree. Instead, this reduction should pay off big time for small trees, possibly with small parallel_threshold (cutoff) points. It may enable smaller parallel cutoff,
       which would be a win for parallelism for smaller arrays.
