@@ -92,7 +92,7 @@ namespace ParallelAlgorithms
 				else if (numberOfElements >= 2)
 					insertionSortSimilarToSTLnoSelfAssignment(&a[startOfBin[i]], numberOfElements);
 			}
-			g.wait();	// TODO: Change this to not wait, as it is not necessary to wait for all tasks to complete
+			g.wait();
 #endif
 		}
 	}
@@ -283,7 +283,7 @@ namespace ParallelAlgorithms
 				else if (numberOfElements >= 2)
 					insertionSortSimilarToSTLnoSelfAssignment(&a[startOfBin[i]], numberOfElements);
 			}
-			g.wait();	// TODO: Change this to not wait, as it is not necessary to wait for all tasks to complete
+			g.wait();
 #endif
 		}
 	}
