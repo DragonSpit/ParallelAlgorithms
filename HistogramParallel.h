@@ -329,8 +329,8 @@ namespace ParallelAlgorithms
 	}
 
 	// Returns count[quanta][NumberOfBins]
-	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
-	inline size_t** HistogramByteComponentsAcrossWorkQuantasQC(unsigned inArray[], size_t l, size_t r, size_t workQuanta, size_t numberOfQuantas, int whichByte)
+	template< unsigned PowerOfTwoRadix, unsigned Log2ofPowerOfTwoRadix >
+	inline size_t** HistogramByteComponentsAcrossWorkQuantasQC(unsigned inArray[], size_t l, size_t r, size_t workQuanta, size_t numberOfQuantas, unsigned whichByte)
 	{
 		const unsigned NumberOfBins = PowerOfTwoRadix;
 		const unsigned mask = 0xff;
@@ -396,10 +396,10 @@ namespace ParallelAlgorithms
 		return count;
 	}
 
-	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
-	inline size_t** HistogramByteComponentsQCParInner(unsigned inArray[], size_t l, size_t r, size_t workQuanta, size_t numberOfQuantas, int whichByte, size_t parallelThreshold = 16 * 1024)
+	template< unsigned PowerOfTwoRadix, unsigned Log2ofPowerOfTwoRadix >
+	inline size_t** HistogramByteComponentsQCParInner(unsigned inArray[], size_t l, size_t r, size_t workQuanta, size_t numberOfQuantas, unsigned whichByte, size_t parallelThreshold = 16 * 1024)
 	{
-		const unsigned long NumberOfBins = PowerOfTwoRadix;
+		const unsigned NumberOfBins = PowerOfTwoRadix;
 		size_t** countLeft  = NULL;
 		size_t** countRight = NULL;
 
@@ -409,7 +409,7 @@ namespace ParallelAlgorithms
 			for (size_t i = 0; i < numberOfQuantas; i++)
 			{
 				countLeft[i] = new size_t[NumberOfBins];
-				for (unsigned long j = 0; j < NumberOfBins; j++)
+				for (unsigned j = 0; j < NumberOfBins; j++)
 					countLeft[i][j] = 0;
 			}
 			return countLeft;
@@ -441,8 +441,8 @@ namespace ParallelAlgorithms
 		return countLeft;
 	}
 
-	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
-	inline size_t** HistogramByteComponentsQCPar(unsigned* inArray, size_t l, size_t r, size_t workQuanta, size_t numberOfQuantas, unsigned long whichByte, size_t parallelThreshold = 16 * 1024)
+	template< unsigned PowerOfTwoRadix, unsigned Log2ofPowerOfTwoRadix >
+	inline size_t** HistogramByteComponentsQCPar(unsigned* inArray, size_t l, size_t r, size_t workQuanta, size_t numberOfQuantas, unsigned whichByte, size_t parallelThreshold = 16 * 1024)
 	{
 		//may return 0 when not able to detect
 		auto processor_count = std::thread::hardware_concurrency();

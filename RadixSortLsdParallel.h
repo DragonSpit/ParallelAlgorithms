@@ -105,10 +105,10 @@ namespace ParallelAlgorithms
 		}
 	}
 
-	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
-	inline size_t** ComputeStartOfBinsPar(unsigned* inArray, size_t size, size_t workQuanta, size_t numberOfQuantas, unsigned long digit, size_t parallelThreshold = 16 * 1024)
+	template< unsigned PowerOfTwoRadix, unsigned Log2ofPowerOfTwoRadix >
+	inline size_t** ComputeStartOfBinsPar(unsigned* inArray, size_t size, size_t workQuanta, size_t numberOfQuantas, unsigned digit, size_t parallelThreshold = 16 * 1024)
 	{
-		unsigned int NumberOfBins = PowerOfTwoRadix;
+		unsigned NumberOfBins = PowerOfTwoRadix;
 
 		//unsigned long** count = HistogramByteComponentsAcrossWorkQuantasQC<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, 0, size - 1, workQuanta, quanta, digit);
 		size_t** count = ParallelAlgorithms::HistogramByteComponentsQCPar<PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(inArray, 0, size - 1, workQuanta, numberOfQuantas, digit, parallelThreshold);
@@ -126,7 +126,7 @@ namespace ParallelAlgorithms
 		size_t* sizeOfBin = new size_t[NumberOfBins];
 
 		// Determine the overall size of each bin, across all work quantas
-		for (unsigned int b = 0; b < NumberOfBins; b++)
+		for (unsigned b = 0; b < NumberOfBins; b++)
 		{
 			sizeOfBin[b] = 0;
 			for (size_t q = 0; q < numberOfQuantas; q++)
@@ -140,7 +140,7 @@ namespace ParallelAlgorithms
 
 		// Determine starting of bins for work quanta 0
 		startOfBin[0][0] = 0;
-		for (unsigned int b = 1; b < NumberOfBins; b++)
+		for (unsigned b = 1; b < NumberOfBins; b++)
 		{
 			startOfBin[0][b] = startOfBin[0][b - 1] + sizeOfBin[b - 1];
 			//cout << "ComputeStartOfBins: d = " << digit << "  startOfBin[0][" << b << "] = " << startOfBin[0][b] << endl;
@@ -148,7 +148,7 @@ namespace ParallelAlgorithms
 
 		// Determine starting of bins for work quanta 1 thru Q
 		for (size_t q = 1; q < numberOfQuantas; q++)
-			for (unsigned int b = 0; b < NumberOfBins; b++)
+			for (unsigned b = 0; b < NumberOfBins; b++)
 			{
 				startOfBin[q][b] = startOfBin[q - 1][b] + count[q - 1][b];
 				//if (currDigit == 1)
@@ -166,7 +166,7 @@ namespace ParallelAlgorithms
 
 	// Permute phase of LSD Radix Sort with de-randomized write memory accesses
 	// Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
-	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix>
+	template< unsigned PowerOfTwoRadix, unsigned Log2ofPowerOfTwoRadix>
 	inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomizedNew(
 		unsigned* inputArray, unsigned* outputArray, size_t q, size_t** startOfBin, size_t startIndex, size_t endIndex,
 		unsigned bitMask, unsigned shiftRightAmount, size_t** bufferIndex, unsigned** bufferDerandomize, size_t* bufferIndexEnd, size_t BufferDepth)
@@ -367,8 +367,8 @@ namespace ParallelAlgorithms
 	inline void SortRadixPar(unsigned* a, unsigned* tmp_work_buff, size_t a_size, size_t parallelThreshold = 512 * 1024)
 	{
 		const size_t Threshold = 100;	// Threshold of when to switch to using Insertion Sort
-		const unsigned long PowerOfTwoRadix = 256;
-		const unsigned long Log2ofPowerOfTwoRadix = 8;
+		const unsigned PowerOfTwoRadix = 256;
+		const unsigned Log2ofPowerOfTwoRadix = 8;
 
 		// may return 0 when not able to detect
 		auto processor_count = std::thread::hardware_concurrency();

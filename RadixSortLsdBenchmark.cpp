@@ -77,15 +77,7 @@ int RadixSortLsdBenchmark(vector<unsigned>& uints)
 
 int ParallelRadixSortLsdBenchmark(vector<unsigned>& uints)
 {
-	// generate some random uints:
-	//unsigned long* uintsCopy = new unsigned long[uints.size()];
-	//unsigned* uintsCopy = static_cast<unsigned*>(operator new[](sizeof(unsigned) * uints.size(), (std::align_val_t)(128)));
-	vector<unsigned> uintsCopy(uints.size());
-	//unsigned long* uintsCopy = new(std::align_val_t{ 128 }) unsigned long[uints.size()];
-	//unsigned long* uintsCopy  = (unsigned long*) operator new[](sizeof(unsigned long) * uints.size(), (std::align_val_t)(128));
-	//unsigned long* tmp_working = new(std::align_val_t{ 128 }) unsigned long[uints.size()];
-	//unsigned long* tmp_working = new unsigned long[uints.size()];
-	//unsigned* tmp_working = static_cast<unsigned*>(operator new[](sizeof(unsigned) * uints.size(), (std::align_val_t)(128)));
+	vector<unsigned> uintsCopy(  uints.size());
 	vector<unsigned> tmp_working(uints.size());
 
 	printf("\n");
@@ -110,22 +102,13 @@ int ParallelRadixSortLsdBenchmark(vector<unsigned>& uints)
 		ParallelAlgorithms::SortRadixPar(uintsCopy.data(), tmp_working.data(), uints.size());		// fastest on 96-core Intel and AMD AWS c7 nodes
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Radix Sort LSD", uintsCopy.data(), uints.size(), startTime, endTime);
+
 		if (!std::equal(sorted_reference.begin(), sorted_reference.end(), uintsCopy.data()))
 		{
 			printf("Arrays are not equal\n");
 			exit(1);
 		}
 	}
-
-	//delete[] tmp_working;
-	//::operator delete[](tmp_working, std::align_val_t{ 128 });
-	//::operator delete[](new(std::align_val_t{ 128 }) unsigned long[uints.size()], std::align_val_t{ 128 });
-	//delete[](operator new[](sizeof(unsigned long) * uints.size(), (std::align_val_t)(128)));
-	//delete[] uintsCopy;
-	//::operator delete[](uintsCopy, std::align_val_t{ 128 });
-	//::operator delete[](new(std::align_val_t{ 128 }) unsigned long[uints.size()], std::align_val_t{ 128 });
-	//::operator delete[](uintsCopy, std::align_val_t{ 128 });
-	//delete[](operator new[](sizeof(unsigned long) * uints.size(), (std::align_val_t)(128)));
 
 	return 0;
 }
