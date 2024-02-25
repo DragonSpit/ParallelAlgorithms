@@ -31,46 +31,35 @@ static void print_results(const char* const tag, const unsigned* sorted, size_t 
 
 int RadixSortLsdBenchmark(vector<unsigned>& uints)
 {
-	// generate some random uints:
-	unsigned* uintsCopy = new unsigned[uints.size()];
-	//unsigned long* uintsCopy = (unsigned long*) operator new[](sizeof(unsigned long) * uints.size(), (std::align_val_t)(128));
-	unsigned* sorted = new unsigned[uints.size()];
-	//unsigned long* tmp_working = (unsigned long*) operator new[](sizeof(unsigned long) * uints.size(), (std::align_val_t)(128));
+	vector<unsigned> uintsCopy(uints);
+	vector<unsigned> tmp_working(uints);
 
-	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			uintsCopy[j] = uints[j];
-			sorted[j] = j;									// page in the destination array into system memory
+			tmp_working[j] = j;									// page in the destination array into system memory
 		}
 		// Eliminate compiler ability to optimize paging-in of the input and output arrays
 		// Paging-in source and destination arrays leads to a 50% speed-up on Linux, and 15% on Windows
 
 		vector<unsigned> sorted_reference(uints);
-		sort(sorted_reference.begin(), sorted_reference.end());
+		sort(std::execution::par_unseq, sorted_reference.begin(), sorted_reference.end());
 
 		//printf("uintsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", uintsCopy, sorted, sorted[static_cast<unsigned>(rd()) % uints.size()], uintsCopy[static_cast<unsigned>(rd()) % uints.size()]);
 		const auto startTime = high_resolution_clock::now();
-		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(uintsCopy, sorted, (unsigned long)uints.size());
+		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(          uintsCopy.data(), tmp_working.data(), uints.size());
+		RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(uintsCopy.data(), tmp_working.data(), uints.size());
 		//sort_radix_in_place_adaptive(uintsCopy, (unsigned long)uints.size(), 0.1);
 		//sort_radix_in_place_stable_adaptive(uintsCopy, uints.size(), 0.9);
-
-		RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(uintsCopy, sorted, (unsigned long)uints.size());
-		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(uintsCopy, sorted, (unsigned long)uints.size());
 		const auto endTime = high_resolution_clock::now();
-		print_results("Radix Sort LSD", sorted, uints.size(), startTime, endTime);
-		if (!std::equal(sorted_reference.begin(), sorted_reference.end(), uintsCopy))
+		print_results("Radix Sort LSD", uintsCopy.data(), uints.size(), startTime, endTime);
+		if (!std::equal(sorted_reference.begin(), sorted_reference.end(), uintsCopy.begin()))
 		{
 			printf("Arrays are not equal\n");
 			exit(1);
 		}
 	}
-
-	delete[] sorted;
-	//delete[](operator new[](sizeof(intptr_t) * uints.size(), (std::align_val_t)(64)));
-	delete [] uintsCopy;
-	//delete[](operator new[](sizeof(intptr_t) * uints.size(), (std::align_val_t)(64)));
 
 	return 0;
 }
