@@ -72,11 +72,11 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_1(unsigned
 	bool _output_array_has_result = false;
 	unsigned currentDigit = 0;
 	unsigned maxDigit = sizeof(unsigned);
-	const unsigned bit_mask = NumberOfBins - 1;
+	unsigned bit_mask = NumberOfBins - 1;
 
 	size_t* count2D = HistogramByteComponents_1 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
 
-	while (currentDigit <= maxDigit)						// end processing digits when all the mask bits have been processes and shift out, leaving none
+	while (currentDigit < maxDigit)						// end processing digits when all the mask bits have been processes and shift out, leaving none
 	{
 		size_t* count = count2D + (currentDigit * NumberOfBins);
 
@@ -88,9 +88,9 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_1(unsigned
 
 		// permutation phase
 		for (size_t _current = 0; _current <= last; _current++)
-			_output_array[endOfBin[(_input_array[_current] >> shiftRightAmount) & bit_mask]++] = _input_array[_current];
+			_output_array[endOfBin[(_input_array[_current] & bit_mask ) >> shiftRightAmount]++] = _input_array[_current];
 
-		bitMask <<= Log2ofPowerOfTwoRadix;
+		bit_mask <<= Log2ofPowerOfTwoRadix;
 		shiftRightAmount += Log2ofPowerOfTwoRadix;
 		_output_array_has_result = !_output_array_has_result;
 		std::swap(_input_array, _output_array);
