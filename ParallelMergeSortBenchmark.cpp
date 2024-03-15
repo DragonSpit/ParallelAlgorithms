@@ -51,11 +51,11 @@ int ParallelMergeSortBenchmark(vector<double>& doubles)
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
-		for (unsigned int j = 0; j < doubles.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+		for (size_t j = 0; j < doubles.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			doublesCopy[   j] = doubles[j];
 			doublesCopy2[  j] = doubles[j];
 			doublesCopyVec[j] = doubles[j];
-			sorted[        j] = j;				// page in the destination array into system memory
+			sorted[        j] = (double)j;				// page in the destination array into system memory
 		}
 		const auto startTime = high_resolution_clock::now();
 		ParallelAlgorithms::sort_par(doublesCopy, doubles.size(), sorted, doubles.size(), false);			//     not-in-place interface
@@ -158,10 +158,10 @@ int ParallelInPlaceMergeSortBenchmark(vector<unsigned>& uints)
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
-		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+		for (size_t j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			uintsCopy2[j] = uints[j];
-			uintsCopy[j]  = uints[j];
-			sorted[j] = j;									// page in the destination array into system memory
+			uintsCopy[ j] = uints[j];
+			sorted[    j] = (unsigned)j;			// page in the destination array into system memory
 		}
 		const auto startTime = high_resolution_clock::now();
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(uintsCopy, 0, uints.size() - 1, sorted);	// ParallelMergeSort modifies the source array
@@ -213,10 +213,10 @@ int ParallelMergeSortBenchmark(vector<unsigned>& uints)
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
-		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+		for (size_t j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			uintsCopy[ j] = uints[j];
 			uintsCopy2[j] = uints[j];
-			sorted[    j] = j;									// page in the destination array into system memory
+			sorted[    j] = (unsigned)j;			// page in the destination array into system memory
 		}
 		const auto startTime = high_resolution_clock::now();
 		//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(uintsCopy, 0, (int)(uints.size() - 1), sorted);	// ParallelMergeSort modifies the source array

@@ -83,7 +83,7 @@ int ParallelStdCppExample(vector<double>& doubles)
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		double * s = new double[doubles.size()];
-		for (unsigned int j = 0; j < doubles.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+		for (size_t j = 0; j < doubles.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			s[j] = doubles[j];
 		}
 		const auto startTime = high_resolution_clock::now();
@@ -128,7 +128,7 @@ int ParallelStdCppExample(vector<unsigned>& uints, bool stable = false)
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		unsigned* s = new unsigned[uints.size()];
-		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+		for (size_t j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			s[j] = uints[j];
 		}
 		const auto startTime = high_resolution_clock::now();
@@ -170,7 +170,7 @@ int ParallelStdCppExample(vector<unsigned>& uints)
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		unsigned *s = new unsigned[uints.size()];
-		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+		for (size_t j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			s[j] = uints[j];
 		}
 		const auto startTime = high_resolution_clock::now();
@@ -185,7 +185,7 @@ int ParallelStdCppExample(vector<unsigned>& uints)
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		unsigned* s = new unsigned[uints.size()];
-		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+		for (size_t j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			s[j] = uints[j];
 		}
 		const auto startTime = high_resolution_clock::now();
@@ -197,7 +197,7 @@ int ParallelStdCppExample(vector<unsigned>& uints)
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		unsigned* s = new unsigned[uints.size()];
-		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+		for (size_t j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
 			s[j] = uints[j];
 		}
 		const auto startTime = high_resolution_clock::now();

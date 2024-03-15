@@ -36,9 +36,9 @@ int RadixSortLsdBenchmark(vector<unsigned>& uints)
 
 	for (int i = 0; i < iterationCount; ++i)
 	{
-		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
-			uintsCopy[j] = uints[j];
-			tmp_working[j] = j;									// page in the destination array into system memory
+		for (size_t j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+			uintsCopy[  j] = uints[j];
+			tmp_working[j] = (unsigned)j;									// page in the destination array into system memory
 		}
 		// Eliminate compiler ability to optimize paging-in of the input and output arrays
 		// Paging-in source and destination arrays leads to a 50% speed-up on Linux, and 15% on Windows
@@ -73,9 +73,9 @@ int ParallelRadixSortLsdBenchmark(vector<unsigned>& uints)
 	// time how long it takes to sort them:
 	for (int i = 0; i < iterationCount; ++i)
 	{
-		for (unsigned int j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
-			uintsCopy[j] = uints[j];
-			tmp_working[j] = j;								// page in the destination array into system memory
+		for (size_t j = 0; j < uints.size(); j++) {	// copy the original random array into the source array each time, since ParallelMergeSort modifies the source array while sorting
+			uintsCopy[  j] = uints[j];
+			tmp_working[j] = (unsigned)j;								// page in the destination array into system memory
 		}
 		// Eliminate compiler ability to optimize paging-in of the input and output arrays
 		// Paging-in source and destination arrays leads to a 50% speed-up on Linux, and 15% on Windows
