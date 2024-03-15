@@ -1,5 +1,5 @@
 // ParallelAlgorithms main application entry point
-#if 0
+#if 1
 
 #include <iostream>
 #include <algorithm>
@@ -29,9 +29,9 @@ static void print_results(const char* const tag, const vector<unsigned>& sorted,
 
 static int ParallelStdCppExample(vector<unsigned>& uints, bool stable = false)
 {
-	vector<unsigned> sorted(uints);
 	for (int i = 0; i < iterationCount; ++i)
 	{
+		vector<unsigned> sorted(uints);
 		const auto startTime = high_resolution_clock::now();
 		// same sort call as above, but with par_unseq:
 		if (!stable)
@@ -46,7 +46,9 @@ static int ParallelStdCppExample(vector<unsigned>& uints, bool stable = false)
 	return 0;
 }
 
-int main()
+
+//int main()
+int std_parallel_sort_leak_demo()
 {
 	// Test configuration options
 	bool UseStableStdSort = false;
