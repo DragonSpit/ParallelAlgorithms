@@ -196,6 +196,7 @@
     <ClCompile Include="RadixSortLsdBenchmark.cpp" />
     <ClCompile Include="ParallelQuickSort.cpp" />
     <ClCompile Include="RadixSortMsdBenchmark.cpp" />
+    <ClCompile Include="StdParallelSortMemoryLeakDemo.cpp" />
     <ClCompile Include="SumBenchmark.cpp" />
   </ItemGroup>
   <ItemGroup>
