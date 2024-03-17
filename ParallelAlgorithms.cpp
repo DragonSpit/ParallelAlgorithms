@@ -1,43 +1,37 @@
-// ParallelAlgorithms.cpp : Defines the entry point for the console application.
-// TODO: TBB includes Parallel STL algorithm implementations, including sort. To use them pstl::execution execution policy needs to be use instead of std::execution, to
-//       select TBB PSTL algorithm. It would be interesting to compare performance of standard and TBB parallel sort implementations, and update my blog to include these results.
+// ParallelAlgorithms main application entry point
 
 #include <iostream>
 #include <random>
 #include <ratio>
 #include <vector>
-#include <random>
-//#include "ParallelMergeSort.h"
 
 using std::random_device;
 using std::vector;
 
-extern int ParallelStdCppExample(vector<double>&             doubles);
-extern int ParallelStdCppExample(vector<unsigned>&      uints, bool stable = false);
-extern int ParallelStdCppExample(vector<unsigned>&      uints);
-extern int RadixSortLsdBenchmark(vector<unsigned>&      uints);
-extern int ParallelMergeSortBenchmark(       vector<double>&        doubles);
-extern int ParallelMergeSortBenchmark(       vector<unsigned>& ulongs, const size_t& testSize);
+extern int ParallelStdCppExample(            vector<double>&   doubles);
+extern int ParallelStdCppExample(            vector<unsigned>& uints, bool stable = false);
+extern int ParallelStdCppExample(            vector<unsigned>& uints);
+extern int RadixSortLsdBenchmark(            vector<unsigned>& uints);
+extern int ParallelMergeSortBenchmark(       vector<double>&   doubles);
+extern int ParallelMergeSortBenchmark(       vector<unsigned>& uints, const size_t& testSize);
 extern int ParallelInPlaceMergeSortBenchmark(vector<unsigned>& uints);
-extern int ParallelMergeSortBenchmark(       vector<unsigned>&      uints);
+extern int ParallelMergeSortBenchmark(       vector<unsigned>& uints);
 extern int main_quicksort();
 extern int ParallelMergeBenchmark();
-extern int ParallelRadixSortLsdBenchmark(vector<unsigned>& uints);
-extern int RadixSortMsdBenchmark(        vector<unsigned>& uints);
+extern int ParallelRadixSortLsdBenchmark(    vector<unsigned>& uints);
+extern int RadixSortMsdBenchmark(            vector<unsigned>& uints);
 extern void TestAverageOfTwoIntegers();
-extern int CountingSortBenchmark(vector<unsigned>& uints);
-extern int SumBenchmark(         vector<unsigned>& uints);
-extern int SumBenchmarkChar(     vector<unsigned>& uints);
+extern int CountingSortBenchmark(            vector<unsigned>& uints);
+extern int SumBenchmark(                     vector<unsigned>& uints);
+extern int SumBenchmarkChar(                 vector<unsigned>& uints);
+extern int SumBenchmark64(                   vector<unsigned>& uints);
 extern int TestMemoryAllocation();
-
+extern int std_parallel_sort_leak_demo();
 
 int main()
 {
-	//	TestMemoryAllocation();
-	//return 0;
-
 	// Test configuration options
-	bool UseStableStdSort = false;
+	bool UseStableStdSort = true;
 	
 	// Test cases for averaging of two integers
 	//TestAverageOfTwoIntegers();
@@ -63,7 +57,7 @@ int main()
 
 	// Demonstrate Parallel Merge Sort
 
-	const unsigned long NumElements = 8;
+	const size_t NumElements = 8;
 	//unsigned long unsorted_array[NumElements] = { 10, 3, 5, 2, 4, 11, 0, 3 };
 	unsigned long   sorted_array[NumElements];
 
@@ -71,7 +65,7 @@ int main()
 	//ParallelAlgorithms::parallel_merge_sort_hybrid_rh_1(unsorted_array, 0, NumElements - 1, sorted_array);	// fastest
 
 	std::cout << "sorted array: ";
-	for (unsigned long i = 0; i < NumElements; i++)
+	for (size_t i = 0; i < NumElements; i++)
 	{
 		std::cout << sorted_array[i] << " ";
 		//std::cout << unsorted_array[i] << " ";
@@ -110,23 +104,24 @@ int main()
 	// Example of C++17 Standard C++ Parallel Sorting
 	ParallelStdCppExample(uints, UseStableStdSort);
 
+	//std_parallel_sort_leak_demo();
+
 	RadixSortMsdBenchmark(uints);
 
 	//CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
 
-	//SumBenchmarkChar(uints);
-
-	//SumBenchmark(uints);
+	SumBenchmarkChar(uints);
+	SumBenchmark(    uints);
+	SumBenchmark64(  uints);
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark(uints, testSize);
 
 	ParallelInPlaceMergeSortBenchmark(uints);
 
-	// Benchmark Radix Sort LSD algorithm
 	ParallelRadixSortLsdBenchmark(uints);
 
-	//ParallelMergeBenchmark();
+	ParallelMergeBenchmark();
 
 	RadixSortLsdBenchmark(uints);
 
@@ -149,16 +144,15 @@ int main()
 
 	//CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
 
-	//SumBenchmarkChar(uints);
+	SumBenchmarkChar(uints);
 
-	//SumBenchmark(uints);
+	SumBenchmark(uints);
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark(uints, testSize);
 
 	ParallelInPlaceMergeSortBenchmark(uints);
 
-	// Benchmark Radix Sort LSD algorithm
 	ParallelRadixSortLsdBenchmark(uints);
 
 	RadixSortLsdBenchmark(uints);
@@ -175,16 +169,15 @@ int main()
 
 	//CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
 
-	//SumBenchmarkChar(uints);
+	SumBenchmarkChar(uints);
 
-	//SumBenchmark(uints);
+	SumBenchmark(uints);
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark(uints, testSize);
 
 	ParallelInPlaceMergeSortBenchmark(uints);
 
-	// Benchmark Radix Sort LSD algorithm
 	ParallelRadixSortLsdBenchmark(uints);
 
 	RadixSortLsdBenchmark(uints);
@@ -242,7 +235,7 @@ int main()
 	//RadixSortMsdBenchmark(ulongs);
 
 	// Example of C++17 Standard C++ Parallel Sorting
-	//ParallelStdCppExample(ulongs, UseStableStdSort);
+	ParallelStdCppExample(ulongs, UseStableStdSort);
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	//ParallelMergeSortBenchmark(ulongs, testSize);
@@ -269,7 +262,7 @@ int main()
 	//RadixSortMsdBenchmark(ulongs);
 
 	// Example of C++17 Standard C++ Parallel Sorting
-	//ParallelStdCppExample(ulongs, UseStableStdSort);
+	ParallelStdCppExample(ulongs, UseStableStdSort);
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	//ParallelMergeSortBenchmark(ulongs, testSize);

@@ -19,7 +19,7 @@ using std::random_device;
 using std::sort;
 using std::vector;
 
-static const int iterationCount = 100;
+static const int iterationCount = 1000;
 
 static void print_results(const char* const tag, const vector<unsigned>& sorted, high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime)
 {

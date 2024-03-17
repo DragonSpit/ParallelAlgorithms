@@ -63,7 +63,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned l
 }
 
 // Serial LSD Radix Sort, with Counting separated into its own phase, followed by a permutation phase, as is done in HPCsharp in C#
-template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
+template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix >
 inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_1(unsigned* input_array, unsigned* output_array, size_t last, unsigned bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
 {
 	const size_t NumberOfBins = PowerOfTwoRadix;
@@ -120,7 +120,7 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned* a, unsigned* b
 	// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
 	// they are not pushed on the stack and are treated as constants, but local.
 	if (a_size >= Threshold) {
-		_RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_1< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, b, a_size - 1, bitMask, shiftRightAmount, false);
+		_RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_1< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(a, b, a_size - 1, bitMask, shiftRightAmount, false);
 	}
 	else {
 		// TODO: Substitute Merge Sort, as it will get rid off the for loop, since it's internal to MergeSort
