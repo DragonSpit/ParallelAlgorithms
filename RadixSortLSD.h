@@ -133,7 +133,7 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned* a, unsigned* b
 // Permute phase of LSD Radix Sort with de-randomized write memory accesses
 // Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold, unsigned long BufferDepth>
-inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsigned* input_array, unsigned* output_array, size_t startIndex, size_t endIndex, unsigned bitMask, unsigned long shiftRightAmount,
+inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsigned* input_array, unsigned* output_array, size_t startIndex, size_t endIndex, unsigned bitMask, unsigned shiftRightAmount,
 	size_t* endOfBin, size_t bufferIndex[], unsigned bufferDerandomize[][BufferDepth])
 {
 	const unsigned long NumberOfBins = PowerOfTwoRadix;
