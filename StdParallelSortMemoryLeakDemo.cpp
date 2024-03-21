@@ -1,6 +1,9 @@
 // ParallelAlgorithms main application entry point
 #if 1
 
+#include <oneapi/dpl/execution>
+#include <oneapi/dpl/algorithm>
+
 #include <iostream>
 #include <algorithm>
 #include <chrono>
@@ -35,9 +38,15 @@ static int ParallelStdCppExample(vector<unsigned>& uints, bool stable = false)
 		const auto startTime = high_resolution_clock::now();
 		// same sort call as above, but with par_unseq:
 		if (!stable)
-			sort(std::execution::par_unseq, sorted.begin(), sorted.end());
+		{
+			//sort(std::execution::par_unseq, sorted.begin(), sorted.end()); 
+			sort(oneapi::dpl::execution::par_unseq, sorted.begin(), sorted.end());
+		}
 		else
-			stable_sort(std::execution::par_unseq, sorted.begin(), sorted.end());
+		{
+			//stable_sort(std::execution::par_unseq, sorted.begin(), sorted.end());
+			stable_sort(oneapi::dpl::execution::par_unseq, sorted.begin(), sorted.end());
+		}
 		const auto endTime = high_resolution_clock::now();
 		// in our output, note that these are the parallel results:
 		print_results("Parallel", sorted, startTime, endTime);
