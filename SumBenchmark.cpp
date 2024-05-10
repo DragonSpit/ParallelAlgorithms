@@ -1,14 +1,24 @@
-//#include <oneapi/dpl/execution>
-//#include <oneapi/dpl/algorithm>
-#include <stddef.h>
-#include <stdio.h>
-#include <iostream>
-#include <algorithm>
-#include <chrono>
-#include <random>
-#include <ratio>
-#include <vector>
-//#include <execution>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+//	#define DPL_ALGORITHMS          // Includes Intel's OneAPI parallel algorithm implementations
+	#define MICROSOFT_ALGORITHMS    // Excludes single-core SIMD implementations, which Microsoft does not support
+#endif
+
+#ifdef DPL_ALGORITHMS
+	// oneDPL headers should be included before standard headers
+	#include <oneapi/dpl/algorithm>
+	#include <oneapi/dpl/execution>
+	#include <oneapi/dpl/iterator>
+#else
+	#include <iostream>
+	#include <random>
+	#include <ratio>
+	#include <vector>
+	#include <algorithm>
+	#include <execution>
+	#include <iterator>
+	#include <chrono>
+#endif
+
 //#include <oneapi/dpl/algorithm>
 //#define __TBB_PREVIEW_TASK_ARENA_CONSTRAINTS_EXTENSION_PRESENT 1
 //#include <oneapi/tbb/task_arena.h>
@@ -132,7 +142,12 @@ int SumBenchmark(vector<unsigned>& uints)
 		const auto startTime = high_resolution_clock::now();
 		//long long sum = ParallelAlgorithms::SumParallel(u8Array, 0, uints.size());
 		//sum = ParallelAlgorithms::SumParallel(u8Array, 0, uints.size(), uints.size() / 24);	// Running on 24-core is fastest, however with 2.7X run-to-run variation
-		sum = ParallelAlgorithms::SumParallel(u32Array.data(), 0, uints.size());
+		//sum = ParallelAlgorithms::SumParallel(u32Array.data(), 0, uints.size());
+		sum = ParallelAlgorithms::SumParallelNonRecursive(u32Array.data(), 0, uints.size());
+		//sum = ParallelAlgorithms::SumParallelNonRecursiveBuffered(u32Array.data(), 0, uints.size());
+		//sum = ParallelAlgorithms::SumParallelNonRecursiveBufferedLocally(u32Array.data(), 0, uints.size());
+		//sum = ParallelAlgorithms::SumParallelNonRecursiveNoHyperthreading(u32Array.data(), 0, uints.size());
+		//sum = ParallelAlgorithms::SumParallelNonRecursiveBufferedLocallyNoHyperthreading(u32Array.data(), 0, uints.size());
 		const auto endTime = high_resolution_clock::now();
 		print_results("Parallel Sum of unsigned", sum, uints.size(), startTime, endTime);
 		//}
@@ -209,7 +224,7 @@ int SumBenchmark64(vector<unsigned>& uints)
 				exit(1);
 			}
 		}
-		print_results("Parallel Sum", sum, uints.size(), startTime, endTime, thruput_sum / num_times, std_deviation(thruputs));
+		print_results("Parallel 64-bit Sum", sum, uints.size(), startTime, endTime, thruput_sum / num_times, std_deviation(thruputs));
 	}
 	return 0;
 }

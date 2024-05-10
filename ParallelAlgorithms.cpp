@@ -27,11 +27,12 @@ extern int SumBenchmarkChar(                 vector<unsigned>& uints);
 extern int SumBenchmark64(                   vector<unsigned>& uints);
 extern int TestMemoryAllocation();
 extern int std_parallel_sort_leak_demo();
+extern int bundling_small_work_items_benchmark(size_t, size_t, size_t);
 
 int main()
 {
 	// Test configuration options
-	bool UseStableStdSort = true;
+	bool UseStableStdSort = false;
 	
 	// Test cases for averaging of two integers
 	//TestAverageOfTwoIntegers();
@@ -74,7 +75,7 @@ int main()
 #endif
 
 	// Provide the same input random array of doubles to all sorting algorithms
-	const size_t testSize = 100'000'000;
+	const size_t testSize = 1'000'000'000;
 	//random_device rd;
 	std::mt19937_64 dist(1234);
 
@@ -102,17 +103,22 @@ int main()
 		d = static_cast<unsigned>(dist());   // way faster on Linux
 	}
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample(uints, UseStableStdSort);
+	//ParallelStdCppExample(uints, UseStableStdSort);
 
-	//std_parallel_sort_leak_demo();
+	bundling_small_work_items_benchmark(20, 10000, 1000);
 
-	RadixSortMsdBenchmark(uints);
+//	std_parallel_sort_leak_demo();
+//	return 0;
+
+//	RadixSortMsdBenchmark(uints);
 
 	//CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
 
-	SumBenchmarkChar(uints);
+	//SumBenchmarkChar(uints);
 	SumBenchmark(    uints);
-	SumBenchmark64(  uints);
+	//SumBenchmark64(  uints);
+
+	return 0;
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	ParallelMergeSortBenchmark(uints, testSize);

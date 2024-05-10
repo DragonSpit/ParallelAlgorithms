@@ -176,6 +176,7 @@ namespace ParallelAlgorithms
     }
 
     // Serial Merge Sort, using divide-and-conquer algorthm
+    // inclusive left and right boundary. This implies this algorithms can't handle 0-element input with l == 0.
     template< class _Type >
     inline void merge_sort_hybrid(_Type* src, size_t l, size_t r, _Type* dst, bool srcToDst = true)
     {
@@ -191,7 +192,7 @@ namespace ParallelAlgorithms
         }
         size_t m = r / 2 + l / 2 + (r % 2 + l % 2) / 2;     // average without overflow
 
-        merge_sort_hybrid(src, l, m, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
+        merge_sort_hybrid(src, l,     m, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
         merge_sort_hybrid(src, m + 1, r, dst, !srcToDst);      // reverse direction of srcToDst for the next level of recursion
 
         if (srcToDst) merge_dac_hybrid(src, l, m, m + 1, r, dst, l);

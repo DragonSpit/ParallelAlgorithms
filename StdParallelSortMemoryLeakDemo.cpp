@@ -1,5 +1,5 @@
 // ParallelAlgorithms main application entry point
-#if 1
+#if 0
 
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
