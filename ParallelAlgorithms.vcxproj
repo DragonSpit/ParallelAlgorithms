@@ -183,6 +183,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AverageTests.cpp" />
+    <ClCompile Include="BundleSmallWorkItems.cpp" />
     <ClCompile Include="CountingSortParallelBenchmark.cpp" />
     <ClCompile Include="FillParallel.h" />
     <ClCompile Include="MemoryUsage.cpp" />
