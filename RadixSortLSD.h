@@ -6,6 +6,24 @@
 #ifndef _RadixSortLSD_h
 #define _RadixSortLSD_h
 
+#include <stddef.h>
+#include <stdio.h>
+#include <iostream>
+#include <algorithm>
+#include <chrono>
+#include <random>
+#include <ratio>
+#include <vector>
+#include <execution>
+
+using std::chrono::duration;
+using std::chrono::duration_cast;
+using std::chrono::high_resolution_clock;
+using std::milli;
+using std::random_device;
+using std::sort;
+using std::vector;
+
 #include "RadixSortCommon.h"
 #include "RadixSortMSD.h"
 #include "InsertionSort.h"
@@ -14,6 +32,12 @@
 
 extern unsigned long long physical_memory_used_in_megabytes();
 extern unsigned long long physical_memory_total_in_megabytes();
+
+static void print_results(const char* const tag,
+	high_resolution_clock::time_point startTime,
+	high_resolution_clock::time_point endTime) {
+	printf("%s: Time: %fms\n", tag, duration_cast<duration<double, milli>>(endTime - startTime).count());
+}
 
 // Serial LSD Radix Sort, with Counting separated into its own phase, followed by a permutation phase, as is done in HPCsharp in C#
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
@@ -72,9 +96,12 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_1(unsigned
 	bool _output_array_has_result = false;
 	unsigned currentDigit = 0;
 	unsigned maxDigit = sizeof(unsigned);
-	unsigned bit_mask = NumberOfBins - 1;
+	const unsigned bit_mask = NumberOfBins - 1;
 
+	//const auto startTime = high_resolution_clock::now();
 	size_t* count2D = HistogramByteComponents_1 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
+	//const auto endTime = high_resolution_clock::now();
+	//print_results("Histogram: ", startTime, endTime);
 
 	while (currentDigit < maxDigit)						// end processing digits when all the mask bits have been processes and shift out, leaving none
 	{
@@ -86,11 +113,30 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_1(unsigned
 		for (size_t i = 1; i < NumberOfBins; i++)
 			endOfBin[i] = endOfBin[i - 1] + count[i - 1];
 
+		//const auto startTime = high_resolution_clock::now();
 		// permutation phase
+#if 0
 		for (size_t _current = 0; _current <= last; _current++)
-			_output_array[endOfBin[(_input_array[_current] & bit_mask ) >> shiftRightAmount]++] = _input_array[_current];
+			_output_array[endOfBin[(_input_array[_current] >> shiftRightAmount) & bit_mask]++] = _input_array[_current];
+#else
+		unsigned prev_digit = (_input_array[0] >> shiftRightAmount) & bit_mask;
+		size_t index = endOfBin[prev_digit];
+		_output_array[index++] = _input_array[0];
+		for (size_t _current = 1; _current <= last; _current++)
+		{
+			unsigned digit = (_input_array[_current] >> shiftRightAmount) & bit_mask;
+			if (digit != prev_digit)
+			{
+				endOfBin[prev_digit] = index;
+				index = endOfBin[digit];
+				prev_digit = digit;
+			}
+			_output_array[index++] = _input_array[_current];
+		}
+#endif
+		//const auto endTime = high_resolution_clock::now();
+		//print_results("Permutation: ", startTime, endTime);
 
-		bit_mask <<= Log2ofPowerOfTwoRadix;
 		shiftRightAmount += Log2ofPowerOfTwoRadix;
 		_output_array_has_result = !_output_array_has_result;
 		std::swap(_input_array, _output_array);
@@ -189,8 +235,10 @@ void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned* i
 	auto bufferDerandomize = new unsigned[NumberOfBins][bufferDepth];
 	auto bufferIndex       = new size_t[  NumberOfBins] { 0 };
 #endif
-
+	//const auto startTime = high_resolution_clock::now();
 	size_t* count2D = HistogramByteComponents_1 <PowerOfTwoRadix, Log2ofPowerOfTwoRadix>(input_array, 0, last);
+	//const auto endTime = high_resolution_clock::now();
+	//print_results("Histogram: ", startTime, endTime);
 
 	while (bitMask != 0)						// end processing digits when all the mask bits have been processes and shift out, leaving none
 	{
@@ -201,8 +249,11 @@ void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned* i
 		for (size_t i = 1; i < NumberOfBins; i++)
 			startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
+		//const auto startTime = high_resolution_clock::now();
 		_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold, bufferDepth>(
 			_input_array, _output_array, 0, last, bitMask, shiftRightAmount, endOfBin, bufferIndex, bufferDerandomize);
+		//const auto endTime = high_resolution_clock::now();
+		//print_results("Permutation: ", startTime, endTime);
 
 		bitMask <<= Log2ofPowerOfTwoRadix;
 		shiftRightAmount += Log2ofPowerOfTwoRadix;
