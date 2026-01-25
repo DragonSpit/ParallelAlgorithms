@@ -1,3 +1,6 @@
+// TODO: Add the same optimization for the permutation phase (improving writes for the case of constant arrays) to the derandomized version
+//       as is done to the non-derandomized version. The derandomized version is currently slower on constant arrays due to the overhead of buffering
+//       for the constant array case.
 // TODO: Allocate a single array (cache-line aligned) for all the count arrays and index into it for each of the counts
 // TODO: Create a version of Radix Sort that handles 64-bit indexes (size_t) for arrays larger than 4GigaElements
 // TODO: Detect the size of array and use unsigned/32-bit counts for smaller arrays and size_t/64-bit counts for larger arrays
@@ -178,6 +181,58 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned* a, unsigned* b
 
 // Permute phase of LSD Radix Sort with de-randomized write memory accesses
 // Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
+// Also implements an optimization for constant arrays, which avoids loop dependency of incrementing through memory/array access.
+template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold, unsigned long BufferDepth>
+inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized_1(unsigned* input_array, unsigned* output_array, size_t startIndex, size_t endIndex, unsigned bitMask, unsigned shiftRightAmount,
+	size_t* endOfBin, size_t bufferIndex[], unsigned bufferDerandomize[][BufferDepth])
+{
+	const unsigned long NumberOfBins = PowerOfTwoRadix;
+
+	unsigned prev_digit = (input_array[startIndex] & bitMask) >> shiftRightAmount;
+	size_t index = bufferIndex[prev_digit];
+	bufferDerandomize[prev_digit][index++] = input_array[startIndex];
+	for (size_t _current = startIndex + 1; _current <= endIndex; _current++)
+	{
+		unsigned digit = (input_array[_current] & bitMask ) >> shiftRightAmount;
+		if (digit != prev_digit)
+		{
+			bufferIndex[prev_digit] = index;
+			index = bufferIndex[digit];
+			prev_digit = digit;
+		}
+		if (index < BufferDepth)
+		{
+			bufferDerandomize[digit][index++] = input_array[_current];
+		}
+		else
+		{
+			size_t outIndex = endOfBin[digit];
+			unsigned* buff = &(bufferDerandomize[digit][0]);
+#if 1
+			memcpy(&(output_array[outIndex]), buff, BufferDepth * sizeof(unsigned));	// significantly faster than a for loop
+#else
+			unsigned* outBuff = &(output_array[outIndex]);
+			for (size_t i = 0; i < BufferDepth; i++)
+				*outBuff++ = *buff++;
+#endif
+			endOfBin[digit] += BufferDepth;
+			bufferDerandomize[digit][0] = input_array[_current];
+			index = 1;
+		}
+	}
+	bufferIndex[prev_digit] = index;
+	// Flush all the derandomization buffers
+	for (size_t whichBuff = 0; whichBuff < NumberOfBins; whichBuff++)
+	{
+		size_t numOfElementsInBuff = bufferIndex[whichBuff];
+		for (size_t i = 0; i < numOfElementsInBuff; i++)
+			output_array[endOfBin[whichBuff]++] = bufferDerandomize[whichBuff][i];
+		bufferIndex[whichBuff] = 0;
+	}
+}
+
+// Permute phase of LSD Radix Sort with de-randomized write memory accesses
+// Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
 template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold, unsigned long BufferDepth>
 inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized(unsigned* input_array, unsigned* output_array, size_t startIndex, size_t endIndex, unsigned bitMask, unsigned shiftRightAmount,
 	size_t* endOfBin, size_t bufferIndex[], unsigned bufferDerandomize[][BufferDepth])
@@ -250,7 +305,7 @@ void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned* i
 			startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
 		//const auto startTime = high_resolution_clock::now();
-		_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold, bufferDepth>(
+		_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized_1< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold, bufferDepth>(
 			_input_array, _output_array, 0, last, bitMask, shiftRightAmount, endOfBin, bufferIndex, bufferDerandomize);
 		//const auto endTime = high_resolution_clock::now();
 		//print_results("Permutation: ", startTime, endTime);
