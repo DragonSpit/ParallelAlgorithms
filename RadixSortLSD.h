@@ -286,11 +286,10 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned* a, unsigned* b
 // Permute phase of LSD Radix Sort with de-randomized write memory accesses
 // Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
 // Also implements an optimization for constant arrays, which avoids loop dependency of incrementing through memory/array access.
-template< unsigned long BufferDepth>
+template< unsigned long BufferDepth >
 inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized_1(unsigned* input_array, unsigned* output_array,
 	size_t startIndex, size_t endIndex, unsigned bitMask, unsigned shiftRightAmount,
-	size_t* endOfBin, unsigned long numberOfBins, unsigned long numberOfBitsPerDigit,
-	size_t bufferIndex[], unsigned bufferDerandomize[][BufferDepth])
+	size_t* endOfBin, unsigned long numberOfBins, size_t bufferIndex[], unsigned bufferDerandomize[][BufferDepth])
 {
 	unsigned prev_digit = (input_array[startIndex] & bitMask) >> shiftRightAmount;
 	size_t index = bufferIndex[prev_digit];
@@ -411,7 +410,7 @@ void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned* i
 		//const auto startTime = high_resolution_clock::now();
 		_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized_1< bufferDepth >(
 			_input_array, _output_array, (size_t)0, last, bitMask, shiftRightAmount, endOfBin,
-			NumberOfBins, BitsPerDigit, bufferIndex, bufferDerandomize);
+			NumberOfBins, bufferIndex, bufferDerandomize);
 		//const auto endTime = high_resolution_clock::now();
 		//print_results("Permutation: ", startTime, endTime);
 
@@ -431,10 +430,11 @@ void _RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize(unsigned* i
 
 // Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
 // Parallel LSD Radix Sort, with Counting separated into its own parallel phase, followed by a serial permutation phase, as is done in HPCsharp in C#
+template< unsigned BitsPerDigit = 8 >
 inline void _RadixSortLSD_StableUnsigned_Nbits_TwoPhase_DeRandomize(unsigned* input_array, unsigned* output_array, size_t last,
-	unsigned bitMask, unsigned long shiftRightAmount, unsigned numBitsPerDigit, bool inputArrayIsDestination)
+	unsigned bitMask, unsigned long shiftRightAmount, bool inputArrayIsDestination)
 {
-	const size_t NumberOfBins = (size_t)1 << numBitsPerDigit;
+	const size_t NumberOfBins = (size_t)1 << BitsPerDigit;
 	unsigned* _input_array  = input_array;
 	unsigned* _output_array = output_array;
 	bool _output_array_has_result = false;
@@ -448,7 +448,7 @@ inline void _RadixSortLSD_StableUnsigned_Nbits_TwoPhase_DeRandomize(unsigned* in
 	auto bufferIndex       = new size_t[NumberOfBins]{ 0 };
 #endif
 	//const auto startTime = high_resolution_clock::now();
-	size_t* count2D = HistogramNbitComponents(input_array, 0, last, numBitsPerDigit);
+	size_t* count2D = HistogramNbitComponents(input_array, 0, last, BitsPerDigit);
 	//const auto endTime = high_resolution_clock::now();
 	//print_results("Histogram: ", startTime, endTime);
 
@@ -466,12 +466,12 @@ inline void _RadixSortLSD_StableUnsigned_Nbits_TwoPhase_DeRandomize(unsigned* in
 		//const auto startTime = high_resolution_clock::now();
 		_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized_1< bufferDepth >(
 			_input_array, _output_array, (size_t)0, last, bitMask, shiftRightAmount, endOfBin,
-			NumberOfBins, numBitsPerDigit, bufferIndex, bufferDerandomize);
+			NumberOfBins, bufferIndex, bufferDerandomize);
 		//const auto endTime = high_resolution_clock::now();
 		//print_results("Permutation: ", startTime, endTime);
 
-		bitMask <<= numBitsPerDigit;
-		shiftRightAmount += numBitsPerDigit;
+		bitMask <<= BitsPerDigit;
+		shiftRightAmount += BitsPerDigit;
 		_output_array_has_result = !_output_array_has_result;
 		std::swap(_input_array, _output_array);
 		currentDigit++;
@@ -498,11 +498,12 @@ inline void _RadixSortLSD_StableUnsigned_Nbits_TwoPhase_DeRandomize(unsigned* in
 }
 
 // LSD Radix Sort - stable (LSD has to be, and this may preclude LSD Radix from being able to be in-place)
+//template< unsigned Threshold = 100 >
 inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned* a, unsigned* b, size_t a_size)
 {
-	const unsigned long Threshold = 100;	// Threshold of when to switch to using Insertion Sort
-	const unsigned long PowerOfTwoRadix = 256;
-	const unsigned long Log2ofPowerOfTwoRadix = 8;
+	const unsigned Threshold = 100;	// Threshold of when to switch to using Insertion Sort
+	const unsigned BitsPerDigit = 8;
+	const unsigned PowerOfTwoRadix = 1 << BitsPerDigit;
 	// Create bit-mask and shift right amount
 	unsigned long shiftRightAmount = 0;
 	unsigned bitMask = (unsigned)(((unsigned)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
@@ -510,7 +511,7 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned* a,
 	// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
 	// they are not pushed on the stack and are treated as constants, but local.
 	if (a_size >= Threshold) {
-		_RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize< Log2ofPowerOfTwoRadix >(
+		_RadixSortLSD_StableUnsigned_PowerOf2Radix_TwoPhase_DeRandomize< BitsPerDigit >(
 			a, b, a_size - 1, bitMask, shiftRightAmount, false);
 	}
 	else {
@@ -520,11 +521,12 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned* a,
 			b[j] = a[j];
 	}
 }
+
 // LSD Radix Sort - stable (LSD has to be, and this may preclude LSD Radix from being able to be in-place)
-inline void RadixSortLSDPowerOf2Radix_Nbit_TwoPhase_DeRandomize(unsigned* a, unsigned* b, size_t a_size, unsigned numBitsPerDigit)
+template< unsigned BitsPerDigit = 8, unsigned Threshold = 100 >
+inline void RadixSortLSDPowerOf2Radix_Nbit_TwoPhase_DeRandomize(unsigned* a, unsigned* b, size_t a_size)
 {
-	const unsigned long Threshold = 100;	// Threshold of when to switch to using Insertion Sort
-	const unsigned long PowerOfTwoRadix = 1UL << numBitsPerDigit;
+	const unsigned long PowerOfTwoRadix = 1UL << BitsPerDigit;
 	// Create bit-mask and shift right amount
 	unsigned long shiftRightAmount = 0;
 	unsigned bitMask = (unsigned)(((unsigned)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
@@ -532,8 +534,8 @@ inline void RadixSortLSDPowerOf2Radix_Nbit_TwoPhase_DeRandomize(unsigned* a, uns
 	// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
 	// they are not pushed on the stack and are treated as constants, but local.
 	if (a_size >= Threshold) {
-		_RadixSortLSD_StableUnsigned_Nbits_TwoPhase_DeRandomize(
-			a, b, a_size - 1, bitMask, shiftRightAmount, numBitsPerDigit, true);
+		_RadixSortLSD_StableUnsigned_Nbits_TwoPhase_DeRandomize< BitsPerDigit >(
+			a, b, a_size - 1, bitMask, shiftRightAmount, true);
 	}
 	else {
 		// TODO: Substitute Merge Sort, as it will get rid off the for loop, since it's internal to MergeSort
