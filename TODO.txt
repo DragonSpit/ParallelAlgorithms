@@ -3,6 +3,8 @@ TODO: Create functions for integer division with ceiling (round up) and division
 TODO: Explore parallelism at small work load, such as small arrays. For example, sum of an array I was exploring in the book didn't improve in performance when I tried to reduce the overhead of small tasks in the body
       of the recursive tree. The mistake I made is using a large tree. Instead, this reduction should pay off big time for small trees, possibly with small parallel_threshold (cutoff) points. It may enable smaller parallel cutoff,
       which would be a win for parallelism for smaller arrays.
+TODO: Implement adaptive index size depending on the size of the array. For example, arrays smaller than 4 billion elements can use 32-bit indices, which would reduce memory usage and increase performance for small arrays.
+      This would be a big win for small arrays, which are more common in practice. It would also be a win for Radix Sort, for N-bit/digit such as 11-bits/digit as it would use less Cache.
 Idea: The whole "parallelism for the small" could be our value add. We could develop techniques and technologies that increase usefulness at the small array scale and enable use of parallelism and higher performance for more use cases,
       expanding the market for parallelism. It would benefit not only C++, but also C#, both of which would enjoy the benefit of parallelism performance gains in more cases - i.e. not just the very large cases. This would blow the doors
       off the parallel performance market.

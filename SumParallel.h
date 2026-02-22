@@ -338,7 +338,7 @@ namespace ParallelAlgorithms
 	{
 		size_t num_tasks = (r - l + (parallelThreshold - 1)) / parallelThreshold;
 		unsigned long long* sum_array = new unsigned long long[num_tasks] {};
-		const size_t BUFFER_DEPTH_PER_TASK = 1024;
+		//const size_t BUFFER_DEPTH_PER_TASK = 1024;
 		tbb::task_group g;
 
 		size_t i = 0;

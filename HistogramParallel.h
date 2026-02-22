@@ -247,7 +247,7 @@ namespace ParallelAlgorithms
 	}
 
 	template< unsigned PowerOfTwoRadix, unsigned Log2ofPowerOfTwoRadix >
-	inline size_t** HistogramByteComponentsParallel(unsigned inArray[], size_t l, size_t r, int parallelThreshold = 64 * 1024)
+	inline size_t** HistogramByteComponentsParallel(unsigned inArray[], size_t l, size_t r, size_t parallelThreshold = 64 * 1024)
 	{
 		const unsigned numberOfDigits = Log2ofPowerOfTwoRadix;
 		const unsigned NumberOfBins   = PowerOfTwoRadix;

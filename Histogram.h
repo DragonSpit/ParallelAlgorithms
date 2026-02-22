@@ -2,9 +2,9 @@
 
 #pragma once
 
-template< unsigned BitsPerDigit >
-inline size_t* HistogramByteComponents_1(unsigned inArray[], size_t l, size_t r)
+inline size_t* HistogramByteComponents(unsigned inArray[], size_t l, size_t r)
 {
+	const unsigned BitsPerDigit   = 8;
 	const unsigned NumberOfBins   = 1 << BitsPerDigit;
 	const unsigned NumberOfDigits = (sizeof(unsigned) * 8 + BitsPerDigit - 1) / BitsPerDigit;
 
@@ -22,6 +22,38 @@ inline size_t* HistogramByteComponents_1(unsigned inArray[], size_t l, size_t r)
 		count1[(value >>  8) & 0xff]++;
 		count2[(value >> 16) & 0xff]++;
 		count3[(value >> 24) & 0xff]++;
+	}
+	return count;
+}
+
+inline void HistogramByteSingleComponent(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount, size_t* count)
+{
+	const size_t NumberOfBins = 256;
+	for (size_t i = 0; i < NumberOfBins; i++)
+		count[i] = 0;
+	for (size_t current = l; current <= r; current++)
+		count[(inArray[current] >> shiftAmount) & 0xff]++;
+}
+
+
+inline size_t* HistogramNbitComponents(unsigned inArray[], size_t l, size_t r, unsigned bitsPerComponent)
+{
+	if (inArray == NULL)
+		return NULL;
+	const int NumBitsInUInt = sizeof(unsigned) * 8;
+	if (bitsPerComponent > NumBitsInUInt || bitsPerComponent == 0)
+		return NULL;
+
+	size_t numberOfBins = (size_t)1 << bitsPerComponent;
+	unsigned numberOfDigits = (NumBitsInUInt + bitsPerComponent - 1) / bitsPerComponent;  // ceiling division
+	size_t* count = new size_t[numberOfDigits * numberOfBins]{};
+	unsigned bitMask = (unsigned)(numberOfBins - 1);
+
+	for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+	{
+		unsigned value = inArray[current];
+		for (unsigned d = 0; d < numberOfDigits; d++)
+			count[d * numberOfBins + ((value >> (d * bitsPerComponent)) & bitMask)]++;
 	}
 	return count;
 }
@@ -50,28 +82,6 @@ inline size_t** HistogramByteComponents(unsigned long long inArray[], int l, int
 		count1[(value >>  8) & 0xff]++;
 		count2[(value >> 16) & 0xff]++;
 		count3[(value >> 24) & 0xff]++;
-	}
-	return count;
-}
-
-inline size_t* HistogramNbitComponents(unsigned inArray[], size_t l, size_t r, unsigned numberOfBitPerComponent)
-{
-	if (inArray == NULL)
-		return NULL;
-	const int NumBitsInUInt = sizeof(unsigned) * 8;
-	if (numberOfBitPerComponent > NumBitsInUInt || numberOfBitPerComponent == 0)
-		return NULL;
-
-	size_t numberOfBins = (size_t)1 << numberOfBitPerComponent;
-	unsigned numberOfDigits = (NumBitsInUInt + numberOfBitPerComponent - 1) / numberOfBitPerComponent;  // ceiling division
-	size_t* count = new size_t[numberOfDigits * numberOfBins]{};
-	unsigned bitMask = (unsigned)(numberOfBins - 1);
-
-	for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
-	{
-		unsigned value = inArray[current];
-		for (unsigned d = 0; d < numberOfDigits; d++)
-			count[d * numberOfBins + ((value >> (d * numberOfBitPerComponent)) & bitMask)]++;
 	}
 	return count;
 }

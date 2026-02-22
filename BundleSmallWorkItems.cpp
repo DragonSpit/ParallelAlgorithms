@@ -33,7 +33,7 @@ void print_results(const char* const tag, const vector<bool>& in_array,
 // - run them in parallel
 // - bundle multiple items and run these bundles in parallel
 // Bundle 1, 2, 3, ..., small work items, such as std::all_of() 
-int bundling_small_work_items_benchmark(size_t max_bundle_size = 20, size_t number_of_items = 1000, size_t size_of_item = 100)
+int bundling_small_work_items_benchmark(size_t number_of_items = 1000, size_t size_of_item = 100)
 {
     std::vector<int>                    item(size_of_item, 2);
     std::vector< std::vector<int> >     all_data(number_of_items, item);         // all_data[number_of_items][size_of_item]

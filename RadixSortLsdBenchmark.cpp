@@ -32,7 +32,7 @@ static void print_results(const char* const tag, const unsigned* sorted, size_t 
 int RadixSortLsdBenchmark(vector<unsigned>& uints)
 {
 	vector<unsigned> uintsCopy(uints);
-	vector<unsigned> tmp_working(uints);
+	vector<unsigned> tmp_working(uints); // temporary working array/buffer
 
 	for (int i = 0; i < iterationCount; ++i)
 	{
@@ -48,8 +48,11 @@ int RadixSortLsdBenchmark(vector<unsigned>& uints)
 
 		//printf("uintsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", uintsCopy, sorted, sorted[static_cast<unsigned>(rd()) % uints.size()], uintsCopy[static_cast<unsigned>(rd()) % uints.size()]);
 		const auto startTime = high_resolution_clock::now();
-		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(          uintsCopy.data(), tmp_working.data(), uints.size());
-		RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(uintsCopy.data(), tmp_working.data(), uints.size());
+		RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(          uintsCopy.data(), tmp_working.data(), uints.size());
+		//RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(uintsCopy.data(), tmp_working.data(), uints.size());
+		//RadixSortLSDPowerOf2Radix_Nbit_TwoPhase_DeRandomize< 11 >(uintsCopy.data(), tmp_working.data(), uints.size());
+		//RadixSortLSDPowerOf2Radix(uintsCopy.data(), tmp_working.data(), uints.size());  // baseline serial implementation - i.e. the slowest
+		//RadixSortLSDPowerOf2Radix_Nbit<11>(uintsCopy.data(), tmp_working.data(), uints.size());  // baseline serial implementation - i.e. the slowest
 		//sort_radix_in_place_adaptive(uintsCopy, (unsigned long)uints.size(), 0.1);
 		//sort_radix_in_place_stable_adaptive(uintsCopy, uints.size(), 0.9);
 		const auto endTime = high_resolution_clock::now();
@@ -57,6 +60,14 @@ int RadixSortLsdBenchmark(vector<unsigned>& uints)
 		if (!std::equal(sorted_reference.begin(), sorted_reference.end(), uintsCopy.begin()))
 		{
 			printf("Arrays are not equal\n");
+			for(size_t i = 0; i < uints.size(); i++)
+			{
+				if (sorted_reference[i] != uintsCopy[i])
+				{
+					printf("Difference at index %zu: sorted_reference = %x, uintsCopy = %x\n", i, sorted_reference[i], uintsCopy[i]);
+					break;
+				}
+			}
 			exit(1);
 		}
 	}

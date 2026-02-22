@@ -75,10 +75,10 @@ namespace ParallelAlgorithms
 		delete[] count2D;
 		// Done with processing, copy all of the bins
 		if (_output_array_has_result && inputArrayIsDestination)
-			for (long _current = 0; _current <= last; _current++)	// copy from output array into the input array
+			for (size_t _current = 0; _current <= last; _current++)	// copy from output array into the input array
 				_input_array[_current] = _output_array[_current];
 		if (!_output_array_has_result && !inputArrayIsDestination)
-			for (long _current = 0; _current <= last; _current++)	// copy from input array back into the output array
+			for (size_t _current = 0; _current <= last; _current++)	// copy from input array back into the output array
 				_output_array[_current] = _input_array[_current];
 	}
 
@@ -440,7 +440,7 @@ namespace ParallelAlgorithms
 
 	// Derandomizes system memory accesses by buffering all Radix bin accesses, turning 256-bin random memory writes into sequential writes
 	// Parallel LSD Radix Sort, with Counting separated into its own parallel phase, followed by a serial permutation phase, as is done in HPCsharp in C#
-	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold>
+	template< unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix>
 	void _RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase_DeRandomize(unsigned* input_array, unsigned* output_array, size_t last, unsigned bitMask, unsigned shiftRightAmount, bool inputArrayIsDestination)
 	{
 		const unsigned long NumberOfBins = PowerOfTwoRadix;
@@ -467,8 +467,9 @@ namespace ParallelAlgorithms
 			for (size_t i = 1; i < NumberOfBins; i++)
 				startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
-			_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold, bufferDepth >(
-				_input_array, _output_array, 0, last, bitMask, shiftRightAmount, endOfBin, bufferIndex, bufferDerandomize);
+			// Intel compiler has trouble with this code, so we comment it out for now
+			_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, bufferDepth >(
+				_input_array, _output_array, std::size_t{ 0 }, last, bitMask, shiftRightAmount, endOfBin, bufferIndex, bufferDerandomize);
 
 			bitMask <<= Log2ofPowerOfTwoRadix;
 			shiftRightAmount += Log2ofPowerOfTwoRadix;
@@ -478,10 +479,10 @@ namespace ParallelAlgorithms
 		}
 		// Done with processing, copy all of the bins
 		if (_output_array_has_result && inputArrayIsDestination)
-			for (long _current = 0; _current <= last; _current++)	// copy from output array into the input array
+			for (size_t _current = 0; _current <= last; _current++)	// copy from output array into the input array
 				_input_array[_current] = _output_array[_current];
 		if (!_output_array_has_result && !inputArrayIsDestination)
-			for (long _current = 0; _current <= last; _current++)	// copy from input array back into the output array
+			for (size_t _current = 0; _current <= last; _current++)	// copy from input array back into the output array
 				_output_array[_current] = _input_array[_current];
 	}
 
@@ -489,16 +490,16 @@ namespace ParallelAlgorithms
 	inline void RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase_DeRandomize(unsigned* a, unsigned* b, size_t a_size)
 	{
 		const size_t Threshold = 100;	// Threshold of when to switch to using Insertion Sort
-		const size_t PowerOfTwoRadix = 256;
-		const size_t Log2ofPowerOfTwoRadix = 8;
+		//const size_t PowerOfTwoRadix = 256;
+		//const size_t Log2ofPowerOfTwoRadix = 8;
 		// Create bit-mask and shift right amount
-		unsigned shiftRightAmount = 0;
-		unsigned bitMask = (unsigned)(((unsigned)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
+		//unsigned shiftRightAmount = 0;
+		//unsigned bitMask = (unsigned)(((unsigned)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
 
 		// The beauty of using template arguments instead of function parameters for the Threshold and Log2ofPowerOfTwoRadix is
 		// they are not pushed on the stack and are treated as constants, but local.
 		if (a_size >= Threshold) {
-			_RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase_DeRandomize< PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, b, a_size - 1, bitMask, shiftRightAmount, false);
+			//_RadixSortLSD_StableUnsigned_PowerOf2RadixParallel_TwoPhase_DeRandomize< PowerOfTwoRadix, Log2ofPowerOfTwoRadix >(a, b, a_size - 1, bitMask, shiftRightAmount, false);
 		}
 		else {
 			// TODO: Substitute Merge Sort, as it will get rid off the for loop, since it's internal to MergeSort

@@ -31,7 +31,7 @@
 #include "RadixSortMsdParallel.h"
 
 // TODO: This extern should not be needed and root-cause needs to be found
-extern void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned long* a, unsigned long* b, size_t a_size);
+extern void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned* a, unsigned* b, size_t a_size);
 extern void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase_DeRandomize(unsigned* a, unsigned* b, size_t a_size);
 
 namespace ParallelAlgorithms
@@ -232,7 +232,7 @@ namespace ParallelAlgorithms
         const auto processor_count = std::thread::hardware_concurrency();
         //printf("Number of cores = %u \n", processor_count);
 
-        if ((int)(parallelThreshold * processor_count) < (r - l + 1))
+        if ((parallelThreshold * processor_count) < (r - l + 1))
             parallelThreshold = (r - l + 1) / processor_count;
 
         parallel_merge_merge_sort_hybrid_inner(src, l, r, dst, srcToDst, parallelThreshold);
@@ -325,7 +325,7 @@ namespace ParallelAlgorithms
     }
 
     template< class _Type >
-    inline void merge_sort_inplace_hybrid_with_sort(_Type* src, size_t l, size_t r, bool stable = false, int threshold = 1024)
+    inline void merge_sort_inplace_hybrid_with_sort(_Type* src, size_t l, size_t r, bool stable = false, size_t threshold = 1024)
     {
         if (r <= l) {
             return;
