@@ -5,6 +5,8 @@
 #include <ratio>
 #include <vector>
 
+#include <tbb/global_control.h>
+
 using std::random_device;
 using std::vector;
 
@@ -27,18 +29,26 @@ extern int SumBenchmarkChar(                 vector<unsigned>& uints);
 extern int SumBenchmark64(                   vector<unsigned>& uints);
 extern int TestMemoryAllocation();
 extern int std_parallel_sort_leak_demo();
-extern int bundling_small_work_items_benchmark(size_t, size_t, size_t);
+extern int bundling_small_work_items_benchmark(size_t, size_t);
+extern int RadixSelectBenchmark(vector<unsigned>& uints);
+extern int sum_parallel_integer_ai();
 
 int main()
 {
+	int num_threads = 2;
+	tbb::global_control control(tbb::global_control::max_allowed_parallelism, num_threads);
+
 	// Test configuration options
-	bool UseStableStdSort = false;
+	//bool UseStableStdSort = true;
 	
 	// Test cases for averaging of two integers
 	//TestAverageOfTwoIntegers();
 
 	// Benchmark QuickSort
 	//main_quicksort();
+
+	//sum_parallel_integer_ai();
+	//return(0);
 
 #if 0
 	// Demonstrate Parallel Merge
@@ -75,7 +85,7 @@ int main()
 #endif
 
 	// Provide the same input random array of doubles to all sorting algorithms
-	const size_t testSize = 1'000'000'000;
+	const size_t testSize = 20'000'000;
 	//random_device rd;
 	std::mt19937_64 dist(1234);
 
@@ -105,7 +115,7 @@ int main()
 	// Example of C++17 Standard C++ Parallel Sorting
 	//ParallelStdCppExample(uints, UseStableStdSort);
 
-	bundling_small_work_items_benchmark(20, 10000, 1000);
+	//bundling_small_work_items_benchmark(10000, 1000);
 
 //	std_parallel_sort_leak_demo();
 //	return 0;
@@ -115,21 +125,23 @@ int main()
 	//CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
 
 	//SumBenchmarkChar(uints);
-	SumBenchmark(    uints);
+	//SumBenchmark(    uints);
 	//SumBenchmark64(  uints);
 
-	return 0;
+	//return 0;
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	ParallelMergeSortBenchmark(uints, testSize);
+	//ParallelMergeSortBenchmark(uints, testSize);
 
-	ParallelInPlaceMergeSortBenchmark(uints);
+	//ParallelInPlaceMergeSortBenchmark(uints);
 
-	ParallelRadixSortLsdBenchmark(uints);
+	//ParallelRadixSortLsdBenchmark(uints);
 
-	ParallelMergeBenchmark();
+	//ParallelMergeBenchmark();
 
-	RadixSortLsdBenchmark(uints);
+	//RadixSortLsdBenchmark(uints);
+
+	RadixSelectBenchmark(uints);
 
 	// generate some nearly pre-sorted unsigned integers:
 	printf("\nTesting with %zu nearly pre-sorted unsigned integers...\n\n", testSize);
@@ -138,55 +150,63 @@ int main()
 		if ((i % 100) == 0)
 		{
 			//uints[i] = static_cast<unsigned>(rd());
-			uints[i] = static_cast<unsigned>(dist());   // way faster on Linux
+			//uints[i] = static_cast<unsigned>(dist());   // way faster on Linux
+			uints[i] = 0x1010;
 		}
 		else
+		{
 			uints[i] = static_cast<unsigned>(i);
+			//uints[i] = 0x1111;
+		}
 	}
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample(uints, UseStableStdSort);
+	//ParallelStdCppExample(uints, UseStableStdSort);
 
-	RadixSortMsdBenchmark(uints);
+	//RadixSortMsdBenchmark(uints);
 
 	//CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
 
-	SumBenchmarkChar(uints);
+	//SumBenchmarkChar(uints);
 
-	SumBenchmark(uints);
+	//SumBenchmark(uints);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	ParallelMergeSortBenchmark(uints, testSize);
+	//ParallelMergeSortBenchmark(uints, testSize);
 
-	ParallelInPlaceMergeSortBenchmark(uints);
+	//ParallelInPlaceMergeSortBenchmark(uints);
 
-	ParallelRadixSortLsdBenchmark(uints);
+	//ParallelRadixSortLsdBenchmark(uints);
 
-	RadixSortLsdBenchmark(uints);
+	//RadixSortLsdBenchmark(uints);
+
+	RadixSelectBenchmark(uints);
 
 	printf("\nTesting with %zu constant unsigned integers...\n\n", testSize);
 	for (size_t i = 0; i < uints.size(); i++) {
-		uints[i] = 10;
+		uints[i] = 0x10101010;
 	}
 
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample(uints, UseStableStdSort);
+	//ParallelStdCppExample(uints, UseStableStdSort);
 
-	RadixSortMsdBenchmark(uints);
+	//RadixSortMsdBenchmark(uints);
 
 	//CountingSortBenchmark(uints);		// sorts uchar's and not ulongs
 
-	SumBenchmarkChar(uints);
+	//SumBenchmarkChar(uints);
 
-	SumBenchmark(uints);
+	//SumBenchmark(uints);
 
 	// Benchmark the above Parallel Merge Sort algorithm
-	ParallelMergeSortBenchmark(uints, testSize);
+	//ParallelMergeSortBenchmark(uints, testSize);
 
-	ParallelInPlaceMergeSortBenchmark(uints);
+	//ParallelInPlaceMergeSortBenchmark(uints);
 
-	ParallelRadixSortLsdBenchmark(uints);
+	//ParallelRadixSortLsdBenchmark(uints);
 
-	RadixSortLsdBenchmark(uints);
+	//RadixSortLsdBenchmark(uints);
+
+	RadixSelectBenchmark(uints);
 
 #if 0
 	// generate some random unsigned longs:
@@ -241,7 +261,7 @@ int main()
 	//RadixSortMsdBenchmark(ulongs);
 
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample(ulongs, UseStableStdSort);
+	//ParallelStdCppExample(ulongs, UseStableStdSort);
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	//ParallelMergeSortBenchmark(ulongs, testSize);
@@ -256,8 +276,9 @@ int main()
 	//ParallelRadixSortLsdBenchmark(ulongs);
 
 	printf("\nTesting with %zu constant unsigned long longs...\n\n", testSize);
-	for (size_t i = 0; i < ulonglongs.size(); i++) {
-		ulonglongs[i] = 10;
+	for (size_t i = 0; i < ulonglongs.size();) {
+		ulonglongs[i++] = 10;
+		ulonglongs[i++] = 11;
 	}
 
 	//CountingSortBenchmark(ulongs);	// sorts uchar's and not ulongs
@@ -268,7 +289,7 @@ int main()
 	//RadixSortMsdBenchmark(ulongs);
 
 	// Example of C++17 Standard C++ Parallel Sorting
-	ParallelStdCppExample(ulongs, UseStableStdSort);
+	//ParallelStdCppExample(ulongs, UseStableStdSort);
 
 	// Benchmark the above Parallel Merge Sort algorithm
 	//ParallelMergeSortBenchmark(ulongs, testSize);

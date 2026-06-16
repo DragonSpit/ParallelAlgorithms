@@ -28,20 +28,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>Intel C++ Compiler 2025</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseIntelTBB>true</UseIntelTBB>
     <UseInteloneTBB>true</UseInteloneTBB>
@@ -49,7 +49,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>Intel C++ Compiler 2025</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseIntelTBB>true</UseIntelTBB>
@@ -185,6 +185,7 @@
   <ItemGroup>
     <ClCompile Include="AverageTests.cpp" />
     <ClCompile Include="BundleSmallWorkItems.cpp" />
+    <ClCompile Include="Copy.h" />
     <ClCompile Include="CountingSortParallelBenchmark.cpp" />
     <ClCompile Include="FillParallel.h" />
     <ClCompile Include="MemoryUsage.cpp" />
@@ -195,11 +196,14 @@
     </ClCompile>
     <ClCompile Include="ParallelMergeSortBenchmark.cpp" />
     <ClCompile Include="ParallelStdCppExample.cpp" />
+    <ClCompile Include="RadixSelect.h" />
+    <ClCompile Include="RadixSelectBenchmark.cpp" />
     <ClCompile Include="RadixSortLsdBenchmark.cpp" />
     <ClCompile Include="ParallelQuickSort.cpp" />
     <ClCompile Include="RadixSortMsdBenchmark.cpp" />
     <ClCompile Include="StdParallelSortMemoryLeakDemo.cpp" />
     <ClCompile Include="SumBenchmark.cpp" />
+    <ClCompile Include="SumParammelAI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="TODO.txt" />

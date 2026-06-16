@@ -26,6 +26,50 @@ inline size_t* HistogramByteComponents(unsigned inArray[], size_t l, size_t r)
 	return count;
 }
 
+inline size_t* HistogramOneByteComponent(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount)
+{
+	const unsigned BitsPerDigit = 8;
+	const unsigned NumberOfBins = 1 << BitsPerDigit;
+
+	size_t* count = new size_t[NumberOfBins]{};
+
+	for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+		count[(inArray[current] >> shiftAmount) & 0xff]++;
+	return count;
+}
+
+inline size_t* HistogramWordComponents(unsigned inArray[], size_t l, size_t r)
+{
+	const unsigned BitsPerDigit = 16;
+	const unsigned NumberOfBins = 1 << BitsPerDigit;
+	const unsigned NumberOfDigits = (sizeof(unsigned) * 8 + BitsPerDigit - 1) / BitsPerDigit;
+
+	size_t* count = new size_t[NumberOfDigits * NumberOfBins]{};
+
+	size_t* count0 = count + (0 * NumberOfBins);
+	size_t* count1 = count + (1 * NumberOfBins);
+
+	for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+	{
+		unsigned value = inArray[current];
+		count0[value         & 0xffff]++;
+		count1[(value >> 16) & 0xffff]++;
+	}
+	return count;
+}
+
+inline size_t* HistogramOneWordComponent(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount)
+{
+	const unsigned BitsPerDigit = 16;
+	const unsigned NumberOfBins = 1 << BitsPerDigit;
+
+	size_t* count = new size_t[NumberOfBins]{};
+
+	for (size_t current = l; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+		count[(inArray[current] >> shiftAmount) & 0xffff]++;
+	return count;
+}
+
 inline void HistogramByteSingleComponent(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount, size_t* count)
 {
 	const size_t NumberOfBins = 256;

@@ -5,6 +5,17 @@ TODO: Explore parallelism at small work load, such as small arrays. For example,
       which would be a win for parallelism for smaller arrays.
 TODO: Implement adaptive index size depending on the size of the array. For example, arrays smaller than 4 billion elements can use 32-bit indices, which would reduce memory usage and increase performance for small arrays.
       This would be a big win for small arrays, which are more common in practice. It would also be a win for Radix Sort, for N-bit/digit such as 11-bits/digit as it would use less Cache.
+TODO: Combine de-randomization and multi-write optimization (in Experimental namespace) to optimize permutation writes.
+TODO: Use non-temporal stores to when writing to memory to bypass cache when writing for LSD Radix Sort during each pass. This could be placed in
+      the memcpy function that is currently used to turn writes into SSE instruction. Is there a version of memcpy that uses non-temporal stores? sfence needs to be used afterwards.
+      A quick test can be done with aligned buffers to see if this improves performance for derandomization, since these buffers can be made aligned, and the destination buffer can be made aligned.
+      We could even make a specialized memcpy function which does it only if source and destination are aligned, and otherwise does a regular memcpy.
+TODO: Measure various radix algorithms with different array sizes to extract the pattern I saw previously where certain array sizes perform worse than other sizes. This may be due to cache effects, and understanding this pattern could
+      help us optimize our algorithms for better performance across all array sizes.
+TODO: Setup large and giant OS pages on Linux and Windows as Denis Bahvalov's Performance Tuning books suggest. This may help Radix and Counting algorithms
+      due to their random memory access patterns. He mentions in Ch. 8 that two benchmarks benefited by over 20% in performance. May have to do this in the
+      cloud since it requires Windows Pro or higher and WSL most likely doesn't support giant OS pages. This has the potential for unleashing Counting Sort
+      especially on an AMD 3D-cache CPUs.
 Idea: The whole "parallelism for the small" could be our value add. We could develop techniques and technologies that increase usefulness at the small array scale and enable use of parallelism and higher performance for more use cases,
       expanding the market for parallelism. It would benefit not only C++, but also C#, both of which would enjoy the benefit of parallelism performance gains in more cases - i.e. not just the very large cases. This would blow the doors
       off the parallel performance market.

@@ -110,7 +110,7 @@ int ParallelStdCppExample(vector<unsigned>& uints, bool stable = false)
 		const auto endTime = high_resolution_clock::now();
 		print_results("Serial", sorted, startTime, endTime);
 	}
-
+#if 0
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		vector<unsigned> sorted(uints);
@@ -140,7 +140,7 @@ int ParallelStdCppExample(vector<unsigned>& uints, bool stable = false)
 		print_results("Parallel Array", s[0], s[uints.size() - 1], startTime, endTime);
 		delete[] s;
 	}
-
+#endif
 	return 0;
 }
 

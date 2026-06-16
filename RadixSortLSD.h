@@ -32,9 +32,208 @@ using std::vector;
 #include "InsertionSort.h"
 #include "ParallelMergeSort.h"
 #include "Histogram.h"
+#include "Copy.h"
 
 extern unsigned long long physical_memory_used_in_megabytes();
 extern unsigned long long physical_memory_total_in_megabytes();
+
+namespace ExperimentalSequentialAlgorithms
+{
+	// Provides 20% speedup over the baseline implementation for constant arrays and does not slow random or presorted arrays down. Runs even faster with Microsoft Compiler.
+	// Versus two-phase counting and permuation, this method is slower.
+	// However, this technique could be used in parallel LSD Radix Sort where two-phase method is not possible and the array is already being split into chunks.
+	// This algorithm does not support two-phase counting and permutation method for the same reason parallel LSD Radix Sort does not support it, as array elements move between
+	// halves of the array, messing up the counts. However, it could be combined with counting while writing the data and with de-randomization of writes.
+	// Splits writes into two halves to attempt to provide two independent memory writes to break any dependencies in hopes of improved pipelining.
+	// Serial LSD Radix Sort, with Counting separated into its own phase, followed by a permutation phase, as is done in HPCsharp in C#
+	// TODO: Test with arrays of odd size to ensure all elements are processed, as they will not be split into equal halves.
+	inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_1(unsigned* inout_array, unsigned* tmp_array, size_t last)
+	{
+		const unsigned BitsPerDigit = 8;
+		const size_t NumberOfBins = (size_t)1 << BitsPerDigit;
+		unsigned shiftRightAmount = 0;
+		unsigned* _inout_array = inout_array;
+		unsigned* _tmp_array = tmp_array;
+		unsigned currentDigit = 0;
+		unsigned maxDigit = sizeof(unsigned);
+		const unsigned bit_mask = NumberOfBins - 1;
+		size_t count_left[NumberOfBins], count_right[NumberOfBins];
+		size_t right_half_start = (last + 1) / 2;
+
+		while (currentDigit < maxDigit)						// end processing digits when all the mask bits have been processes and shift out, leaving none
+		{
+			HistogramByteSingleComponent(_inout_array, 0, right_half_start - 1, shiftRightAmount, count_left);
+			HistogramByteSingleComponent(_inout_array, right_half_start, last, shiftRightAmount, count_right);
+
+			//size_t* count_left  = count2D_left  + (currentDigit * NumberOfBins);  // TODO: Could move endOfBin calculation outside of this loop.
+			//size_t* count_right = count2D_right + (currentDigit * NumberOfBins);
+			alignas(64) size_t startOfBin_left[NumberOfBins];
+			alignas(64) size_t startOfBin_right[NumberOfBins];
+			//printf("endOfBin address = %p\n", endOfBin);
+			startOfBin_left[0] = 0; startOfBin_right[0] = count_left[0];
+			for (size_t i = 1; i < NumberOfBins; i++)
+			{
+				startOfBin_left[i] = startOfBin_left[i - 1] + count_left[i - 1] + count_right[i - 1];
+				startOfBin_right[i] = startOfBin_left[i] + count_left[i];
+			}
+			//printf("startOfBin_left & startOfBin_right\n");
+			//for (size_t i = 0; i < NumberOfBins; i++)
+			//	printf("%zu: %zu  %zu\n", i, startOfBin_left[i], startOfBin_right[i]);
+			//printf("\n");
+			//const auto startTime = high_resolution_clock::now();
+			// permutation phase
+			// Left half of the array always has <= right half of the array number of elements.
+			size_t _current_right = right_half_start;
+			for (size_t _current_left = 0; _current_left < right_half_start; _current_left++, _current_right++)
+			{
+				_tmp_array[startOfBin_left[ (_inout_array[_current_left]  >> shiftRightAmount) & bit_mask]++] = _inout_array[_current_left];
+				_tmp_array[startOfBin_right[(_inout_array[_current_right] >> shiftRightAmount) & bit_mask]++] = _inout_array[_current_right];
+			}
+			//if (_current_right == last)
+			//	_output_array[startOfBin_right[(_input_array[_current_right] >> shiftRightAmount) & bit_mask]] = _input_array[_current_right];
+
+			//printf("_tmp_arry:  ");
+			//for (size_t i = 0; i <= last; i++)
+			//	printf("%x  ", _tmp_array[i]);
+			//printf("\n");
+
+			//const auto endTime = high_resolution_clock::now();
+			//print_results("Permutation: ", startTime, endTime);
+
+			shiftRightAmount += BitsPerDigit;
+			std::swap(_inout_array, _tmp_array);
+			currentDigit++;
+		}
+	}
+	// TODO: Move arrays to heap instead of stack.
+	inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_4X(unsigned* inout_array, unsigned* tmp_array, size_t last)
+	{
+		const unsigned BitsPerDigit = 8;
+		const size_t NumberOfBins = (size_t)1 << BitsPerDigit;
+		unsigned shiftRightAmount = 0;
+		unsigned* _inout_array = inout_array;
+		unsigned* _tmp_array = tmp_array;
+		unsigned currentDigit = 0;
+		unsigned maxDigit = sizeof(unsigned);
+		const unsigned bit_mask = NumberOfBins - 1;
+		size_t count_0[NumberOfBins], count_1[NumberOfBins], count_2[NumberOfBins], count_3[NumberOfBins];
+		size_t quarter_1_start = (last + 1) / 4;
+		size_t quarter_2_start = (last + 1) / 2;
+		size_t quarter_3_start = (last + 1) * 3 / 4;
+
+		while (currentDigit < maxDigit)						// end processing digits when all the mask bits have been processes and shift out, leaving none
+		{
+			HistogramByteSingleComponent(_inout_array, 0,               quarter_1_start - 1, shiftRightAmount, count_0);
+			HistogramByteSingleComponent(_inout_array, quarter_1_start, quarter_2_start - 1, shiftRightAmount, count_1);
+			HistogramByteSingleComponent(_inout_array, quarter_2_start, quarter_3_start - 1, shiftRightAmount, count_2);
+			HistogramByteSingleComponent(_inout_array, quarter_3_start, last,                shiftRightAmount, count_3);
+
+			alignas(64) size_t startOfBin_0[NumberOfBins];
+			alignas(64) size_t startOfBin_1[NumberOfBins];
+			alignas(64) size_t startOfBin_2[NumberOfBins];
+			alignas(64) size_t startOfBin_3[NumberOfBins];
+			//printf("endOfBin address = %p\n", endOfBin);
+			startOfBin_0[0] = 0; startOfBin_1[0] = count_0[0]; startOfBin_2[0] = count_0[0] + count_1[0]; startOfBin_3[0] = count_0[0] + count_1[0] + count_2[0];
+			for (size_t i = 1; i < NumberOfBins; i++)
+			{
+				startOfBin_0[i] = startOfBin_0[i - 1] + count_0[i - 1] + count_1[i - 1] + count_2[i - 1] + count_3[i - 1];
+				startOfBin_1[i] = startOfBin_0[i] + count_0[i];
+				startOfBin_2[i] = startOfBin_0[i] + count_0[i] + count_1[i];
+				startOfBin_3[i] = startOfBin_0[i] + count_0[i] + count_1[i] + count_2[i];
+			}
+			//printf("startOfBin_left & startOfBin_right\n");
+			//for (size_t i = 0; i < NumberOfBins; i++)
+			//	printf("%zu: %zu  %zu\n", i, startOfBin_left[i], startOfBin_right[i]);
+			//printf("\n");
+			//const auto startTime = high_resolution_clock::now();
+			// permutation phase
+			// Left half of the array always has <= right half of the array number of elements.
+			size_t _current_1 = quarter_1_start; size_t _current_2 = quarter_2_start; size_t _current_3 = quarter_3_start;
+			for (size_t _current_0 = 0; _current_0 < quarter_1_start; _current_0++, _current_1++, _current_2++, _current_3++)
+			{
+				_tmp_array[startOfBin_0[(_inout_array[_current_0] >> shiftRightAmount) & bit_mask]++] = _inout_array[_current_0];
+				_tmp_array[startOfBin_1[(_inout_array[_current_1] >> shiftRightAmount) & bit_mask]++] = _inout_array[_current_1];
+				_tmp_array[startOfBin_2[(_inout_array[_current_2] >> shiftRightAmount) & bit_mask]++] = _inout_array[_current_2];
+				_tmp_array[startOfBin_3[(_inout_array[_current_3] >> shiftRightAmount) & bit_mask]++] = _inout_array[_current_3];
+			}
+			//if (_current_right == last)
+			//	_output_array[startOfBin_right[(_input_array[_current_right] >> shiftRightAmount) & bit_mask]] = _input_array[_current_right];
+
+			//printf("_tmp_arry:  ");
+			//for (size_t i = 0; i <= last; i++)
+			//	printf("%x  ", _tmp_array[i]);
+			//printf("\n");
+
+			//const auto endTime = high_resolution_clock::now();
+			//print_results("Permutation: ", startTime, endTime);
+
+			shiftRightAmount += BitsPerDigit;
+			std::swap(_inout_array, _tmp_array);
+			currentDigit++;
+		}
+	}
+	inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_3X(unsigned* inout_array, unsigned* tmp_array, size_t last)
+	{
+		const unsigned BitsPerDigit = 8;
+		const size_t NumberOfBins = (size_t)1 << BitsPerDigit;
+		unsigned shiftRightAmount = 0;
+		unsigned* _inout_array = inout_array;
+		unsigned* _tmp_array = tmp_array;
+		unsigned currentDigit = 0;
+		unsigned maxDigit = sizeof(unsigned);
+		const unsigned bit_mask = NumberOfBins - 1;
+		size_t count_0[NumberOfBins], count_1[NumberOfBins], count_2[NumberOfBins];
+		size_t third_1_start = (last + 1) / 3;
+		size_t third_2_start = (last + 1) * 2 / 3;
+
+		while (currentDigit < maxDigit)						// end processing digits when all the mask bits have been processes and shift out, leaving none
+		{
+			HistogramByteSingleComponent(_inout_array, 0, third_1_start - 1,             shiftRightAmount, count_0);
+			HistogramByteSingleComponent(_inout_array, third_1_start, third_2_start - 1, shiftRightAmount, count_1);
+			HistogramByteSingleComponent(_inout_array, third_2_start, last,              shiftRightAmount, count_2);
+
+			alignas(64) size_t startOfBin_0[NumberOfBins];
+			alignas(64) size_t startOfBin_1[NumberOfBins];
+			alignas(64) size_t startOfBin_2[NumberOfBins];
+			//printf("endOfBin address = %p\n", endOfBin);
+			startOfBin_0[0] = 0; startOfBin_1[0] = count_0[0]; startOfBin_2[0] = count_0[0] + count_1[0];
+			for (size_t i = 1; i < NumberOfBins; i++)
+			{
+				startOfBin_0[i] = startOfBin_0[i - 1] + count_0[i - 1] + count_1[i - 1] + count_2[i - 1];
+				startOfBin_1[i] = startOfBin_0[i] + count_0[i];
+				startOfBin_2[i] = startOfBin_0[i] + count_0[i] + count_1[i];
+			}
+			//printf("startOfBin_left & startOfBin_right\n");
+			//for (size_t i = 0; i < NumberOfBins; i++)
+			//	printf("%zu: %zu  %zu\n", i, startOfBin_left[i], startOfBin_right[i]);
+			//printf("\n");
+			//const auto startTime = high_resolution_clock::now();
+			// permutation phase
+			// Left half of the array always has <= right half of the array number of elements.
+			size_t _current_1 = third_1_start; size_t _current_2 = third_2_start;
+			for (size_t _current_0 = 0; _current_0 < third_1_start; _current_0++, _current_1++, _current_2++)
+			{
+				_tmp_array[startOfBin_0[(_inout_array[_current_0] >> shiftRightAmount) & bit_mask]++] = _inout_array[_current_0];
+				_tmp_array[startOfBin_1[(_inout_array[_current_1] >> shiftRightAmount) & bit_mask]++] = _inout_array[_current_1];
+				_tmp_array[startOfBin_2[(_inout_array[_current_2] >> shiftRightAmount) & bit_mask]++] = _inout_array[_current_2];
+			}
+			//if (_current_right == last)
+			//	_output_array[startOfBin_right[(_input_array[_current_right] >> shiftRightAmount) & bit_mask]] = _input_array[_current_right];
+
+			//printf("_tmp_arry:  ");
+			//for (size_t i = 0; i <= last; i++)
+			//	printf("%x  ", _tmp_array[i]);
+			//printf("\n");
+
+			//const auto endTime = high_resolution_clock::now();
+			//print_results("Permutation: ", startTime, endTime);
+
+			shiftRightAmount += BitsPerDigit;
+			std::swap(_inout_array, _tmp_array);
+			currentDigit++;
+		}
+	}
+}
 
 inline static void print_results(const char* const tag,
 	high_resolution_clock::time_point startTime,
@@ -55,8 +254,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar(unsigned* inout_arr
 	unsigned shiftRightAmount = 0;
 	unsigned* _inout_array = inout_array;
 	unsigned* _tmp_array   = tmp_array;
-	size_t count[NumberOfBins];
-	size_t endOfBin[NumberOfBins];
+	size_t count[NumberOfBins], endOfBin[NumberOfBins];
 
 	for (unsigned d = 0; d < numberOfDigits; d++)
 	{
@@ -91,8 +289,7 @@ inline void _RadixSortLSD_StableUnsigned_Nbit_PowerOf2RadixScalar(unsigned* inou
 	unsigned* _inout_array = inout_array;
 	unsigned* _tmp_array   = tmp_array;
 	bool _tmp_array_has_result = false;
-	size_t count[   NumberOfBins];
-	size_t endOfBin[NumberOfBins];
+	size_t count[   NumberOfBins], endOfBin[NumberOfBins];
 
 	for (unsigned d = 0; d < numberOfDigits; d++)
 	{
@@ -129,6 +326,8 @@ inline void RadixSortLSDPowerOf2Radix(unsigned* inout_array, unsigned* tmp_array
 
 	if (inout_size >= Threshold) {
 		_RadixSortLSD_StableUnsigned_PowerOf2RadixScalar< BitsPerDigit >(inout_array, tmp_array, inout_size - 1);
+		//ExperimentalSequentialAlgorithms::_RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_1(inout_array, tmp_array, inout_size - 1);
+		//ExperimentalSequentialAlgorithms::_RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_4X(inout_array, tmp_array, inout_size - 1);
 	}
 	else {
 		// TODO: Substitute Merge Sort, as it will get rid off the for loop, since it's internal to MergeSort
@@ -225,7 +424,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned* 
 		for (size_t i = 1; i < NumberOfBins; i++)
 			endOfBin[i] = endOfBin[i - 1] + count[i - 1];
 
-		const auto startTime = high_resolution_clock::now();
+		//const auto startTime = high_resolution_clock::now();
 		// permutation phase
 #if 0
 		for (size_t _current = 0; _current <= last; _current++)
@@ -246,8 +445,8 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned* 
 			_output_array[index++] = _input_array[_current];
 		}
 #endif
-		const auto endTime = high_resolution_clock::now();
-		print_results("Permutation: ", startTime, endTime);
+		//const auto endTime = high_resolution_clock::now();
+		//print_results("Permutation: ", startTime, endTime);
 
 		shiftRightAmount += BitsPerDigit;
 		std::swap(_input_array, _output_array);
@@ -255,68 +454,64 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(unsigned* 
 	}
 	delete[] count2D;
 }
-
-// TODO: Move to Experimental namespace, since this optimization did not provide a speed-up on laptop CPU, but may provide a speed-up on a different CPU architecture.
-// This algorithm does not support two-phase counting and permutation method for the same reason parallel LSD Radix Sort does not support it, as array elements move between
-// halves of the array, messing up the counts. However, it could be combined with counting while writing the data and with de-randomization of writes.
-// Splits writes into two halves to attempt to provide two independent memory writes to break any dependencies in hopes of improved pipelining.
 // Serial LSD Radix Sort, with Counting separated into its own phase, followed by a permutation phase, as is done in HPCsharp in C#
-inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_1(unsigned* inout_array, unsigned* tmp_array, size_t last, unsigned shiftRightAmount)
+// Performance optimization of scanning the input array left-to-right followed by right-to-left in an alternating fashion to take advantage
+// of evergrowing size of caches.
+// Slower than the always left-to-right (incrementing addressing of the source) implementation - slightly.
+inline void _RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_rlscan(unsigned* input_array, unsigned* output_array, size_t last, unsigned long shiftRightAmount)
 {
 	const unsigned BitsPerDigit = 8;
-	const size_t NumberOfBins = (size_t)1 << BitsPerDigit;
-	unsigned* _inout_array  = inout_array;
-	unsigned* _tmp_array = tmp_array;
+	const size_t NumberOfBins = 1 << BitsPerDigit;
+	unsigned* _input_array = input_array;
+	unsigned* _output_array = output_array;
 	unsigned currentDigit = 0;
 	unsigned maxDigit = sizeof(unsigned);
 	const unsigned bit_mask = NumberOfBins - 1;
-	size_t count_left[NumberOfBins], count_right[NumberOfBins];
-	size_t right_half_start = (last + 1) / 2;
+
+	//const auto startTime = high_resolution_clock::now();
+	size_t* count2D = HistogramByteComponents(input_array, 0, last);
+	//const auto endTime = high_resolution_clock::now();
+	//print_results("Histogram: ", startTime, endTime);
 
 	while (currentDigit < maxDigit)						// end processing digits when all the mask bits have been processes and shift out, leaving none
 	{
-		HistogramByteSingleComponent(_inout_array, 0, right_half_start - 1, shiftRightAmount, count_left);
-		HistogramByteSingleComponent(_inout_array, right_half_start, last,  shiftRightAmount, count_right);
-
-		//size_t* count_left  = count2D_left  + (currentDigit * NumberOfBins);  // TODO: Could move endOfBin calculation outside of this loop.
-		//size_t* count_right = count2D_right + (currentDigit * NumberOfBins);
-		alignas(64) size_t startOfBin_left[ NumberOfBins];
-		alignas(64) size_t startOfBin_right[NumberOfBins];
-		//printf("endOfBin address = %p\n", endOfBin);
-		startOfBin_left[0] = 0; startOfBin_right[0] = count_left[0];
-		for (size_t i = 1; i < NumberOfBins; i++)
+		if ((currentDigit & 1) == 0)	// left-to-right for even digits
 		{
-			startOfBin_left[ i] = startOfBin_left[i - 1] + count_left[i - 1] + count_right[i - 1];
-			startOfBin_right[i] = startOfBin_left[i] + count_left[i];
+			size_t* count = count2D + (currentDigit * NumberOfBins);  // TODO: Could move endOfBin calculation outside of this loop.
+			alignas(64) size_t startOfBin[NumberOfBins];
+			//printf("endOfBin address = %p\n", endOfBin);
+			startOfBin[0] = 0;
+			for (size_t i = 1; i < NumberOfBins; i++)
+				startOfBin[i] = startOfBin[i - 1] + count[i - 1];
+
+			//const auto startTime = high_resolution_clock::now();
+			// permutation phase
+			for (size_t _current = 0; _current <= last; _current++)
+				_output_array[startOfBin[(_input_array[_current] >> shiftRightAmount) & bit_mask]++] = _input_array[_current];
+			//const auto endTime = high_resolution_clock::now();
+			//print_results("Permutation: ", startTime, endTime);
 		}
-		//printf("startOfBin_left & startOfBin_right\n");
-		//for (size_t i = 0; i < NumberOfBins; i++)
-		//	printf("%zu: %zu  %zu\n", i, startOfBin_left[i], startOfBin_right[i]);
-		//printf("\n");
-		//const auto startTime = high_resolution_clock::now();
-		// permutation phase
-		// Left half of the array always has <= right half of the array number of elements.
-		size_t _current_right = right_half_start;
-		for (size_t _current_left = 0; _current_left < right_half_start; _current_left++, _current_right++)
+		else     // right-to-left for odd digits
 		{
-			_tmp_array[startOfBin_left[ (_inout_array[_current_left]  >> shiftRightAmount) & bit_mask]++] = _inout_array[_current_left];
-			_tmp_array[startOfBin_right[(_inout_array[_current_right] >> shiftRightAmount) & bit_mask]++] = _inout_array[_current_right];
+			size_t* count = count2D + (currentDigit * NumberOfBins);  // TODO: Could move endOfBin calculation outside of this loop.
+			alignas(64) size_t endOfBin[NumberOfBins];
+			//printf("endOfBin address = %p\n", endOfBin);
+			endOfBin[0] = count[0] - 1;
+			for (size_t i = 1; i < NumberOfBins; i++)
+				endOfBin[i] = endOfBin[i - 1] + count[i];
+
+			//const auto startTime = high_resolution_clock::now();
+			// permutation phase
+			for (long long _current = last; _current >= 0; _current--)
+				_output_array[endOfBin[(_input_array[_current] >> shiftRightAmount) & bit_mask]--] = _input_array[_current];
+			//const auto endTime = high_resolution_clock::now();
+			//print_results("Permutation: ", startTime, endTime);
 		}
-		//if (_current_right == last)
-		//	_output_array[startOfBin_right[(_input_array[_current_right] >> shiftRightAmount) & bit_mask]] = _input_array[_current_right];
-
-		//printf("_tmp_arry:  ");
-		//for (size_t i = 0; i <= last; i++)
-		//	printf("%x  ", _tmp_array[i]);
-		//printf("\n");
-
-		//const auto endTime = high_resolution_clock::now();
-		//print_results("Permutation: ", startTime, endTime);
-
 		shiftRightAmount += BitsPerDigit;
-		std::swap(_inout_array, _tmp_array);
+		std::swap(_input_array, _output_array);
 		currentDigit++;
 	}
+	delete[] count2D;
 }
 
 // LSD Radix Sort - stable (LSD has to be, and this may preclude LSD Radix from being able to be in-place)
@@ -329,6 +524,7 @@ inline void RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(unsigned* a, unsigned* b
 	// they are not pushed on the stack and are treated as constants, but local.
 	if (a_size >= Threshold) {
 		_RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase(a, b, a_size - 1, shiftRightAmount);
+		//_RadixSortLSD_StableUnsigned_PowerOf2RadixScalar_TwoPhase_rlscan(a, b, a_size - 1, shiftRightAmount);  // Slower than always left-to-right scan
 	}
 	else {
 		// TODO: Substitute Merge Sort, as it will get rid off the for loop, since it's internal to MergeSort
@@ -368,6 +564,7 @@ inline void _RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized_1(uns
 			unsigned* buff = &(bufferDerandomize[digit][0]);
 #if 1
 			memcpy(&(output_array[outIndex]), buff, BufferDepth * sizeof(unsigned));	// significantly faster than a for loop
+			//nontemporal_memcpy_aligned(&(output_array[outIndex]), buff, BufferDepth * sizeof(unsigned));  // same speed as memcpy on laptop CPU
 #else
 			unsigned* outBuff = &(output_array[outIndex]);
 			for (size_t i = 0; i < BufferDepth; i++)
@@ -508,19 +705,18 @@ inline void _RadixSortLSD_StableUnsigned_Nbits_TwoPhase_DeRandomize(unsigned* in
 	//print_results("Histogram: ", startTime, endTime);
 
 	size_t* startOfBin = new size_t[NumberOfBins];
-	size_t* endOfBin   = new size_t[NumberOfBins];
 
 	while (bitMask != 0)						// end processing digits when all the mask bits have been processes and shift out, leaving none
 	{
 		size_t* count = count2D + (currentDigit * NumberOfBins);
 
-		startOfBin[0] = endOfBin[0] = 0;
+		startOfBin[0] = 0;
 		for (size_t i = 1; i < NumberOfBins; i++)
-			startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
+			startOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
 		//const auto startTime = high_resolution_clock::now();
 		_RadixSortLSD_StableUnsigned_PowerOf2Radix_PermuteDerandomized_1< bufferDepth >(
-			_input_array, _output_array, (size_t)0, last, bitMask, shiftRightAmount, endOfBin,
+			_input_array, _output_array, (size_t)0, last, bitMask, shiftRightAmount, startOfBin,
 			NumberOfBins, bufferIndex, bufferDerandomize);
 		//const auto endTime = high_resolution_clock::now();
 		//print_results("Permutation: ", startTime, endTime);
@@ -543,7 +739,6 @@ inline void _RadixSortLSD_StableUnsigned_Nbits_TwoPhase_DeRandomize(unsigned* in
 	//	for (size_t _current = 0; _current <= last; _current++)	// copy from input array back into the output array
 	//		_input_array[_current] = _output_array[_current];
 
-	delete[] endOfBin;
 	delete[] startOfBin;
 	delete[] count2D;
 #if 1
@@ -695,5 +890,6 @@ inline void sort_radix_in_place_stable_adaptive(unsigned* src, size_t src_size, 
 		}
 	}
 }
+
 
 #endif
