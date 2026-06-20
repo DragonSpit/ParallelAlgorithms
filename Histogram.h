@@ -90,10 +90,10 @@ inline size_t* HistogramOneByteComponentOpt(unsigned inArray[], size_t l, size_t
 
 // l is inclusing and r is exclusive
 // Nearly 2X faster than the version with a single additional count array for constant and pre-sorted arrays, but is slower for random arrays.
-inline size_t* HistogramOneByteComponentOpt(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount, size_t* count)
+inline size_t* HistogramOneComponentOpt(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount, unsigned bitsPerDigit, size_t* count)
 {
-	const unsigned BitsPerDigit = 8;
-	const unsigned NumberOfBins = 1 << BitsPerDigit;
+	const unsigned NumberOfBins = 1 << bitsPerDigit;
+	const unsigned Mask = NumberOfBins - 1;
 
 	size_t* count_all = new size_t[4 * NumberOfBins]{};  // extra count arrays
 	size_t* count_0 = count_all + (0 * NumberOfBins);
@@ -104,13 +104,13 @@ inline size_t* HistogramOneByteComponentOpt(unsigned inArray[], size_t l, size_t
 	size_t last_by_three = l + ((r - l) / 3) * 3;
 	for (current = l; current < last_by_three;)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 	{
-		count_0[(inArray[current] >> shiftAmount) & 0xff]++; current++;
-		count_1[(inArray[current] >> shiftAmount) & 0xff]++; current++;
-		count_2[(inArray[current] >> shiftAmount) & 0xff]++; current++;
+		count_0[(inArray[current] >> shiftAmount) & Mask]++; current++;
+		count_1[(inArray[current] >> shiftAmount) & Mask]++; current++;
+		count_2[(inArray[current] >> shiftAmount) & Mask]++; current++;
 	}
 
 	for (; current < r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
-		count_0[(inArray[current] >> shiftAmount) & 0xff]++;
+		count_0[(inArray[current] >> shiftAmount) & Mask]++;
 
 	// Combine the counts from the extra count arrays into the main count array
 	for (size_t i = 0; i < NumberOfBins; i++)
