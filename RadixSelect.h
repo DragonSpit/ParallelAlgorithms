@@ -82,16 +82,16 @@ inline static size_t MoveOutsideOfKthBinInAndCount(unsigned a[], size_t startOfO
 
 inline static void RadixSelectiontNonRecursiveInner(unsigned a[], size_t first, size_t length, int shiftRightAmount, size_t k)
 {
-	size_t last = first + length;  // non-inclusive
     const unsigned bitMask = PowerOfTwoRadix - 1;
 
     size_t* startOfBin = new size_t[PowerOfTwoRadix + 1];
-	size_t* count = new size_t[PowerOfTwoRadix]{};
+	size_t* count      = new size_t[PowerOfTwoRadix]{};
 
     while (shiftRightAmount >= 0)
     {
+        size_t last = first + length;  // non-inclusive
         //const auto startTime_0 = high_resolution_clock::now();
-        HistogramOneByteComponent(a, first, last, shiftRightAmount, count);
+        HistogramOneByteComponentOpt(a, first, last, shiftRightAmount, count);
         //const auto endTime_0 = high_resolution_clock::now();
         //printf("Histogram: Time: %fms\n", duration_cast<duration<double, milli>>(endTime_0 - startTime_0).count());
         startOfBin[0] = first; startOfBin[PowerOfTwoRadix] = last;
@@ -120,7 +120,6 @@ inline static void RadixSelectiontNonRecursiveInner(unsigned a[], size_t first, 
         {
             first = startOfBin[kthBin];
             length = startOfBin[kthBin + 1] - startOfBin[kthBin];
-            last = first + length;
         }
         else if ((startOfBin[kthBin + 1] - startOfBin[kthBin]) == 1) return; // Only one element in the bin that k is in, so it must be the k-th smallest element
         //TODO: Port to C++: else throw new Exception("RadixSelectiontMsdInner: No elements in the bin that k is in, which should never happen");

@@ -45,7 +45,7 @@ inline size_t* HistogramOneByteComponent(unsigned inArray[], size_t l, size_t r,
 	const unsigned BitsPerDigit = 8;
 	const unsigned NumberOfBins = 1 << BitsPerDigit;
 
-	for (int i = 0; i < PowerOfTwoRadix; i++)
+	for (int i = 0; i < NumberOfBins; i++)
 		count[i] = 0;
 	for (size_t current = l; current < r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 		count[(inArray[current] >> shiftAmount) & 0xff]++;
@@ -53,50 +53,13 @@ inline size_t* HistogramOneByteComponent(unsigned inArray[], size_t l, size_t r,
 }
 
 // Optimized by realizing that incrementing the same memory location, in the case of constant inArray, is a loop dependency with memory access within the dependency.
-// 2X faster than the non-optimized version for constant and pre-sorted arrays.
-// TODO: Potential further optimization is to allocate the extra count arrays on the stack, but the heap allocation is safer. This would improve performance for small arrays.
+// Nearly2X faster than the non-optimized version for constant and pre-sorted arrays, but is slower for random arrays.
 inline size_t* HistogramOneByteComponentOpt(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount)
 {
 	const unsigned BitsPerDigit = 8;
 	const unsigned NumberOfBins = 1 << BitsPerDigit;
 
 	size_t* count_0 = new size_t[NumberOfBins]{};
-	size_t* count_1 = new size_t[NumberOfBins]{};  // extra count arrays
-	size_t* count_2 = new size_t[NumberOfBins]{};
-	size_t* count_3 = new size_t[NumberOfBins]{};
-
-	size_t current;
-// TODO: This r limit is wrong and need to be by four.
-	for (current = l; current <= r;)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
-	{
-		count_0[(inArray[current++] >> shiftAmount) & 0xff]++;
-		count_1[(inArray[current++] >> shiftAmount) & 0xff]++;
-		count_2[(inArray[current++] >> shiftAmount) & 0xff]++;
-		count_3[(inArray[current++] >> shiftAmount) & 0xff]++;
-	}
-
-	for (; current <= r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
-		count_0[(inArray[current] >> shiftAmount) & 0xff]++;
-
-	// Combine the counts from the extra count arrays into the main count array
-	for (size_t i = 0; i < NumberOfBins; i++)
-		count_0[i] += count_1[i] + count_2[i] + count_3[i];
-
-	delete[] count_1;
-	delete[] count_2;
-	delete[] count_3;
-
-	return count_0;
-}
-
-// l is inclusing and r is exclusive
-inline size_t* HistogramOneByteComponentOpt(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount, size_t* count_0)
-{
-	const unsigned BitsPerDigit = 8;
-	const unsigned NumberOfBins = 1 << BitsPerDigit;
-
-	for (int i = 0; i < PowerOfTwoRadix; i++)
-		count_0[i] = 0;
 	size_t* count_1 = new size_t[NumberOfBins]{};  // extra count arrays
 	size_t* count_2 = new size_t[NumberOfBins]{};
 	size_t* count_3 = new size_t[NumberOfBins]{};
@@ -121,6 +84,39 @@ inline size_t* HistogramOneByteComponentOpt(unsigned inArray[], size_t l, size_t
 	delete[] count_1;
 	delete[] count_2;
 	delete[] count_3;
+
+	return count_0;
+}
+
+// l is inclusing and r is exclusive
+// Nearly 2X faster than the version with a single additional count array for constant and pre-sorted arrays, but is slower for random arrays.
+inline size_t* HistogramOneByteComponentOpt(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount, size_t* count)
+{
+	const unsigned BitsPerDigit = 8;
+	const unsigned NumberOfBins = 1 << BitsPerDigit;
+
+	size_t* count_all = new size_t[4 * NumberOfBins]{};  // extra count arrays
+	size_t* count_0 = count_all + (0 * NumberOfBins);
+	size_t* count_1 = count_all + (1 * NumberOfBins);
+	size_t* count_2 = count_all + (2 * NumberOfBins);
+
+	size_t current;
+	size_t last_by_three = l + ((r - l) / 3) * 3;
+	for (current = l; current < last_by_three;)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+	{
+		count_0[(inArray[current] >> shiftAmount) & 0xff]++; current++;
+		count_1[(inArray[current] >> shiftAmount) & 0xff]++; current++;
+		count_2[(inArray[current] >> shiftAmount) & 0xff]++; current++;
+	}
+
+	for (; current < r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+		count_0[(inArray[current] >> shiftAmount) & 0xff]++;
+
+	// Combine the counts from the extra count arrays into the main count array
+	for (size_t i = 0; i < NumberOfBins; i++)
+		count[i] = count_0[i] + count_1[i] + count_2[i];
+
+	delete[] count_all;
 
 	return count_0;
 }
