@@ -80,48 +80,48 @@ inline static size_t MoveOutsideOfKthBinInAndCount(unsigned a[], size_t startOfO
     return _current_ib;
 }
 
-inline static void RadixSelectiontNonRecursiveInner(unsigned a[], size_t first, size_t length, int shiftRightAmount, size_t k)
+inline static void RadixSelectiontNonRecursiveInner(unsigned a[], size_t first, size_t length, int shiftRightAmount, unsigned bitsPerDigit, size_t k)
 {
-    const unsigned bitMask = PowerOfTwoRadix - 1;
+	const unsigned BitMask = (1 << bitsPerDigit) - 1;
+	const size_t NumberOfBins = 1 << bitsPerDigit;
 
-    size_t* startOfBin = new size_t[PowerOfTwoRadix + 1];
-	size_t* count      = new size_t[PowerOfTwoRadix]{};
+    size_t* startOfBin = new size_t[NumberOfBins + 1];
+	size_t* count      = new size_t[NumberOfBins]{};
 
     while (shiftRightAmount >= 0)
     {
         size_t last = first + length;  // non-inclusive
         //const auto startTime_0 = high_resolution_clock::now();
-        HistogramOneByteComponentOpt(a, first, last, shiftRightAmount, count);
+        HistogramOneComponentOpt(a, first, last, shiftRightAmount, bitsPerDigit, count);
         //const auto endTime_0 = high_resolution_clock::now();
         //printf("Histogram: Time: %fms\n", duration_cast<duration<double, milli>>(endTime_0 - startTime_0).count());
-        startOfBin[0] = first; startOfBin[PowerOfTwoRadix] = last;
-        for (int i = 1; i < PowerOfTwoRadix; i++)
+        startOfBin[0] = first; startOfBin[NumberOfBins] = last;
+        for (int i = 1; i < NumberOfBins; i++)
             startOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
         // Determine which bin contains the k-th smallest element. kthBin will hold the bin number.
         size_t kthBin = 0, _current_ib;
-        for (; kthBin < PowerOfTwoRadix; kthBin++)
+        for (; kthBin < NumberOfBins; kthBin++)
             if (k >= startOfBin[kthBin] && k < startOfBin[kthBin + 1]) break;
 
         //const auto startTime_1 = high_resolution_clock::now();
-        _current_ib = MoveOutsideOfKthBinIn(a, first, startOfBin[kthBin] - first, startOfBin[kthBin], startOfBin[kthBin + 1] - startOfBin[kthBin], shiftRightAmount, bitMask, kthBin);
+        _current_ib = MoveOutsideOfKthBinIn(a, first, startOfBin[kthBin] - first, startOfBin[kthBin], startOfBin[kthBin + 1] - startOfBin[kthBin], shiftRightAmount, BitMask, kthBin);
         //const auto endTime_1 = high_resolution_clock::now();
         //printf("Move Outside of Kth Bin #1: Time: %fms\n", duration_cast<duration<double, milli>>(endTime_1 - startTime_1).count());
         //const auto startTime_2 = high_resolution_clock::now();
-        _current_ib = MoveOutsideOfKthBinIn(a, startOfBin[kthBin + 1], last - startOfBin[kthBin + 1] + 1, _current_ib, startOfBin[kthBin + 1] - _current_ib, shiftRightAmount, bitMask, kthBin);
+        _current_ib = MoveOutsideOfKthBinIn(a, startOfBin[kthBin + 1], last - startOfBin[kthBin + 1] + 1, _current_ib, startOfBin[kthBin + 1] - _current_ib, shiftRightAmount, BitMask, kthBin);
         //const auto endTime_2 = high_resolution_clock::now();
         //printf("Move Outside of Kth Bin #2: Time: %fms\n", duration_cast<duration<double, milli>>(endTime_2 - startTime_2).count());
 
         if (shiftRightAmount == 0) break;
         if (shiftRightAmount >= Log2ofPowerOfTwoRadix) shiftRightAmount -= Log2ofPowerOfTwoRadix;
         else shiftRightAmount = 0;
-        // Only recurse into the bin that contains the k-th smallest element and if more than one element is in that bin
         if ((startOfBin[kthBin + 1] - startOfBin[kthBin]) > 1)
         {
             first = startOfBin[kthBin];
             length = startOfBin[kthBin + 1] - startOfBin[kthBin];
         }
-        else if ((startOfBin[kthBin + 1] - startOfBin[kthBin]) == 1) return; // Only one element in the bin that k is in, so it must be the k-th smallest element
+        else if ((startOfBin[kthBin + 1] - startOfBin[kthBin]) == 1) break; // Only one element in the bin that k is in, so it must be the k-th smallest element
         //TODO: Port to C++: else throw new Exception("RadixSelectiontMsdInner: No elements in the bin that k is in, which should never happen");
     }
     delete[] count;
@@ -211,7 +211,7 @@ inline unsigned SelectRadix(unsigned arrayToBeSelected[], size_t start, size_t l
     //if (k < start || k >(start + arrayToBeSelected.Length))
     //    throw new ArgumentOutOfRangeException(nameof(k), "k must be between start and (start + length)");
     int shiftRightAmount = (sizeof(unsigned) * 8) - Log2ofPowerOfTwoRadix;
-    RadixSelectiontNonRecursiveInner(arrayToBeSelected, start, length, shiftRightAmount, k);
+    RadixSelectiontNonRecursiveInner(arrayToBeSelected, start, length, shiftRightAmount, Log2ofPowerOfTwoRadix, k);
     return arrayToBeSelected[k];
 }
 /**
@@ -229,57 +229,19 @@ inline unsigned SelectRadix(unsigned arrayToBeSelected[], size_t length, size_t 
     //if (k < 0 || k > arrayToBeSelected.Length)
     //    throw new ArgumentOutOfRangeException(nameof(k), "k must be between start and (start + length)");
     int shiftRightAmount = (sizeof(unsigned) * 8) - Log2ofPowerOfTwoRadix;
-    RadixSelectiontNonRecursiveInner(arrayToBeSelected, 0, length, shiftRightAmount, k);
+    RadixSelectiontNonRecursiveInner(arrayToBeSelected, 0, length, shiftRightAmount, Log2ofPowerOfTwoRadix, k);
     return arrayToBeSelected[k];
 }
 
-// Process 16-bit digits at a time, since the count array fits in modern CPU cache.
-inline static void RadixSelectionWordInner(unsigned a[], size_t first, size_t length, int shiftRightAmount, size_t k)
-{
-    size_t last = first + length - 1;
-    const int PowerOfTwoRadix_loc = 256 * 256;
-    const int Log2ofPowerOfTwoRadix_loc = 16;
-    const unsigned bitMask = PowerOfTwoRadix_loc - 1;
-
-    size_t* count = HistogramOneWordComponent(a, 0, last, shiftRightAmount);
-
-    size_t* startOfBin = new size_t[PowerOfTwoRadix_loc + 1]{};
-    startOfBin[0] = first; startOfBin[PowerOfTwoRadix_loc] = last + 1;
-    for (int i = 1; i < PowerOfTwoRadix_loc; i++)
-        startOfBin[i] = startOfBin[i - 1] + count[i - 1];
-
-    // Determine which bin contains the k-th smallest element. kthBin will hold the bin number.
-    size_t kthBin, _current_ib;
-    for (kthBin = 0; kthBin < PowerOfTwoRadix_loc; kthBin++)
-    {
-        size_t binLength = startOfBin[kthBin + 1] - startOfBin[kthBin];
-        if (binLength == 0) continue; // skip empty bins
-        if (k >= startOfBin[kthBin] && k <= (startOfBin[kthBin + 1] - 1)) break;
-    }
-    _current_ib = MoveOutsideOfKthBinIn(a, first, startOfBin[kthBin] - first, startOfBin[kthBin], startOfBin[kthBin + 1] - startOfBin[kthBin], shiftRightAmount, bitMask, kthBin);
-    _current_ib = MoveOutsideOfKthBinIn(a, startOfBin[kthBin + 1], last - startOfBin[kthBin + 1] + 1, _current_ib, startOfBin[kthBin + 1] - _current_ib, shiftRightAmount, bitMask, kthBin);
-
-    if (shiftRightAmount > 0)          // end recursion when all the bits have been processes
-    {
-        if (shiftRightAmount >= Log2ofPowerOfTwoRadix_loc) shiftRightAmount -= Log2ofPowerOfTwoRadix_loc;
-        else shiftRightAmount = 0;
-        // Only recurse into the bin that contains the k-th smallest element and if more than one element is in that bin
-        if ((startOfBin[kthBin + 1] - startOfBin[kthBin]) > 1)
-            RadixSelectionWordInner(a, startOfBin[kthBin], startOfBin[kthBin + 1] - startOfBin[kthBin], shiftRightAmount, k);
-        else if ((startOfBin[kthBin + 1] - startOfBin[kthBin]) == 1) return; // Only one element in the bin that k is in, so it must be the k-th smallest element
-        // TODO: Port to C++:  else throw new Exception("RadixSelectiontMsdInner: No elements in the bin that k is in, which should never happen");
-    }
-    delete[] startOfBin;
-    delete[] count;
-}
 /**
- * @brief In-place Radix Selection of the k-th element in an array. Processes one word-digit (16-bits) at a time.
+ * @brief In-place Radix Selection of the k-th element in an array. Processes one word-digits (16-bits) at a time.
  * @param arrayToBeSelected Array that is to be selected from in place
  * @param start Starting index of the subarray
  * @param length Length of the subarray
  * @param k Index of the desired element to be selected
-*/
-inline unsigned SelectRadixWord(unsigned* arrayToBeSelected, size_t start, size_t length, size_t k)
+ * @return the k-th element in the array
+ */
+inline unsigned SelectRadixWord(unsigned arrayToBeSelected[], size_t start, size_t length, size_t k)
 {
     //if (arrayToBeSelected == null)
     //    throw new ArgumentNullException(nameof(arrayToBeSelected));
@@ -287,17 +249,17 @@ inline unsigned SelectRadixWord(unsigned* arrayToBeSelected, size_t start, size_
     //    throw new ArgumentOutOfRangeException(nameof(k), "l or r are invalid");
     //if (k < start || k >(start + arrayToBeSelected.Length))
     //    throw new ArgumentOutOfRangeException(nameof(k), "k must be between start and (start + length)");
-    const int Log2ofPowerOfTwoRadix_loc = 16;
-    int shiftRightAmount = (sizeof(unsigned) / 2 * 16) - Log2ofPowerOfTwoRadix_loc;
-    RadixSelectionWordInner(arrayToBeSelected, start, length, shiftRightAmount, k);
+    int shiftRightAmount = (sizeof(unsigned) * 8) - 16;
+    RadixSelectiontNonRecursiveInner(arrayToBeSelected, start, length, shiftRightAmount, 16, k);
     return arrayToBeSelected[k];
 }
 /**
- * @brief In-place Radix Selection of the k-th element in an array. Processes one word-digit (16-bits) at a time.
- * @param arrayToBeSelected Array that is to be selected from in place
+ * @brief In-place Radix Selection of the k-th element in an array. Processes one word-digits (16-bits) at a time.
+ * @param ArrayToBeSelected array that is to be sorted in place
  * @param k Index of the desired element to be selected
+ * @return the k-th element in the array
  */
-inline unsigned SelectRadixWord(unsigned* arrayToBeSelected, size_t length, size_t k)
+inline unsigned SelectRadixWord(unsigned arrayToBeSelected[], size_t length, size_t k)
 {
     //if (arrayToBeSelected == null)
     //    throw new ArgumentNullException(nameof(arrayToBeSelected));
@@ -305,9 +267,8 @@ inline unsigned SelectRadixWord(unsigned* arrayToBeSelected, size_t length, size
     //    throw new ArgumentOutOfRangeException(nameof(arrayToBeSelected.Length), "array length is invalid");
     //if (k < 0 || k > arrayToBeSelected.Length)
     //    throw new ArgumentOutOfRangeException(nameof(k), "k must be between start and (start + length)");
-    const int Log2ofPowerOfTwoRadix_loc = 16;
-    int shiftRightAmount = (sizeof(unsigned) / 2 * 16) - Log2ofPowerOfTwoRadix_loc;
-    RadixSelectionWordInner(arrayToBeSelected, 0, length, shiftRightAmount, k);
+    int shiftRightAmount = (sizeof(unsigned) * 8) - 16;
+    RadixSelectiontNonRecursiveInner(arrayToBeSelected, 0, length, shiftRightAmount, 16, k);
     return arrayToBeSelected[k];
 }
 
