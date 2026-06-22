@@ -22,10 +22,10 @@ using std::vector;
 
 const int iterationCount = 5;
 
-static void print_results(const char* const tag, const unsigned* sorted, size_t sortedLength,
+static void print_results(int iteration, const char* const tag, const unsigned* sorted, size_t sortedLength,
 	high_resolution_clock::time_point startTime, high_resolution_clock::time_point endTime)
 {
-	printf("%s: Lowest: %u Highest: %u Time: %fms\n", tag,
+	printf("%d %s: Lowest: %u Highest: %u Time: %fms\n", iteration, tag,
 		sorted[0], sorted[sortedLength - 1],
 		duration_cast<duration<double, milli>>(endTime - startTime).count());
 }
@@ -54,10 +54,9 @@ int RadixSelectBenchmark(vector<unsigned>& uints)
 
 		//printf("uintsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", uintsCopy, sorted, sorted[static_cast<unsigned>(rd()) % uints.size()], uintsCopy[static_cast<unsigned>(rd()) % uints.size()]);
 		const auto startTime = high_resolution_clock::now();
-		//unsigned selectedValue = SelectRadixWord(uintsCopy.data(), uints.size(), k);
 		unsigned selectedValue = SelectRadix(uintsCopy.data(), uints.size(), k);
 		const auto endTime = high_resolution_clock::now();
-		print_results("Radix Select", uintsCopy.data(), uints.size(), startTime, endTime);
+		print_results(i, "Radix Select", uintsCopy.data(), uints.size(), startTime, endTime);
 		if (selectedValue != a_reference[k])
 		{
 			printf("Selected value does not match reference value\n");
