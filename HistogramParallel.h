@@ -405,7 +405,7 @@ namespace ParallelAlgorithms
 
 		if (l > r)      // zero elements to compare
 		{
-			size_t** countLeft = new size_t * [numberOfQuantas];
+			countLeft = new size_t * [numberOfQuantas];
 			for (size_t i = 0; i < numberOfQuantas; i++)
 			{
 				countLeft[i] = new size_t[NumberOfBins];

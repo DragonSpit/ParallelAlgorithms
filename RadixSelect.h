@@ -83,7 +83,7 @@ inline static size_t MoveOutsideOfKthBinInAndCount(unsigned a[], size_t startOfO
 inline static void RadixSelectiontNonRecursiveInner(unsigned a[], size_t first, size_t length, int shiftRightAmount, unsigned bitsPerDigit, size_t k)
 {
 	const unsigned BitMask = (1 << bitsPerDigit) - 1;
-	const size_t NumberOfBins = 1 << bitsPerDigit;
+	const size_t NumberOfBins = (size_t)1 << bitsPerDigit;
 
     size_t* startOfBin = new size_t[NumberOfBins + 1];
 	size_t* count      = new size_t[NumberOfBins]{};
@@ -129,7 +129,7 @@ inline static void RadixSelectiontNonRecursiveInner(unsigned a[], size_t first, 
 }
 
 /**
- * @brief In-place Radix Selection of the k-th element in an array. Processes one byte-digits at a time.
+ * @brief In-place Radix Selection of the k-th element in an array.
  * @param arrayToBeSelected Array that is to be selected from in place
  * @param start Starting index of the subarray
  * @param length Length of the subarray
@@ -149,8 +149,8 @@ inline unsigned SelectRadix(unsigned arrayToBeSelected[], size_t start, size_t l
     return arrayToBeSelected[k];
 }
 /**
- * @brief In-place Radix Selection of the k-th element in an array. Processes one byte-digits at a time.
- * @param ArrayToBeSelected array that is to be sorted in place
+ * @brief In-place Radix Selection of the k-th element in an array.
+ * @param ArrayToBeSelected array that is to be selected from in place
  * @param k Index of the desired element to be selected
  * @return the k-th element in the array
  */

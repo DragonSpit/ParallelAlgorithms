@@ -249,8 +249,8 @@ namespace ParallelAlgorithms
 		sum_array[num_tasks - 1] = Sum(in_array, l + parallelThreshold * i, r);	// process the last partial parallelThreshold chunk
 
 		unsigned long long sum = 0;
-		for (size_t i = 0; i < num_tasks; i++)
-			sum += sum_array[i];
+		for (size_t j = 0; j < num_tasks; j++)
+			sum += sum_array[j];
 
 		delete[] sum_array;
 		return sum;
@@ -273,8 +273,8 @@ namespace ParallelAlgorithms
 		g.wait();	// wait for all tasks to complete
 
 		unsigned long long sum = 0;
-		for (size_t i = 0; i < num_tasks; i++)
-			sum += sum_array[i];
+		for (size_t j = 0; j < num_tasks; j++)
+			sum += sum_array[j];
 
 		delete[] sum_array;
 		return sum;
@@ -297,8 +297,8 @@ namespace ParallelAlgorithms
 		g.wait();	// wait for all tasks to complete
 
 		unsigned long long sum = 0;
-		for (size_t i = 0; i < num_tasks; i++)
-			sum += sum_array[i];
+		for (size_t j = 0; j < num_tasks; j++)
+			sum += sum_array[j];
 
 		delete[] sum_array;
 		return sum;
@@ -325,8 +325,8 @@ namespace ParallelAlgorithms
 		g.wait();	// wait for all tasks to complete
 
 		unsigned long long sum = 0;
-		for (size_t i = 0; i < num_tasks; i++)
-			sum += sum_array[i];
+		for (size_t j = 0; j < num_tasks; j++)
+			sum += sum_array[j];
 
 		delete[] sum_array;
 		return sum;
@@ -354,8 +354,8 @@ namespace ParallelAlgorithms
 		g.wait();	// wait for all tasks to complete
 
 		unsigned long long sum = 0;
-		for (size_t i = 0; i < num_tasks; i++)
-			sum += sum_array[i];
+		for (size_t j = 0; j < num_tasks; j++)
+			sum += sum_array[j];
 
 		delete[] sum_array;
 		return sum;
@@ -380,8 +380,8 @@ namespace ParallelAlgorithms
 		g.wait();	// wait for all tasks to complete
 
 		unsigned long long sum = 0;
-		for (size_t i = 0; i < num_tasks; i++)
-			sum += sum_array[i];
+		for (size_t j = 0; j < num_tasks; j++)
+			sum += sum_array[j];
 
 		delete[] sum_array;
 		return sum;
@@ -407,8 +407,8 @@ namespace ParallelAlgorithms
 		g.wait();	// wait for all tasks to complete
 
 		unsigned long long sum = 0;
-		for (size_t i = 0; i < num_tasks; i++)
-			sum += sum_array[i];
+		for (size_t j = 0; j < num_tasks; j++)
+			sum += sum_array[j];
 
 		delete[] sum_array;
 		return sum;
@@ -431,8 +431,8 @@ namespace ParallelAlgorithms
 		g.wait();	// wait for all tasks to complete
 
 		unsigned long long sum = 0;
-		for (size_t i = 0; i < num_tasks; i++)
-			sum += sum_array[i];
+		for (size_t j = 0; j < num_tasks; j++)
+			sum += sum_array[j];
 
 		return sum;
 	}
@@ -454,8 +454,8 @@ namespace ParallelAlgorithms
 		g.wait();	// wait for all tasks to complete
 
 		unsigned long long sum = 0;
-		for (size_t i = 0; i < num_tasks; i++)
-			sum += sum_array[i];
+		for (size_t j = 0; j < num_tasks; j++)
+			sum += sum_array[j];
 
 		return sum;
 	}

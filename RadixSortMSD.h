@@ -44,7 +44,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_L1(_Type* a, size_t a_size, _Type 
 	if (bitMask != 0)						// end recursion when all the bits have been processes
 	{
 		if (shiftRightAmount >= Log2ofPowerOfTwoRadix)	shiftRightAmount -= Log2ofPowerOfTwoRadix;
-		else												shiftRightAmount = 0;
+		else											shiftRightAmount = 0;
 
 		for (unsigned long i = 0; i < PowerOfTwoRadix; i++)
 		{

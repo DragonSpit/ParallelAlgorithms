@@ -60,11 +60,11 @@ int RadixSortLsdBenchmark(vector<unsigned>& uints)
 		if (!std::equal(sorted_reference.begin(), sorted_reference.end(), uintsCopy.begin()))
 		{
 			printf("Arrays are not equal\n");
-			for(size_t i = 0; i < uints.size(); i++)
+			for(size_t j = 0; j < uints.size(); j++)
 			{
-				if (sorted_reference[i] != uintsCopy[i])
+				if (sorted_reference[j] != uintsCopy[j])
 				{
-					printf("Difference at index %zu: sorted_reference = %x, uintsCopy = %x\n", i, sorted_reference[i], uintsCopy[i]);
+					printf("Difference at index %zu: sorted_reference = %x, uintsCopy = %x\n", j, sorted_reference[j], uintsCopy[j]);
 					break;
 				}
 			}

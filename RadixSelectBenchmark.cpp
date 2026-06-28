@@ -55,6 +55,7 @@ int RadixSelectBenchmark(vector<unsigned>& uints)
 		//printf("uintsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", uintsCopy, sorted, sorted[static_cast<unsigned>(rd()) % uints.size()], uintsCopy[static_cast<unsigned>(rd()) % uints.size()]);
 		const auto startTime = high_resolution_clock::now();
 		unsigned selectedValue = SelectRadix(uintsCopy.data(), uints.size(), k);
+		selectedValue = uintsCopy[k];
 		const auto endTime = high_resolution_clock::now();
 		print_results(i, "Radix Select", uintsCopy.data(), uints.size(), startTime, endTime);
 		if (selectedValue != a_reference[k])

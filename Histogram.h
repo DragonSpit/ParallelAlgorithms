@@ -2,8 +2,6 @@
 
 #pragma once
 
-const int PowerOfTwoRadix = 256;
-
 inline size_t* HistogramByteComponents(unsigned inArray[], size_t l, size_t r)
 {
 	const unsigned BitsPerDigit   = 8;
@@ -49,6 +47,18 @@ inline size_t* HistogramOneByteComponent(unsigned inArray[], size_t l, size_t r,
 		count[i] = 0;
 	for (size_t current = l; current < r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
 		count[(inArray[current] >> shiftAmount) & 0xff]++;
+	return count;
+}
+
+inline size_t* HistogramOneComponent(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount, unsigned bitsPerDigit, size_t* count)
+{
+	const unsigned NumberOfBins = 1 << bitsPerDigit;
+	const unsigned Mask = NumberOfBins - 1;
+
+	for (unsigned i = 0; i < NumberOfBins; i++)
+		count[i] = 0;
+	for (size_t current = l; current < r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+		count[(inArray[current] >> shiftAmount) & Mask]++;
 	return count;
 }
 
@@ -100,25 +110,26 @@ inline size_t* HistogramOneComponentOpt(unsigned inArray[], size_t l, size_t r, 
 	size_t* count_1 = count_all + (1 * NumberOfBins);
 	size_t* count_2 = count_all + (2 * NumberOfBins);
 
-	size_t current;
-	size_t last_by_three = l + ((r - l) / 3) * 3;
-	for (current = l; current < last_by_three;)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+	if (l < r)
 	{
-		count_0[(inArray[current] >> shiftAmount) & Mask]++; current++;
-		count_1[(inArray[current] >> shiftAmount) & Mask]++; current++;
-		count_2[(inArray[current] >> shiftAmount) & Mask]++; current++;
+		size_t current;
+		size_t last_by_three = l + ((r - l) / 3) * 3;
+		for (current = l; current < last_by_three;)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+		{
+			count_0[(inArray[current] >> shiftAmount) & Mask]++; current++;
+			count_1[(inArray[current] >> shiftAmount) & Mask]++; current++;
+			count_2[(inArray[current] >> shiftAmount) & Mask]++; current++;
+		}
+
+		for (; current < r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
+			count_0[(inArray[current] >> shiftAmount) & Mask]++;
+
+		// Combine the counts from the extra count arrays into the main count array
+		for (size_t i = 0; i < NumberOfBins; i++)
+			count[i] = count_0[i] + count_1[i] + count_2[i];
 	}
-
-	for (; current < r; current++)    // Scan the array and count the number of times each digit value appears - i.e. size of each bin
-		count_0[(inArray[current] >> shiftAmount) & Mask]++;
-
-	// Combine the counts from the extra count arrays into the main count array
-	for (size_t i = 0; i < NumberOfBins; i++)
-		count[i] = count_0[i] + count_1[i] + count_2[i];
-
 	delete[] count_all;
-
-	return count_0;
+	return count;
 }
 
 inline size_t* HistogramWordComponents(unsigned inArray[], size_t l, size_t r)

@@ -393,7 +393,8 @@ namespace ParallelAlgorithms
 	public:
 		static const size_t numberOfDigits = 4;
 		static const size_t NumberOfBins = 256;
-		alignas(64) _CountType my_count[numberOfDigits][NumberOfBins];		// the count for this task
+		//alignas(64) _CountType my_count[numberOfDigits][NumberOfBins];		// the count for this task
+		_CountType my_count[numberOfDigits][NumberOfBins];		// the count for this task
 
 		HistogramByteComponentsParallelType(unsigned* a) : my_input_array(a)	// constructor, which copies the pointer to the array being counted
 		{
