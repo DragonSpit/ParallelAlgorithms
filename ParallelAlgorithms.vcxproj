@@ -196,6 +196,8 @@
     </ClCompile>
     <ClCompile Include="ParallelMergeSortBenchmark.cpp" />
     <ClCompile Include="ParallelStdCppExample.cpp" />
+    <ClCompile Include="RadixPartition.h" />
+    <ClCompile Include="RadixPartitionBenchmark.cpp" />
     <ClCompile Include="RadixSelect.h" />
     <ClCompile Include="RadixSelectBenchmark.cpp" />
     <ClCompile Include="RadixSortLsdBenchmark.cpp" />

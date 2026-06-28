@@ -31,6 +31,7 @@ extern int TestMemoryAllocation();
 extern int std_parallel_sort_leak_demo();
 extern int bundling_small_work_items_benchmark(size_t, size_t);
 extern int RadixSelectBenchmark(vector<unsigned>& uints);
+extern int RadixPartitionBenchmark(vector<unsigned>& uints);
 extern int sum_parallel_integer_ai();
 
 int main()
@@ -141,7 +142,8 @@ int main()
 
 	//RadixSortLsdBenchmark(uints);
 
-	RadixSelectBenchmark(uints);
+	//RadixSelectBenchmark(uints);
+	RadixPartitionBenchmark(uints);
 
 	// generate some nearly pre-sorted unsigned integers:
 	printf("\nTesting with %zu nearly pre-sorted unsigned integers...\n\n", testSize);
@@ -179,7 +181,8 @@ int main()
 
 	//RadixSortLsdBenchmark(uints);
 
-	RadixSelectBenchmark(uints);
+	//RadixSelectBenchmark(uints);
+	RadixPartitionBenchmark(uints);
 
 	printf("\nTesting with %zu constant unsigned integers...\n\n", testSize);
 	for (size_t i = 0; i < uints.size(); i++) {
@@ -206,7 +209,8 @@ int main()
 
 	//RadixSortLsdBenchmark(uints);
 
-	RadixSelectBenchmark(uints);
+	//RadixSelectBenchmark(uints);
+	RadixPartitionBenchmark(uints);
 
 #if 0
 	// generate some random unsigned longs:
