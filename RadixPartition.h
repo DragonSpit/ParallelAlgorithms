@@ -28,43 +28,57 @@ using std::vector;
 
 // Simplified the implementation of the inner loop.
 template< class _Type, unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold >
-inline void PartitionRadixMsdUIntInner(_Type* a, size_t a_size, _Type bitMask, unsigned long shiftRightAmount)
+inline void PartitionRadixMsdUIntInner(_Type* a, size_t start, size_t a_size, int shiftRightAmount, size_t* k, size_t kStart, size_t kLength)
 {
-    size_t last = a_size - 1;
+	//printf("PartitionRadixMsdUIntInner: a_size=%zu, shiftRightAmount=%d, kStart=%zu, kLength=%zu  kValue=%zu\n", a_size, shiftRightAmount, kStart, kLength, k[kStart]);
+    size_t last = start + a_size - 1;
     size_t count[PowerOfTwoRadix];
+    const unsigned long BitMask = PowerOfTwoRadix - 1;
     for (unsigned long i = 0; i < PowerOfTwoRadix; i++)     count[i] = 0;
-    for (size_t _current = 0; _current <= last; _current++)	    // Scan the array and count the number of times each value appears
-        count[(unsigned)((a[_current] & bitMask) >> shiftRightAmount)]++;
+    for (size_t _current = start; _current <= last; _current++)	    // Scan the array and count the number of times each value appears
+        count[(unsigned)((a[_current] >> shiftRightAmount) & BitMask)]++;
 
     size_t startOfBin[PowerOfTwoRadix + 1], endOfBin[PowerOfTwoRadix], nextBin = 1;
-    startOfBin[0] = endOfBin[0] = 0;    startOfBin[PowerOfTwoRadix] = 0;			// sentinal
-    for (unsigned long i = 1; i < PowerOfTwoRadix; i++)
-        startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
+    startOfBin[0] = endOfBin[0] = start;    startOfBin[PowerOfTwoRadix] = start;			// sentinal
+    for (size_t i = 1; i < PowerOfTwoRadix; i++)
+		startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1]; // endOfBin is exclusive
 
-    for (size_t _current = 0; _current <= last; )
+    for (size_t _current = start; _current <= last;)
     {
         unsigned digit;
         _Type _current_element = a[_current];	// get the compiler to recognize that a register can be used for the loop instead of a[_current] memory location
-        while (endOfBin[digit = (unsigned)((_current_element & bitMask) >> shiftRightAmount)] != _current)  _swap(_current_element, a[endOfBin[digit]++]);
+        while (endOfBin[digit = (unsigned)((_current_element >> shiftRightAmount) & BitMask)] != _current)  _swap(_current_element, a[endOfBin[digit]++]);
         a[_current] = _current_element;
 
         endOfBin[digit]++;
         while (endOfBin[nextBin - 1] == startOfBin[nextBin])  nextBin++;	// skip over empty and full bins, when the end of the current bin reaches the start of the next bin
         _current = endOfBin[nextBin - 1];
     }
-    bitMask >>= Log2ofPowerOfTwoRadix;
-    if (bitMask != 0)						// end recursion when all the bits have been processes
+    if (shiftRightAmount > 0)          // end recursion when all the bits have been processes
     {
         if (shiftRightAmount >= Log2ofPowerOfTwoRadix)	shiftRightAmount -= Log2ofPowerOfTwoRadix;
         else											shiftRightAmount = 0;
 
-        for (unsigned long i = 0; i < PowerOfTwoRadix; i++)
+        for (size_t bin = 0, kIndex = kStart; bin < PowerOfTwoRadix && kIndex < (kStart + kLength); bin++)
         {
-            size_t numberOfElements = endOfBin[i] - startOfBin[i];
-            if (numberOfElements >= Threshold)		// endOfBin actually points to one beyond the bin
-                _RadixSort_Unsigned_PowerOf2Radix_L1< _Type, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(&a[startOfBin[i]], numberOfElements, bitMask, shiftRightAmount);
-            else if (numberOfElements >= 2)
-                insertionSortSimilarToSTLnoSelfAssignment(&a[startOfBin[i]], numberOfElements);
+			//printf("PartitionRadixMsdUIntInner: bin=%zu, startOfBin=%zu, endOfBin=%zu, kIndex=%zu, kValue=%zu\n", bin, startOfBin[bin], endOfBin[bin], kIndex, k[kIndex]);
+            // Recurse only into a bin which contains one or more of the k[] elements
+            if (startOfBin[bin] < endOfBin[bin] && k[kIndex] >= startOfBin[bin] && k[kIndex] < endOfBin[bin])
+            {
+                size_t kNewStart = kIndex++;
+                size_t kNewLength = 1; // at least one of the k[] elements is in this bin. Determine if more k[] element are in this bin, and pass them into the recursive call for this bin.
+                for (; kIndex < (kStart + kLength); kIndex++)
+                {
+                    if (k[kIndex] >= startOfBin[bin] && k[kIndex] < endOfBin[bin])
+                        kNewLength++;
+                    else break;
+                }
+                size_t numberOfElements = endOfBin[bin] - startOfBin[bin];
+                if (numberOfElements >= Threshold)		// endOfBin is exclusive
+                    PartitionRadixMsdUIntInner< _Type, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, startOfBin[bin], numberOfElements, shiftRightAmount, k, kNewStart, kNewLength);
+                else
+                    insertionSortSimilarToSTLnoSelfAssignment(&a[startOfBin[bin]], numberOfElements);
+            }
         }
     }
 }
@@ -88,10 +102,9 @@ inline unsigned PartitionRadix(unsigned arrayToBeSelected[], size_t length, size
     const long Threshold = 48;
 
     const unsigned BitsPerDigit = 8;
-    unsigned long shiftRightAmount = (sizeof(unsigned) * 8) - BitsPerDigit;
-    unsigned bitmask = (unsigned)(((unsigned)(PowerOfTwoRadix - 1)) << shiftRightAmount);	// bitMask controls/selects how many and which bits we process at a time
-    //size_t kArray[1] = { k };
-    PartitionRadixMsdUIntInner< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(arrayToBeSelected, length, bitmask, shiftRightAmount);
+    int shiftRightAmount = (sizeof(unsigned) * 8) - BitsPerDigit;
+    size_t kArray[1] = { k };
+    PartitionRadixMsdUIntInner< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(arrayToBeSelected, 0, length, shiftRightAmount, kArray, 0, 1);
     return arrayToBeSelected[k];
 }
 #if 0
