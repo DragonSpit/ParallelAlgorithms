@@ -15,6 +15,7 @@ inline void _swap(_Type& a, _Type& b)
 }
 
 // Simplified the implementation of the inner loop.
+// This version iterates over the array one element at a time.
 template< class _Type, unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold >
 inline void _RadixSort_Unsigned_PowerOf2Radix_L1(_Type* a, size_t a_size, _Type bitMask, unsigned long shiftRightAmount)
 {
@@ -81,6 +82,74 @@ inline void hybrid_inplace_msd_radix_sort(unsigned* a, size_t a_size)
 		insertionSortSimilarToSTLnoSelfAssignment( a, a_size );
 		//insertionSortHybrid(a, a_size);
 }
+
+// Simplified the implementation of the inner loop.
+// This version iterates over the bins, and then iterates over the elements within each bin.
+template< class _Type, unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold >
+inline void _RadixSort_Unsigned_PowerOf2Radix_Simple(_Type* a, size_t a_size, _Type bitMask, unsigned long shiftRightAmount)
+{
+	size_t last = a_size - 1;
+	size_t count[PowerOfTwoRadix];
+	for (unsigned long i = 0; i < PowerOfTwoRadix; i++)     count[i] = 0;
+	for (size_t _current = 0; _current <= last; _current++)	    // Scan the array and count the number of times each value appears
+		count[(unsigned)((a[_current] & bitMask) >> shiftRightAmount)]++;
+
+	size_t startOfBin[PowerOfTwoRadix + 1], endOfBin[PowerOfTwoRadix];
+	startOfBin[0] = endOfBin[0] = 0;    startOfBin[PowerOfTwoRadix] = a_size;	// sentinal
+	for (unsigned long i = 1; i < PowerOfTwoRadix; i++)
+		startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
+
+	for (size_t bin = 0; bin < PowerOfTwoRadix; bin++)
+	{
+		while (endOfBin[bin] < startOfBin[bin + 1])	// while this bin has elements to process, permute array elements into their correct bins
+		{
+			unsigned digit = (unsigned)((a[endOfBin[bin]] & bitMask) >> shiftRightAmount);
+			if (digit == bin)	endOfBin[bin]++;
+			else				_swap(a[endOfBin[bin]], a[endOfBin[digit]++]);
+		}
+	}
+	bitMask >>= Log2ofPowerOfTwoRadix;
+	if (bitMask != 0)						// end recursion when all the bits have been processes
+	{
+		if (shiftRightAmount >= Log2ofPowerOfTwoRadix)	shiftRightAmount -= Log2ofPowerOfTwoRadix;
+		else											shiftRightAmount = 0;
+
+		for (unsigned long i = 0; i < PowerOfTwoRadix; i++)
+		{
+			size_t numberOfElements = endOfBin[i] - startOfBin[i];
+			if (numberOfElements >= Threshold)		// endOfBin actually points to one beyond the bin
+				_RadixSort_Unsigned_PowerOf2Radix_Simple< _Type, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(&a[startOfBin[i]], numberOfElements, bitMask, shiftRightAmount);
+			else if (numberOfElements >= 2)
+				insertionSortSimilarToSTLnoSelfAssignment(&a[startOfBin[i]], numberOfElements);
+		}
+	}
+}
+
+inline void hybrid_inplace_msd_radix_sort_simple(unsigned* a, size_t a_size)
+{
+	if (a_size < 2)	return;
+
+	const long PowerOfTwoRadix = 256;
+	const long Log2ofPowerOfTwoRadix = 8;
+	const long Threshold = 48;
+
+	unsigned bitMask = 0x80000000;	// bitMask controls how many bits we process at a time
+	unsigned long shiftRightAmount = 31;
+
+	for (unsigned long i = 2; i < PowerOfTwoRadix; )	// if not power-of-two value then it will do up to the largest power-of-two value
+	{													// that's smaller than the value provided (e.g. radix-10 will do radix-8)
+		bitMask |= (bitMask >> 1);
+		shiftRightAmount -= 1;
+		i <<= 1;
+	}
+
+	if (a_size >= Threshold)
+		_RadixSort_Unsigned_PowerOf2Radix_Simple< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, a_size, bitMask, shiftRightAmount);
+	else
+		insertionSortSimilarToSTLnoSelfAssignment(a, a_size);
+	//insertionSortHybrid(a, a_size);
+}
+
 
 template< unsigned PowerOfTwoRadix, unsigned Log2ofPowerOfTwoRadix, size_t Threshold, class _Type >
 inline void _RadixSort_StableUnsigned_PowerOf2Radix_2(_Type* a, _Type* b, size_t last, _Type bitMask, unsigned shiftRightAmount, bool inputArrayIsDestination)
