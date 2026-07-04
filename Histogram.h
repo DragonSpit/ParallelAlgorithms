@@ -38,6 +38,7 @@ inline size_t* HistogramOneByteComponent(unsigned inArray[], size_t l, size_t r,
 	return count;
 }
 
+// l is inclusing and r is exclusive
 inline size_t* HistogramOneByteComponent(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount, size_t* count)
 {
 	const unsigned BitsPerDigit = 8;
@@ -50,6 +51,7 @@ inline size_t* HistogramOneByteComponent(unsigned inArray[], size_t l, size_t r,
 	return count;
 }
 
+// l is inclusing and r is exclusive
 inline size_t* HistogramOneComponent(unsigned inArray[], size_t l, size_t r, unsigned shiftAmount, unsigned bitsPerDigit, size_t* count)
 {
 	const unsigned NumberOfBins = 1 << bitsPerDigit;
@@ -105,7 +107,7 @@ inline size_t* HistogramOneComponentOpt(unsigned inArray[], size_t l, size_t r, 
 	const unsigned NumberOfBins = 1 << bitsPerDigit;
 	const unsigned Mask = NumberOfBins - 1;
 
-	size_t* count_all = new size_t[4 * NumberOfBins]{};  // extra count arrays
+	size_t* count_all = new size_t[3 * NumberOfBins]{};  // extra count arrays
 	size_t* count_0 = count_all + (0 * NumberOfBins);
 	size_t* count_1 = count_all + (1 * NumberOfBins);
 	size_t* count_2 = count_all + (2 * NumberOfBins);
