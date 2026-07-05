@@ -28,32 +28,28 @@ using std::vector;
 
 // Simplified the implementation of the inner loop.
 template< class _Type, unsigned long PowerOfTwoRadix, unsigned long Log2ofPowerOfTwoRadix, long Threshold >
-inline void PartitionRadixMsdUIntInner(_Type* a, size_t start, size_t a_size, int shiftRightAmount, size_t* k, size_t kStart, size_t kLength)
+inline void PartitionRadixMsdUIntInner_Simple(_Type* a, size_t start, size_t a_size, int shiftRightAmount, size_t* k, size_t kStart, size_t kLength)
 {
 	//printf("PartitionRadixMsdUIntInner: a_size=%zu, shiftRightAmount=%d, kStart=%zu, kLength=%zu  kValue=%zu\n", a_size, shiftRightAmount, kStart, kLength, k[kStart]);
     size_t last = start + a_size;
     const unsigned long BitMask = PowerOfTwoRadix - 1;
     size_t count[PowerOfTwoRadix];
 
-    for (unsigned long i = 0; i < PowerOfTwoRadix; i++)     count[i] = 0;
-    for (size_t _current = start; _current < last; _current++)	    // Scan the array and count the number of times each value appears
-        count[(unsigned)((a[_current] >> shiftRightAmount) & BitMask)]++;
+    HistogramOneComponentOpt(a, start, last, shiftRightAmount, Log2ofPowerOfTwoRadix, count);
 
-    size_t startOfBin[PowerOfTwoRadix + 1], endOfBin[PowerOfTwoRadix], nextBin = 1;
-    startOfBin[0] = endOfBin[0] = start;    startOfBin[PowerOfTwoRadix] = start;			// sentinal
+    size_t startOfBin[PowerOfTwoRadix + 1], endOfBin[PowerOfTwoRadix];
+    startOfBin[0] = endOfBin[0] = start;    startOfBin[PowerOfTwoRadix] = a_size;		// sentinal
     for (size_t i = 1; i < PowerOfTwoRadix; i++)
 		startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1]; // endOfBin is exclusive
 
-    for (size_t _current = start; _current < last;)
+    for (size_t bin = 0; bin < PowerOfTwoRadix; bin++)
     {
-        unsigned digit;
-        _Type _current_element = a[_current];	// get the compiler to recognize that a register can be used for the loop instead of a[_current] memory location
-        while (endOfBin[digit = (unsigned)((_current_element >> shiftRightAmount) & BitMask)] != _current)  _swap(_current_element, a[endOfBin[digit]++]);
-        a[_current] = _current_element;
-
-        endOfBin[digit]++;
-        while (endOfBin[nextBin - 1] == startOfBin[nextBin])  nextBin++;	// skip over empty and full bins, when the end of the current bin reaches the start of the next bin
-        _current = endOfBin[nextBin - 1];
+        while (endOfBin[bin] < startOfBin[bin + 1])	// while this bin has elements to process, permute array elements into their correct bins
+        {
+            unsigned digit = (unsigned)((a[endOfBin[bin]] >> shiftRightAmount) & BitMask);
+            if (digit == bin)	endOfBin[bin]++;
+            else				_swap(a[endOfBin[bin]], a[endOfBin[digit]++]);
+        }
     }
     if (shiftRightAmount > 0)          // end recursion when all the bits have been processes
     {
@@ -76,7 +72,7 @@ inline void PartitionRadixMsdUIntInner(_Type* a, size_t start, size_t a_size, in
                 }
                 size_t numberOfElements = endOfBin[bin] - startOfBin[bin];
                 if (numberOfElements >= Threshold)		// endOfBin is exclusive
-                    PartitionRadixMsdUIntInner< _Type, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, startOfBin[bin], numberOfElements, shiftRightAmount, k, kNewStart, kNewLength);
+                    PartitionRadixMsdUIntInner_Simple< _Type, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(a, startOfBin[bin], numberOfElements, shiftRightAmount, k, kNewStart, kNewLength);
                 else
                     insertionSortSimilarToSTLnoSelfAssignment(&a[startOfBin[bin]], numberOfElements);
             }
@@ -108,7 +104,7 @@ inline unsigned PartitionRadix(unsigned arrayToBePartitioned[], size_t aLength, 
     size_t kArray[1] = { k };
     size_t kStart = 0;
 	size_t kLength = 1;
-    PartitionRadixMsdUIntInner< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(arrayToBePartitioned, 0, aLength, shiftRightAmount, kArray, kStart, kLength);
+    PartitionRadixMsdUIntInner_Simple< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(arrayToBePartitioned, 0, aLength, shiftRightAmount, kArray, kStart, kLength);
     return arrayToBePartitioned[k];
 }
 /**
@@ -136,7 +132,7 @@ inline unsigned PartitionRadix(unsigned arrayToBePartitioned[], size_t aStart, s
     size_t kArray[1] = { k };
     size_t kStart = 0;
     size_t kLength = 1;
-    PartitionRadixMsdUIntInner< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(arrayToBePartitioned, aStart, aLength, shiftRightAmount, kArray, kStart, kLength);
+    PartitionRadixMsdUIntInner_Simple< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(arrayToBePartitioned, aStart, aLength, shiftRightAmount, kArray, kStart, kLength);
     return arrayToBePartitioned[k];
 }
 /**
@@ -158,7 +154,7 @@ inline void PartitionRadix(unsigned arrayToBePartitioned[], size_t aLength, size
     const unsigned BitsPerDigit = 8;
 
     int shiftRightAmount = (sizeof(unsigned) * 8) - BitsPerDigit;
-    PartitionRadixMsdUIntInner< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(arrayToBePartitioned, 0, aLength, shiftRightAmount, k, 0, kLength);
+    PartitionRadixMsdUIntInner_Simple< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(arrayToBePartitioned, 0, aLength, shiftRightAmount, k, 0, kLength);
 }
 /**
  * @brief In-place Radix Partition by the k-th array elements in an array.
@@ -183,7 +179,7 @@ inline void PartitionRadix(unsigned arrayToBePartitioned[], size_t aStart, size_
     const unsigned BitsPerDigit = 8;
 
     int shiftRightAmount = (sizeof(unsigned) * 8) - BitsPerDigit;
-    PartitionRadixMsdUIntInner< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(arrayToBePartitioned, aStart, aLength, shiftRightAmount, k, kStart, kLength);
+    PartitionRadixMsdUIntInner_Simple< unsigned, PowerOfTwoRadix, Log2ofPowerOfTwoRadix, Threshold >(arrayToBePartitioned, aStart, aLength, shiftRightAmount, k, kStart, kLength);
 }
 
 #endif
