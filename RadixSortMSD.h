@@ -95,7 +95,7 @@ inline void _RadixSort_Unsigned_PowerOf2Radix_Bins(_Type* a, size_t a_size, unsi
 		count[(unsigned)((a[_current] >> shiftRightAmount) & BitMask)]++;
 
 	size_t startOfBin[PowerOfTwoRadix + 1], endOfBin[PowerOfTwoRadix];
-	startOfBin[0] = endOfBin[0] = 0;    startOfBin[PowerOfTwoRadix] = a_size;	// sentinal
+	startOfBin[0] = endOfBin[0] = 0;    startOfBin[PowerOfTwoRadix] = a_size;
 	for (unsigned long i = 1; i < PowerOfTwoRadix; i++)
 		startOfBin[i] = endOfBin[i] = startOfBin[i - 1] + count[i - 1];
 
