@@ -9,6 +9,8 @@
 #include <ratio>
 #include <vector>
 #include <execution>
+#include <set>
+#include <unordered_set>
 
 #include "RadixSelect.h"
 
@@ -34,12 +36,37 @@ int DeDuplicateBenchmark(vector<unsigned>& uints)
 		}
 
 		vector<unsigned> a_reference(uints);
+#if 0
+		// sort-unique method 1
 		const auto startTime_0 = high_resolution_clock::now();
 		sort(a_reference.begin(), a_reference.end());
 		auto last_ref = unique(a_reference.begin(), a_reference.end());	
 		const auto endTime_0 = high_resolution_clock::now();
 		auto uniqueCount = std::distance(a_reference.begin(), last_ref);
-		printf("sort-unique: Time: %fms with %lld unique elements\n", duration_cast<duration<double, milli>>(endTime_0 - startTime_0).count(), uniqueCount);
+		printf("sort-unique method: Time: %fms with %lld unique elements\n", duration_cast<duration<double, milli>>(endTime_0 - startTime_0).count(), uniqueCount);
+		a_reference.erase(last_ref, a_reference.end());
+#endif
+#if 0
+		// set method 2
+		const auto startTime_0 = high_resolution_clock::now();
+		std::set<unsigned> s(a_reference.begin(), a_reference.end());	// Construct a set (removes duplicates and sorts)
+		a_reference.assign(s.begin(), s.end());							// Assign back to the vector
+		const auto endTime_0 = high_resolution_clock::now();
+		printf("set method: Time: %fms with %lld unique elements\n", duration_cast<duration<double, milli>>(endTime_0 - startTime_0).count(), a_reference.size());
+#endif
+#if 1
+		// unordered_set method 3
+		const auto startTime_0 = high_resolution_clock::now();
+		std::unordered_set<int> seen;
+		// Remove elements if they are already in the 'seen' set
+		auto last_ref = std::remove_if(a_reference.begin(), a_reference.end(), [&seen](int x) {
+			return !seen.insert(x).second; // .second is false if element already existed
+			});
+		const auto endTime_0 = high_resolution_clock::now();
+		a_reference.erase(last_ref, a_reference.end());
+		sort(a_reference.begin(), a_reference.end()); // Sort the unique elements for later comparison
+		printf("unordered_set method: Time: %fms with %lld unique elements\n", duration_cast<duration<double, milli>>(endTime_0 - startTime_0).count(), a_reference.size());
+#endif
 
 		//printf("uintsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", uintsCopy, sorted, sorted[static_cast<unsigned>(rd()) % uints.size()], uintsCopy[static_cast<unsigned>(rd()) % uints.size()]);
 		const auto startTime = high_resolution_clock::now();
@@ -47,10 +74,8 @@ int DeDuplicateBenchmark(vector<unsigned>& uints)
 		RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(uintsCopy.data(), tmp_working.data(), uints.size());	// Not-in-place LSD Radix Sort
 		auto last = unique(uintsCopy.begin(), uintsCopy.end());
 		const auto endTime = high_resolution_clock::now();
-		uniqueCount = std::distance(uintsCopy.begin(), last);
-		printf("Radix sort-unique: Time: %fms with %lld unique elements\n", duration_cast<duration<double, milli>>(endTime - startTime).count(), uniqueCount);
-
-		a_reference.erase(last_ref, a_reference.end());
+		auto uniqueCountGolden = std::distance(uintsCopy.begin(), last);
+		printf("Radix sort-unique: Time: %fms with %lld unique elements\n", duration_cast<duration<double, milli>>(endTime - startTime).count(), uniqueCountGolden);
 		uintsCopy.erase(last, uintsCopy.end());
 
 		if (!std::equal(a_reference.begin(), a_reference.end(), uintsCopy.begin()))
