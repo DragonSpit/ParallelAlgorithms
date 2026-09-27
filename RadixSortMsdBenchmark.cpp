@@ -19,12 +19,12 @@ using std::random_device;
 using std::sort;
 using std::vector;
 
-const int iterationCount = 5; 
+const int iterationCount = 10000; 
 
-static void print_results(const char* const tag, const vector<unsigned>& sorted, size_t sortedLength,
+static void print_results(int iteration, const char* const tag, const vector<unsigned>& sorted, size_t sortedLength,
 	high_resolution_clock::time_point startTime,
 	high_resolution_clock::time_point endTime) {
-	printf("%s: Lowest: %u Highest: %u Time: %fms\n", tag,
+	printf("%d: %s: Lowest: %u Highest: %u Time: %fms\n", iteration, tag,
 		sorted[0], sorted[sortedLength - 1],
 		duration_cast<duration<double, milli>>(endTime - startTime).count());
 }
@@ -56,10 +56,11 @@ int RadixSortMsdBenchmark(vector<unsigned>& uints)
 		//RadixSortLSDPowerOf2RadixScalar_unsigned_TwoPhase(  uintsCopy.data(), sorted.data(), (unsigned long)uints.size());
 		//RadixSortLSDPowerOf2RadixParallel_unsigned_TwoPhase(uintsCopy.data(), sorted.data(), (unsigned long)uints.size());
 		//hybrid_inplace_msd_radix_sort(uintsCopy.data(), (unsigned long)uints.size());
+		hybrid_inplace_msd_radix_sort_bins(uintsCopy.data(), (unsigned long)uintsCopy.size());
 		//ParallelAlgorithms::parallel_hybrid_inplace_msd_radix_sort(uintsCopy.data(), (unsigned long)uints.size());
-		RadixSortMSDStablePowerOf2Radix_unsigned(uintsCopy.data(), tmp_working.data(), uints.size());
+		//RadixSortMSDStablePowerOf2Radix_unsigned(uintsCopy.data(), tmp_working.data(), uints.size());
 		const auto endTime = high_resolution_clock::now();
-		print_results("Radix Sort MSD", uintsCopy, uints.size(), startTime, endTime);
+		print_results(i, "Radix Sort MSD", uintsCopy, uints.size(), startTime, endTime);
 
 		if (!std::equal(sorted_reference.begin(), sorted_reference.end(), uintsCopy.begin()))
 		{

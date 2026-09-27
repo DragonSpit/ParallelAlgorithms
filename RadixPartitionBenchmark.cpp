@@ -55,6 +55,7 @@ int RadixPartitionBenchmark(vector<unsigned>& uints)
 
 		//printf("uintsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", uintsCopy, sorted, sorted[static_cast<unsigned>(rd()) % uints.size()], uintsCopy[static_cast<unsigned>(rd()) % uints.size()]);
 		const auto startTime = high_resolution_clock::now();
+		//hybrid_inplace_msd_radix_sort(uintsCopy.data(), uints.size()); // uses an in-place MSD Radix Sort. Provides a nice comparison for the initial implementation of  Radix Partition.
 		PartitionRadix(uintsCopy.data(), uints.size(), k);
 		//unsigned selectedValue = SelectRadix(uintsCopy.data(), uints.size(), k);
 		unsigned selectedValue = uintsCopy[k];
