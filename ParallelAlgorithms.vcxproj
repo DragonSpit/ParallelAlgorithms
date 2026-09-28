@@ -169,6 +169,7 @@
     <ClInclude Include="Configuration.h" />
     <ClInclude Include="CountingSort.h" />
     <ClInclude Include="CountingSortParallel.h" />
+    <ClInclude Include="DeDuplicate.h" />
     <ClInclude Include="Histogram.h" />
     <ClInclude Include="HistogramParallel.h" />
     <ClInclude Include="InplaceMerge.h" />

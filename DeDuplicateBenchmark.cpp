@@ -12,7 +12,7 @@
 #include <set>
 #include <unordered_set>
 
-#include "RadixSelect.h"
+#include "DeDuplicate.h"
 
 using std::chrono::duration;
 using std::chrono::duration_cast;
@@ -70,13 +70,14 @@ int DeDuplicateBenchmark(vector<unsigned>& uints)
 
 		//printf("uintsCopy address = %p   sorted address = %p   value at a random location = %lu %lu\n", uintsCopy, sorted, sorted[static_cast<unsigned>(rd()) % uints.size()], uintsCopy[static_cast<unsigned>(rd()) % uints.size()]);
 		const auto startTime = high_resolution_clock::now();
-		//hybrid_inplace_msd_radix_sort_bins(uintsCopy.data(), (unsigned long)uintsCopy.size());				// In-place MSD Radix Sort
-		RadixSortLSDPowerOf2Radix_unsigned_TwoPhase(uintsCopy.data(), tmp_working.data(), uints.size());	// Not-in-place LSD Radix Sort
-		auto last = unique(uintsCopy.begin(), uintsCopy.end());
+#if 0
+		auto uniqueCountGolden = DeDuplicate(uintsCopy.data(), uintsCopy.size()); // In-place algorithm
+#else
+		auto uniqueCountGolden = DeDuplicateNotInPlace(uintsCopy.data(), tmp_working.data(), uintsCopy.size()); // Not-in-place algorithm
+#endif
 		const auto endTime = high_resolution_clock::now();
-		auto uniqueCountGolden = std::distance(uintsCopy.begin(), last);
 		printf("Radix sort-unique: Time: %fms with %lld unique elements\n", duration_cast<duration<double, milli>>(endTime - startTime).count(), uniqueCountGolden);
-		uintsCopy.erase(last, uintsCopy.end());
+		uintsCopy.erase(uintsCopy.begin() + uniqueCountGolden, uintsCopy.end());
 
 		if (!std::equal(a_reference.begin(), a_reference.end(), uintsCopy.begin()))
 		{
